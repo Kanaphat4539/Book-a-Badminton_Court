@@ -71,6 +71,18 @@ export default function Dashboard() {
     }
   };
 
+  const handleResetDatabase = async () => {
+    if (!confirm('WARNING: Are you sure you want to reset the database? This will delete ALL bookings!')) return;
+    if (!confirm('Are you ABSOLUTELY sure? This action cannot be undone.')) return;
+    try {
+      await api.post('/bookings/reset');
+      toast.success('Database reset successfully');
+      fetchAllBookings();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to reset database');
+    }
+  };
+
   // Find active checked-in booking
   const activeBooking = bookings.find(b => b.status === 'CHECKED_IN');
   const pendingBooking = bookings.find(b => b.status === 'PENDING');
@@ -109,7 +121,10 @@ export default function Dashboard() {
               <h1 className="text-xl font-bold">Admin Dashboard</h1>
               <p className="text-sm text-slate-500">Manage courts and view all bookings</p>
             </div>
-            <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
+            <div className="flex gap-2">
+              <Button variant="destructive" size="sm" onClick={handleResetDatabase}>Reset Database</Button>
+              <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
+            </div>
           </div>
 
           <Card>

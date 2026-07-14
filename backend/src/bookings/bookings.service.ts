@@ -117,4 +117,10 @@ export class BookingsService {
     booking.status = BookingStatus.CANCELLED;
     return this.bookingsRepository.save(booking);
   }
+
+  async resetBookings() {
+    // Delete all bookings using query builder to bypass empty criteria safeguard
+    await this.bookingsRepository.createQueryBuilder().delete().execute();
+    return { message: 'Database reset successfully. All bookings have been cleared.' };
+  }
 }

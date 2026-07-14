@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 
 export default function Dashboard() {
@@ -114,165 +112,227 @@ export default function Dashboard() {
 
   if (user.role === 'ADMIN') {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+      <div className="bg-background text-on-background antialiased min-h-screen flex flex-col pt-16 pb-24 font-sans">
+        {/* TopAppBar */}
+        <header className="fixed top-0 w-full z-50 bg-background flex justify-between items-center px-container-padding h-16">
+          <div className="flex items-center gap-sm cursor-pointer" onClick={() => router.push('/')}>
+            <img alt="Apex Badminton Logo" className="h-8 w-8 rounded-full object-cover" src="/logo.jpg" onError={(e) => (e.target as HTMLImageElement).src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9ufthUuxh5dWIL4bluPC_-EgGRKNDVZo_9zS-_3AX985RaArbVg6VZMOcfSjMTJt6s7yiLK0t07ZHyOwYmpcVpbt0I1G8nM3aNkXMsv_pm8SWQq-inB4F3ICF5Gg3nI-5k6_gdZiccWTAalrDuP2h-yBwN83Yxqs8PdB8nCH49-gR6e_g5NaDZfS2DavqyNfskg6Id8enrw3M608HilHt2Tm0RKYSy0FC9alKOa0Crgdlx0YpTsUlrQ"} />
+            <span className="font-display-sm text-[24px] font-bold text-primary tracking-tight">APEX BADMINTON</span>
+          </div>
+          <button className="hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-200 text-on-surface-variant" onClick={handleLogout}>
+            <span className="material-symbols-outlined font-headline-md text-[24px]" style={{fontVariationSettings: "'FILL' 0"}}>logout</span>
+          </button>
+        </header>
+
+        <div className="max-w-2xl mx-auto space-y-6 w-full px-container-padding mt-4">
+          <div className="flex justify-between items-center bg-surface-container p-4 rounded-xl shadow-lg border border-outline-variant/30">
             <div>
-              <h1 className="text-xl font-bold">Admin Dashboard</h1>
-              <p className="text-sm text-slate-500">Manage courts and view all bookings</p>
+              <h1 className="font-display-sm text-[24px] font-bold text-white">Admin Dashboard</h1>
+              <p className="font-body-md text-[14px] text-on-surface-variant">Manage courts and view all bookings</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="destructive" size="sm" onClick={handleResetDatabase}>Reset Database</Button>
-              <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
+              <button 
+                className="bg-error hover:bg-error/90 text-on-error px-4 py-2 rounded-lg font-button text-[14px] font-semibold transition-colors shadow-md"
+                onClick={handleResetDatabase}
+              >
+                Reset Database
+              </button>
             </div>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>All Bookings</CardTitle>
-              <CardDescription>Recent and upcoming bookings in the system</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {allBookings.length === 0 && <p className="text-slate-500 text-sm">No bookings found.</p>}
-                {allBookings.map(booking => (
-                  <div key={booking.id} className="bg-slate-50 p-3 rounded-lg flex justify-between items-center border border-slate-100">
-                    <div>
-                      <p className="font-semibold text-sm">{booking.user?.name} (@{booking.user?.username})</p>
-                      <p className="text-xs text-slate-500">{booking.court?.name} • {booking.booking_date}</p>
-                    </div>
-                    <div className="text-right flex flex-col items-end gap-1">
-                      <p className="text-sm font-semibold">{booking.start_time.slice(0,5)} - {booking.end_time.slice(0,5)}</p>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        booking.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' :
-                        booking.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-                        booking.status === 'CHECKED_IN' ? 'bg-blue-100 text-blue-700' :
-                        'bg-amber-100 text-amber-700'
-                      }`}>
-                        {booking.status}
-                      </span>
-                    </div>
+          <section>
+            <h2 className="font-headline-md text-[20px] font-semibold text-white mb-4">All Bookings</h2>
+            <div className="space-y-3">
+              {allBookings.length === 0 && <p className="text-on-surface-variant text-sm">No bookings found.</p>}
+              {allBookings.map(booking => (
+                <div key={booking.id} className="bg-surface-container p-4 rounded-xl flex justify-between items-center border border-outline-variant/30">
+                  <div>
+                    <p className="font-headline-md text-[16px] font-bold text-white">{booking.user?.name} <span className="text-on-surface-variant font-normal text-[14px]">(@{booking.user?.username})</span></p>
+                    <p className="text-[14px] text-on-surface-variant mt-1">{booking.court?.name} • {booking.booking_date}</p>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="text-right flex flex-col items-end gap-2">
+                    <p className="text-[14px] font-bold text-primary">{booking.start_time.slice(0,5)} - {booking.end_time.slice(0,5)}</p>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                      booking.status === 'COMPLETED' ? 'bg-[#004d40] text-[#1de9b6] border border-[#1de9b6]/30' :
+                      booking.status === 'CANCELLED' ? 'bg-[#4a0005] text-[#ffb4ab] border border-[#ffb4ab]/30' :
+                      booking.status === 'CHECKED_IN' ? 'bg-[#003257] text-[#9ccaff] border border-[#9ccaff]/30' :
+                      'bg-[#572000] text-[#ffb693] border border-[#ffb693]/30'
+                    }`}>
+                      {booking.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4">
-      <div className="max-w-md mx-auto space-y-6">
-        <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-          <div>
-            <h1 className="text-xl font-bold">Hi, {user.name}</h1>
-            <p className="text-sm text-slate-500">Welcome to Badminton Courts</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
+    <div className="bg-background text-on-background antialiased min-h-screen flex flex-col pt-16 pb-24 font-sans">
+      {/* TopAppBar */}
+      <header className="fixed top-0 w-full z-50 bg-background flex justify-between items-center px-container-padding h-16">
+        <div className="flex items-center gap-sm cursor-pointer" onClick={() => router.push('/')}>
+          <img alt="Apex Badminton Logo" className="h-8 w-8 rounded-full object-cover" src="/logo.jpg" onError={(e) => (e.target as HTMLImageElement).src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9ufthUuxh5dWIL4bluPC_-EgGRKNDVZo_9zS-_3AX985RaArbVg6VZMOcfSjMTJt6s7yiLK0t07ZHyOwYmpcVpbt0I1G8nM3aNkXMsv_pm8SWQq-inB4F3ICF5Gg3nI-5k6_gdZiccWTAalrDuP2h-yBwN83Yxqs8PdB8nCH49-gR6e_g5NaDZfS2DavqyNfskg6Id8enrw3M608HilHt2Tm0RKYSy0FC9alKOa0Crgdlx0YpTsUlrQ"} />
+          <span className="font-display-sm text-[24px] font-bold text-primary tracking-tight">APEX BADMINTON</span>
         </div>
+        <button className="hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-200 text-on-surface-variant" onClick={handleLogout}>
+          <span className="material-symbols-outlined font-headline-md text-[24px]" style={{fontVariationSettings: "'FILL' 0"}}>logout</span>
+        </button>
+      </header>
 
+      <main className="max-w-md mx-auto space-y-6 w-full px-container-padding mt-4">
+        
+        {/* Welcome Header */}
+        <section>
+          <h1 className="font-display-lg text-[32px] font-bold text-white mb-1">Hi, {user.name}</h1>
+          <p className="font-body-lg text-[16px] text-on-surface-variant">Welcome back to Apex Badminton</p>
+        </section>
+
+        {/* Active Session Card */}
         {activeBooking && (
-          <Card className="border-emerald-200 bg-emerald-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-emerald-700">Currently Playing</CardTitle>
-              <CardDescription>You are checked in to {activeBooking.court?.name}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-4">
-                <p className="text-sm font-medium text-emerald-800">Time remaining (Ends at {activeBooking.end_time})</p>
-                <div className="text-4xl font-bold text-emerald-600 my-2">
+          <section className="bg-surface-container rounded-2xl p-5 border border-primary shadow-[0_0_20px_rgba(255,107,0,0.15)] relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+            <div className="relative z-10">
+              <h2 className="font-headline-md text-[18px] font-bold text-primary mb-1">Currently Playing</h2>
+              <p className="font-body-md text-[14px] text-on-surface-variant mb-4">You are checked in to {activeBooking.court?.name}</p>
+              
+              <div className="text-center py-4 bg-surface rounded-xl border border-outline-variant/20">
+                <p className="font-label-md text-[12px] font-medium text-on-surface-variant mb-2">TIME REMAINING (ENDS AT {activeBooking.end_time})</p>
+                <div className="font-display-lg text-[48px] font-bold text-primary">
                   {timeLeft}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         )}
 
+        {/* Upcoming Booking Card */}
         {pendingBooking && !activeBooking && (
-          <Card className="border-blue-200 bg-blue-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-blue-700">Upcoming Booking</CardTitle>
-              <CardDescription>Your next court reservation</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <p className="font-semibold text-slate-800">{pendingBooking.court?.name}</p>
-                  <p className="text-sm text-slate-500">{pendingBooking.booking_date}</p>
+          <section className="bg-surface-container rounded-2xl p-5 border border-tertiary-container/30 relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-tertiary-container/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+             <div className="relative z-10">
+                <h2 className="font-headline-md text-[18px] font-bold text-white mb-1">Upcoming Booking</h2>
+                <p className="font-body-md text-[14px] text-on-surface-variant mb-4">Your next court reservation</p>
+
+                <div className="flex justify-between items-center mb-4 bg-surface p-4 rounded-xl border border-outline-variant/20">
+                  <div>
+                    <p className="font-headline-md text-[16px] font-bold text-primary">{pendingBooking.court?.name}</p>
+                    <p className="font-body-md text-[14px] text-on-surface-variant mt-1">{pendingBooking.booking_date}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-display-sm text-[24px] font-bold text-white">{pendingBooking.start_time.slice(0,5)}</p>
+                    <p className="font-body-md text-[14px] text-on-surface-variant">to {pendingBooking.end_time.slice(0,5)}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-blue-600">{pendingBooking.start_time.slice(0,5)}</p>
-                  <p className="text-sm text-slate-500">to {pendingBooking.end_time.slice(0,5)}</p>
+
+                <div className="flex gap-3 mt-4">
+                  <button 
+                    className="flex-1 btn-primary h-12 rounded-lg font-button text-[14px] font-semibold flex items-center justify-center gap-2"
+                    onClick={() => router.push('/scan')}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
+                    Check-in
+                  </button>
+                  <button 
+                    className="flex-1 bg-transparent border border-error/50 text-error hover:bg-error/10 h-12 rounded-lg font-button text-[14px] font-semibold transition-colors"
+                    onClick={() => handleCancelBooking(pendingBooking.id)}
+                  >
+                    Cancel
+                  </button>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <Button className="w-full" onClick={() => router.push('/scan')}>
-                  Scan QR to Check-in
-                </Button>
-                <Button variant="destructive" className="w-full" onClick={() => handleCancelBooking(pendingBooking.id)}>
-                  Cancel Booking
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+             </div>
+          </section>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
-          <Button 
-            className="h-24 flex flex-col gap-2 bg-slate-900 hover:bg-slate-800" 
+        {/* Quick Actions */}
+        <section className="grid grid-cols-2 gap-4">
+          <button 
+            className="h-28 flex flex-col items-center justify-center gap-3 rounded-2xl transition-all active:scale-95 bg-primary-container text-white shadow-[0_4px_14px_0_rgba(255,107,0,0.39)] border border-primary-container/20 hover:bg-primary-container/90"
             onClick={() => router.push('/booking')}
           >
-            <span className="text-2xl">🏸</span>
-            <span>Book Court</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="h-24 flex flex-col gap-2 bg-white"
+            <span className="material-symbols-outlined text-[32px]">sports_tennis</span>
+            <span className="font-button text-[16px] font-semibold">Book Court</span>
+          </button>
+          <button 
+            className="h-28 flex flex-col items-center justify-center gap-3 rounded-2xl transition-all active:scale-95 bg-surface-container border border-outline-variant/30 text-white hover:border-primary/50 hover:bg-surface-container-high"
             onClick={() => router.push('/scan')}
           >
-            <span className="text-2xl">📱</span>
-            <span>Scan QR</span>
-          </Button>
-        </div>
+            <span className="material-symbols-outlined text-[32px]" style={{fontVariationSettings: "'FILL' 0"}}>qr_code_scanner</span>
+            <span className="font-button text-[16px] font-semibold">Scan QR</span>
+          </button>
+        </section>
 
-        <div>
-          <h2 className="text-lg font-bold mb-3 px-1">Recent Bookings</h2>
+        {/* Recent Bookings */}
+        <section>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-headline-md text-[20px] font-semibold text-white">Recent Bookings</h2>
+          </div>
           <div className="space-y-3">
-            {bookings.length === 0 && <p className="text-slate-500 text-sm px-1">No bookings yet.</p>}
+            {bookings.length === 0 && (
+              <div className="bg-surface-container border border-outline-variant/30 rounded-xl p-6 text-center">
+                <p className="font-body-md text-[14px] text-on-surface-variant">No bookings yet.</p>
+                <button 
+                  className="mt-4 text-primary font-button text-[14px] font-semibold hover:underline"
+                  onClick={() => router.push('/booking')}
+                >
+                  Make your first booking
+                </button>
+              </div>
+            )}
             {bookings.map(booking => (
-              <div key={booking.id} className="bg-white p-3 rounded-lg shadow-sm border border-slate-100 flex justify-between items-center">
+              <div key={booking.id} className="bg-surface-container p-4 rounded-xl flex justify-between items-center border border-outline-variant/30">
                 <div>
-                  <p className="font-medium text-sm">{booking.court?.name || 'Court'}</p>
-                  <p className="text-xs text-slate-500">{booking.booking_date}</p>
+                  <p className="font-headline-md text-[16px] font-bold text-white mb-1">{booking.court?.name || 'Court'}</p>
+                  <p className="font-body-md text-[12px] text-on-surface-variant">{booking.booking_date}</p>
                 </div>
-                <div className="text-right flex flex-col items-end gap-1">
-                  <p className="text-sm font-semibold">{booking.start_time.slice(0,5)}</p>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      booking.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' :
-                      booking.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-                      booking.status === 'CHECKED_IN' ? 'bg-blue-100 text-blue-700' :
-                      'bg-amber-100 text-amber-700'
-                    }`}>
-                      {booking.status}
-                    </span>
+                <div className="text-right flex flex-col items-end gap-2">
+                  <p className="font-headline-md text-[16px] font-bold text-primary">{booking.start_time.slice(0,5)}</p>
+                  <div className="flex items-center gap-3">
                     {booking.status === 'PENDING' && (
                       <button 
                         onClick={() => handleCancelBooking(booking.id)}
-                        className="text-xs text-red-600 hover:text-red-800 underline"
+                        className="text-[12px] font-bold text-error hover:text-error/80 uppercase tracking-wider transition-colors"
                       >
                         Cancel
                       </button>
                     )}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                      booking.status === 'COMPLETED' ? 'bg-[#004d40] text-[#1de9b6] border border-[#1de9b6]/30' :
+                      booking.status === 'CANCELLED' ? 'bg-[#4a0005] text-[#ffb4ab] border border-[#ffb4ab]/30' :
+                      booking.status === 'CHECKED_IN' ? 'bg-[#003257] text-[#9ccaff] border border-[#9ccaff]/30' :
+                      'bg-[#572000] text-[#ffb693] border border-[#ffb693]/30'
+                    }`}>
+                      {booking.status}
+                    </span>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
+
+      {/* BottomNavBar */}
+      {user.role !== 'ADMIN' && (
+        <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 z-50 rounded-t-xl bg-surface-container/90 backdrop-blur-md shadow-[0px_-8px_24px_rgba(0,0,0,0.5)] border-t border-[#2A2A2A]">
+          <button className="flex flex-col items-center justify-center text-primary font-bold hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
+            <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>sports_tennis</span>
+            <span className="font-label-md text-[12px] font-semibold">Home</span>
+          </button>
+          <button onClick={() => router.push('/booking')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
+            <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>event_note</span>
+            <span className="font-label-md text-[12px] font-semibold">Bookings</span>
+          </button>
+          <button onClick={() => router.push('/scan')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
+            <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>qr_code_scanner</span>
+            <span className="font-label-md text-[12px] font-semibold">Scan</span>
+          </button>
+        </nav>
+      )}
     </div>
   );
 }
+

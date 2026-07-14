@@ -3,10 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 
 export default function RegisterPage() {
@@ -33,53 +29,100 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 bg-slate-50">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">Register</CardTitle>
-          <CardDescription className="text-center">Create a new account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
+    <div className="min-h-screen flex flex-col items-center justify-center p-container-padding bg-background text-on-surface font-sans">
+      <main className="w-full max-w-md relative z-10 flex flex-col items-center">
+        {/* Logo Section */}
+        <div className="mb-xl flex flex-col items-center">
+          <div className="w-32 h-32 mb-sm rounded-full overflow-hidden bg-surface-container flex items-center justify-center shadow-[0px_8px_24px_rgba(0,0,0,0.5)] border border-[#2A2A2A]">
+            <img 
+              alt="Apex Badminton Logo" 
+              className="w-full h-full object-cover" 
+              src="/logo.jpg" 
+              onError={(e) => {
+                // Fallback if logo.jpg doesn't exist yet
+                (e.target as HTMLImageElement).src = "https://lh3.googleusercontent.com/aida-public/AB6AXuA9ufthUuxh5dWIL4bluPC_-EgGRKNDVZo_9zS-_3AX985RaArbVg6VZMOcfSjMTJt6s7yiLK0t07ZHyOwYmpcVpbt0I1G8nM3aNkXMsv_pm8SWQq-inB4F3ICF5Gg3nI-5k6_gdZiccWTAalrDuP2h-yBwN83Yxqs8PdB8nCH49-gR6e_g5NaDZfS2DavqyNfskg6Id8enrw3M608HilHt2Tm0RKYSy0FC9alKOa0Crgdlx0YpTsUlrQ";
+              }}
+            />
+          </div>
+          <h1 className="font-display-lg text-[32px] font-bold text-primary tracking-tight text-center uppercase">APEX BADMINTON</h1>
+          <p className="font-body-md text-[14px] text-on-surface-variant text-center mt-xs">Create your account</p>
+        </div>
+
+        {/* Register Card */}
+        <div className="w-full bg-[#1E1E1E] rounded-xl p-lg shadow-[0px_8px_24px_rgba(0,0,0,0.5)] border border-[#2A2A2A] p-6">
+          <form onSubmit={handleRegister} className="flex flex-col gap-4">
+            
+            {/* Name Input */}
+            <div className="flex flex-col gap-1">
+              <label className="font-label-md text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider" htmlFor="name">Full Name</label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" style={{fontVariationSettings: "'FILL' 0"}}>badge</span>
+                <input 
+                  className="input-field w-full h-12 rounded-lg pl-10 pr-3 font-body-md text-[14px] text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" 
+                  id="name" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="John Doe" 
+                  required 
+                  type="text"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
+
+            {/* Username Input */}
+            <div className="flex flex-col gap-1">
+              <label className="font-label-md text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider" htmlFor="username">Username / Email</label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" style={{fontVariationSettings: "'FILL' 0"}}>person</span>
+                <input 
+                  className="input-field w-full h-12 rounded-lg pl-10 pr-3 font-body-md text-[14px] text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" 
+                  id="username" 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="athlete@example.com" 
+                  required 
+                  type="text"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+
+            {/* Password Input */}
+            <div className="flex flex-col gap-1">
+              <label className="font-label-md text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider" htmlFor="password">Password</label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" style={{fontVariationSettings: "'FILL' 0"}}>lock</span>
+                <input 
+                  className="input-field w-full h-12 rounded-lg pl-10 pr-3 font-body-md text-[14px] text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" 
+                  id="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••" 
+                  required 
+                  type="password"
+                />
+              </div>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+
+            {/* Register Button */}
+            <button 
+              className="btn-primary w-full h-12 rounded-lg font-button text-[16px] font-semibold flex items-center justify-center mt-4 disabled:opacity-50" 
+              type="submit"
+              disabled={loading}
+            >
               {loading ? 'Registering...' : 'Register'}
-            </Button>
+              {!loading && <span className="material-symbols-outlined ml-2 text-[18px]" style={{fontVariationSettings: "'FILL' 1"}}>person_add</span>}
+            </button>
           </form>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-slate-500">
-            Already have an account? <a href="/login" className="text-blue-600 hover:underline">Login</a>
-          </p>
-        </CardFooter>
-      </Card>
+
+          {/* Login Link */}
+          <div className="mt-6 pt-4 border-t border-[#2A2A2A] text-center">
+            <p className="font-body-md text-[14px] text-on-surface-variant">
+              Already have an account? 
+              <a className="font-button text-[16px] font-semibold text-primary hover:text-primary/80 transition-colors ml-2" href="/login">Login</a>
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

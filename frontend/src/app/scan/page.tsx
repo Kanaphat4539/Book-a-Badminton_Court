@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { Button } from '@/components/ui/button';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { toast } from 'sonner';
 
@@ -94,27 +93,51 @@ export default function ScanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col p-4">
-      <div className="max-w-md w-full mx-auto flex-1 flex flex-col">
-        <div className="flex items-center justify-between mb-8 text-white mt-4">
-          <h1 className="text-2xl font-bold">Scan QR Code</h1>
-          <Button variant="ghost" className="text-white hover:bg-slate-800 hover:text-white" onClick={() => router.push('/')}>Cancel</Button>
+    <div className="bg-background text-on-background antialiased min-h-screen flex flex-col font-sans">
+      <div className="max-w-md w-full mx-auto flex-1 flex flex-col p-container-padding">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8 mt-4">
+          <h1 className="font-display-sm text-[24px] font-bold text-white">Scan QR Code</h1>
+          <button 
+            className="text-primary font-button text-[14px] font-semibold hover:opacity-80 transition-opacity" 
+            onClick={() => router.push('/')}
+          >
+            Cancel
+          </button>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="bg-white p-2 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+          <div className="bg-surface p-2 rounded-2xl w-full max-w-sm overflow-hidden shadow-[0_0_30px_rgba(255,107,0,0.2)] border border-primary/30">
             <div id="qr-reader" className="w-full"></div>
           </div>
           
-          <div className="mt-8 text-center text-slate-300">
+          <div className="mt-8 text-center text-on-surface-variant font-body-md text-[14px]">
             {loading ? (
-              <p className="animate-pulse text-emerald-400">Processing Check-in...</p>
+              <p className="animate-pulse text-primary font-bold">Processing Check-in...</p>
             ) : (
               <p>Point your camera at the QR code on the court to check in.</p>
             )}
           </div>
         </div>
       </div>
+
+      {/* BottomNavBar */}
+      <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 z-50 rounded-t-xl bg-surface-container/90 backdrop-blur-md shadow-[0px_-8px_24px_rgba(0,0,0,0.5)] border-t border-[#2A2A2A]">
+        <button onClick={() => router.push('/')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
+          <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>sports_tennis</span>
+          <span className="font-label-md text-[12px] font-semibold">Home</span>
+        </button>
+        <button onClick={() => router.push('/booking')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
+          <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>event_note</span>
+          <span className="font-label-md text-[12px] font-semibold">Bookings</span>
+        </button>
+        <button className="flex flex-col items-center justify-center text-primary font-bold hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
+          <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>qr_code_scanner</span>
+          <span className="font-label-md text-[12px] font-semibold">Scan</span>
+        </button>
+      </nav>
     </div>
   );
 }
+

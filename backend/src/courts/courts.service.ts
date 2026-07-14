@@ -36,7 +36,7 @@ export class CourtsService implements OnModuleInit {
     const courts = await this.findAll();
     const bookings = await this.bookingsRepository.find({
       where: { booking_date: date },
-      relations: ['court'],
+      relations: { court: true },
     });
 
     // Group bookings by court id

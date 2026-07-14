@@ -14,7 +14,7 @@ export class Court {
   @Column()
   name: string;
 
-  @Column({ type: 'enum', enum: CourtStatus, default: CourtStatus.AVAILABLE })
+  @Column({ type: 'simple-enum', enum: CourtStatus, default: CourtStatus.AVAILABLE })
   status: CourtStatus;
 
   @OneToMany(() => Booking, (booking) => booking.court)

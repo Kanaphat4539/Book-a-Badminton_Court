@@ -17,10 +17,13 @@ export class UsersService {
 
   async create(user: Partial<User>): Promise<User> {
     const saltOrRounds = 10;
-    const hashedPassword = await bcrypt.hash(user.password, saltOrRounds);
+    const passwordToHash = user.password || 'password';
+    const hashedPassword = await bcrypt.hash(passwordToHash, saltOrRounds);
     
     const newUser = this.usersRepository.create({
-      ...user,
+      username: user.username,
+      name: user.name,
+      role: user.role,
       password: hashedPassword,
     });
     

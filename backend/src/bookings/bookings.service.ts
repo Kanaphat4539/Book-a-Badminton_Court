@@ -53,6 +53,7 @@ export class BookingsService {
     if (!court) throw new NotFoundException('Court not found');
 
     const user = await this.usersRepository.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException('User not found');
 
     const newBooking = this.bookingsRepository.create({
       user,
@@ -69,7 +70,7 @@ export class BookingsService {
   async getMyBookings(userId: number) {
     return this.bookingsRepository.find({
       where: { user: { id: userId } },
-      relations: ['court'],
+      relations: { court: true },
       order: { booking_date: 'DESC', start_time: 'DESC' },
     });
   }
@@ -78,7 +79,7 @@ export class BookingsService {
     const whereCondition = date ? { booking_date: date } : {};
     return this.bookingsRepository.find({
       where: whereCondition,
-      relations: ['court', 'user'],
+      relations: { court: true, user: true },
       order: { booking_date: 'DESC', start_time: 'DESC' },
     });
   }

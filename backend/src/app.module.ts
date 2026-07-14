@@ -16,12 +16,8 @@ import { Booking } from './bookings/entities/booking.entity';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'badminton_user',
-      password: 'password',
-      database: 'badminton_db',
+      type: 'better-sqlite3',
+      database: 'database.sqlite',
       entities: [User, Court, Booking],
       synchronize: true, // Use only in dev, not in production
     }),

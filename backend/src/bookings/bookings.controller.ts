@@ -11,7 +11,7 @@ export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Post()
-  async createBooking(@Request() req, @Body() body: { courtId: number; date: string; startTime: string }) {
+  async createBooking(@Request() req: any, @Body() body: { courtId: number; date: string; startTime: string }) {
     return this.bookingsService.createBooking(req.user.userId, body.courtId, body.date, body.startTime);
   }
 
@@ -22,12 +22,12 @@ export class BookingsController {
   }
 
   @Get('me')
-  async getMyBookings(@Request() req) {
+  async getMyBookings(@Request() req: any) {
     return this.bookingsService.getMyBookings(req.user.userId);
   }
 
   @Post(':id/check-in')
-  async checkIn(@Request() req, @Param('id') id: string, @Body() body: { courtId: number }) {
+  async checkIn(@Request() req: any, @Param('id') id: string, @Body() body: { courtId: number }) {
     return this.bookingsService.checkIn(+id, req.user.userId, body.courtId);
   }
 }

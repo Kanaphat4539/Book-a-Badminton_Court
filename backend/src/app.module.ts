@@ -16,8 +16,12 @@ import { Booking } from './bookings/entities/booking.entity';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: 'better-sqlite3',
-      database: 'database.sqlite',
+      type: (process.env.DB_TYPE as any) || 'better-sqlite3',
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '3306'),
+      username: process.env.DB_USER || 'badminton_user',
+      password: process.env.DB_PASSWORD || 'password',
+      database: process.env.DB_NAME || 'database.sqlite',
       entities: [User, Court, Booking],
       synchronize: true, // Use only in dev, not in production
     }),

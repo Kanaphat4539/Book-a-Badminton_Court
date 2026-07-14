@@ -234,14 +234,24 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right flex flex-col items-end gap-1">
                   <p className="text-sm font-semibold">{booking.start_time.slice(0,5)}</p>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    booking.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' :
-                    booking.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-                    booking.status === 'CHECKED_IN' ? 'bg-blue-100 text-blue-700' :
-                    'bg-amber-100 text-amber-700'
-                  }`}>
-                    {booking.status}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      booking.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' :
+                      booking.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                      booking.status === 'CHECKED_IN' ? 'bg-blue-100 text-blue-700' :
+                      'bg-amber-100 text-amber-700'
+                    }`}>
+                      {booking.status}
+                    </span>
+                    {booking.status === 'PENDING' && (
+                      <button 
+                        onClick={() => handleCancelBooking(booking.id)}
+                        className="text-xs text-red-600 hover:text-red-800 underline"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

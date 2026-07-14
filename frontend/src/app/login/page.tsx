@@ -23,7 +23,7 @@ export default function LoginPage() {
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       toast.success('Login successful!');
-      router.push('/');
+      window.location.href = '/';
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Login failed');
     } finally {

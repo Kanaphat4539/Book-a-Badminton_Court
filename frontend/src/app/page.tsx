@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -54,6 +55,20 @@ export default function Dashboard() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     router.push('/login');
+  };
+
+  const handleCancelBooking = async (bookingId: number) => {
+    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    try {
+      await api.post(`/bookings/${bookingId}/cancel`);
+      toast.success('Booking cancelled successfully');
+      fetchBookings();
+      if (user?.role === 'ADMIN') {
+        fetchAllBookings();
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to cancel booking');
+    }
   };
 
   // Find active checked-in booking
@@ -177,9 +192,14 @@ export default function Dashboard() {
                   <p className="text-sm text-slate-500">to {pendingBooking.end_time.slice(0,5)}</p>
                 </div>
               </div>
-              <Button className="w-full" onClick={() => router.push('/scan')}>
-                Scan QR to Check-in
-              </Button>
+              <div className="flex gap-2">
+                <Button className="w-full" onClick={() => router.push('/scan')}>
+                  Scan QR to Check-in
+                </Button>
+                <Button variant="destructive" className="w-full" onClick={() => handleCancelBooking(pendingBooking.id)}>
+                  Cancel Booking
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}

@@ -15,8 +15,6 @@ export class CronService {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
-    this.logger.debug('Running booking cancellation check...');
-
     const now = new Date();
     // Current date string in YYYY-MM-DD
     const currentDate = now.toISOString().split('T')[0];

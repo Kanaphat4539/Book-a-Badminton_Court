@@ -100,4 +100,21 @@ export class BookingsService {
     booking.status = BookingStatus.CHECKED_IN;
     return this.bookingsRepository.save(booking);
   }
+
+  async cancelBooking(bookingId: number, userId: number) {
+    const booking = await this.bookingsRepository.findOne({
+      where: { id: bookingId, user: { id: userId } }
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+
+    if (booking.status !== BookingStatus.PENDING) {
+      throw new BadRequestException(`Cannot cancel. Status is currently ${booking.status}`);
+    }
+
+    booking.status = BookingStatus.CANCELLED;
+    return this.bookingsRepository.save(booking);
+  }
 }

@@ -30,4 +30,9 @@ export class BookingsController {
   async checkIn(@Request() req: any, @Param('id') id: string, @Body() body: { courtId: number }) {
     return this.bookingsService.checkIn(+id, req.user.userId, body.courtId);
   }
+
+  @Post(':id/cancel')
+  async cancelBooking(@Request() req: any, @Param('id') id: string) {
+    return this.bookingsService.cancelBooking(+id, req.user.userId);
+  }
 }

@@ -28,11 +28,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-container-padding bg-background text-on-surface font-sans">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background text-on-surface font-sans">
       <main className="w-full max-w-md relative z-10 flex flex-col items-center">
         {/* Logo Section */}
-        <div className="mb-xl flex flex-col items-center">
-          <div className="w-32 h-32 mb-sm rounded-full overflow-hidden bg-surface-container flex items-center justify-center shadow-[0px_8px_24px_rgba(0,0,0,0.5)] border border-[#2A2A2A]">
+        <div className="mb-8 flex flex-col items-center">
+          <div className="w-32 h-32 mb-2 rounded-full overflow-hidden bg-surface-container flex items-center justify-center shadow-[0px_8px_24px_rgba(0,0,0,0.5)] border border-[#2A2A2A]">
             <img 
               alt="Apex Badminton Logo" 
               className="w-full h-full object-cover" 
@@ -44,11 +44,11 @@ export default function LoginPage() {
             />
           </div>
           <h1 className="font-display-lg text-[32px] font-bold text-primary tracking-tight text-center uppercase">APEX BADMINTON</h1>
-          <p className="font-body-md text-[14px] text-on-surface-variant text-center mt-xs">Premium Court Booking</p>
+          <p className="font-body-md text-[14px] text-on-surface-variant text-center mt-1">Premium Court Booking</p>
         </div>
 
         {/* Login Card */}
-        <div className="w-full bg-[#1E1E1E] rounded-xl p-lg shadow-[0px_8px_24px_rgba(0,0,0,0.5)] border border-[#2A2A2A] p-6">
+        <div className="w-full bg-[#1E1E1E] rounded-xl shadow-[0px_8px_24px_rgba(0,0,0,0.5)] border border-[#2A2A2A] p-6">
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             {/* Username Input */}
             <div className="flex flex-col gap-1">

@@ -124,7 +124,7 @@ export default function Dashboard() {
           </button>
         </header>
 
-        <div className="max-w-2xl mx-auto space-y-6 w-full px-container-padding mt-4">
+        <div className="max-w-5xl mx-auto space-y-6 w-full px-container-padding mt-4">
           <div className="flex justify-between items-center bg-surface-container p-4 rounded-xl shadow-lg border border-outline-variant/30">
             <div>
               <h1 className="font-display-sm text-[24px] font-bold text-white">Admin Dashboard</h1>
@@ -183,7 +183,7 @@ export default function Dashboard() {
         </button>
       </header>
 
-      <main className="max-w-md mx-auto space-y-6 w-full px-container-padding mt-4">
+      <main className="max-w-5xl mx-auto space-y-6 w-full px-container-padding mt-4">
         
         {/* Welcome Header */}
         <section>

@@ -7,9 +7,9 @@ import { toast } from 'sonner';
 
 export default function BookingPage() {
   const router = useRouter();
-  
+
   // States
-  const [dates, setDates] = useState<{date: string, day: string, num: string}[]>([]);
+  const [dates, setDates] = useState<{ date: string, day: string, num: string }[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [courts, setCourts] = useState<any[]>([]);
@@ -101,20 +101,20 @@ export default function BookingPage() {
 
   return (
     <div className="bg-background text-on-background antialiased min-h-screen flex flex-col pt-16 pb-24 selection:bg-primary selection:text-white font-sans">
-      
+
       {/* TopAppBar */}
       <header className="fixed top-0 w-full z-50 bg-background flex justify-between items-center px-container-padding h-16">
         <div className="flex items-center gap-sm cursor-pointer" onClick={() => router.push('/')}>
-          <img alt="Apex Badminton Logo" className="h-8 w-8 rounded-full object-cover" src="/logo.jpg" onError={(e) => (e.target as HTMLImageElement).src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9ufthUuxh5dWIL4bluPC_-EgGRKNDVZo_9zS-_3AX985RaArbVg6VZMOcfSjMTJt6s7yiLK0t07ZHyOwYmpcVpbt0I1G8nM3aNkXMsv_pm8SWQq-inB4F3ICF5Gg3nI-5k6_gdZiccWTAalrDuP2h-yBwN83Yxqs8PdB8nCH49-gR6e_g5NaDZfS2DavqyNfskg6Id8enrw3M608HilHt2Tm0RKYSy0FC9alKOa0Crgdlx0YpTsUlrQ"} />
-          <span className="font-display-sm text-[24px] font-bold text-primary tracking-tight">APEX BADMINTON</span>
+          <img alt="Apex Badminton Logo" className="h-8 w-8 rounded-full object-cover" src="/logo.jpg" onError={(e) => (e.target as HTMLImageElement).src = "https://lh3.googleusercontent.com/aida-public/AB6AXuA9ufthUuxh5dWIL4bluPC_-EgGRKNDVZo_9zS-_3AX985RaArbVg6VZMOcfSjMTJt6s7yiLK0t07ZHyOwYmpcVpbt0I1G8nM3aNkXMsv_pm8SWQq-inB4F3ICF5Gg3nI-5k6_gdZiccWTAalrDuP2h-yBwN83Yxqs8PdB8nCH49-gR6e_g5NaDZfS2DavqyNfskg6Id8enrw3M608HilHt2Tm0RKYSy0FC9alKOa0Crgdlx0YpTsUlrQ"} />
+          <span className="font-display-sm text-[24px] font-bold text-primary tracking-tight">KMITL BADMINTON</span>
         </div>
         <button className="hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-200" onClick={() => router.push('/')}>
-          <span className="material-symbols-outlined text-primary font-headline-md text-[24px]" style={{fontVariationSettings: "'FILL' 0"}}>home</span>
+          <span className="material-symbols-outlined text-primary font-headline-md text-[24px]" style={{ fontVariationSettings: "'FILL' 0" }}>home</span>
         </button>
       </header>
 
       <main className="flex-grow w-full max-w-3xl mx-auto px-container-padding flex flex-col gap-6">
-        
+
         {/* Header Section */}
         <section className="mt-4">
           <h1 className="font-display-lg text-[32px] font-bold text-white mb-2">Reserve a Court</h1>
@@ -129,18 +129,17 @@ export default function BookingPage() {
               {new Date(selectedDate || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </span>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2 snap-x scrollbar-hide" style={{scrollbarWidth: 'none'}}>
+          <div className="flex gap-2 overflow-x-auto pb-2 snap-x scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
             {dates.map((d, index) => {
               const isActive = selectedDate === d.date;
               return (
-                <button 
+                <button
                   key={d.date}
                   onClick={() => setSelectedDate(d.date)}
-                  className={`flex flex-col items-center justify-center min-w-[64px] h-20 rounded-lg snap-center shrink-0 transition-colors border ${
-                    isActive 
-                      ? 'bg-primary-container text-white shadow-[0_0_15px_rgba(255,107,0,0.3)] border-transparent' 
+                  className={`flex flex-col items-center justify-center min-w-[64px] h-20 rounded-lg snap-center shrink-0 transition-colors border ${isActive
+                      ? 'bg-primary-container text-white shadow-[0_0_15px_rgba(255,107,0,0.3)] border-transparent'
                       : 'bg-surface-container hover:bg-surface-container-high border-outline-variant/30 text-on-surface-variant'
-                  }`}
+                    }`}
                 >
                   <span className={`font-label-md text-[12px] uppercase mb-1 ${isActive ? 'text-white/90' : ''}`}>{d.day}</span>
                   <span className={`font-headline-md text-[20px] font-bold ${isActive ? 'text-white' : 'text-white'}`}>{d.num}</span>
@@ -154,7 +153,7 @@ export default function BookingPage() {
         <section>
           <h2 className="font-headline-md text-[20px] font-semibold text-white mb-4">Time Slots</h2>
           {loading ? (
-             <p className="text-on-surface-variant text-sm">Loading times...</p>
+            <p className="text-on-surface-variant text-sm">Loading times...</p>
           ) : (
             <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
               {timeSlots.map(time => {
@@ -170,14 +169,13 @@ export default function BookingPage() {
                 }
 
                 return (
-                  <button 
+                  <button
                     key={time}
                     onClick={() => setSelectedTime(time)}
-                    className={`py-2 px-1 rounded-md flex items-center justify-center transition-colors ${
-                      isSelected 
+                    className={`py-2 px-1 rounded-md flex items-center justify-center transition-colors ${isSelected
                         ? 'bg-primary-container text-white shadow-[0_0_10px_rgba(255,107,0,0.4)]'
                         : 'bg-surface-container border border-outline-variant/30 hover:border-primary text-white'
-                    }`}
+                      }`}
                   >
                     <span className={`font-body-md text-[14px] ${isSelected ? 'font-bold' : ''}`}>{time}</span>
                   </button>
@@ -190,7 +188,7 @@ export default function BookingPage() {
         {/* Court Selection */}
         <section>
           <h2 className="font-headline-md text-[20px] font-semibold text-white mb-4">Available Courts</h2>
-          
+
           {!selectedTime && (
             <div className="p-4 bg-surface-container border border-outline-variant/30 rounded-xl text-center text-on-surface-variant">
               Please select a time slot first to view available courts.
@@ -210,7 +208,7 @@ export default function BookingPage() {
                         <img className="object-cover w-full h-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlv85Ujefo4LbDgoUY4F4dsbrTyG2TghyekyI9vwKhgxG38nziYzECIjwK0fBMXAQpZBNOYY3SlOtWlI-JK2QAcs40vdjkShWG7_5tjvsZrMxmgwkEx-AVsJvFCaFTsBXLEukXNeGR1Yrp-Z8PWg7SgyyxB296wmCSsDgiieR-SYbNoZSWQZICGtyyehykB5Lb_eLQoQF4DT4mKmz4wE1yAUpqz3rQZfhlgKT44LlDuKpI-d4E0TbbpQ" alt="Premium Court" />
                         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent"></div>
                         <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded text-primary font-label-md text-[12px] font-bold border border-primary/20">
-                            PRO TIER
+                          PRO TIER
                         </div>
                       </div>
                       <div className="p-4 relative flex justify-between items-end">
@@ -223,16 +221,15 @@ export default function BookingPage() {
                         </div>
                         <div className="text-right">
                           <div className="font-display-sm text-[24px] font-bold text-white mb-1">$45<span className="text-body-md text-[14px] font-normal text-on-surface-variant">/hr</span></div>
-                          <button 
+                          <button
                             disabled={isBooked || bookingLoading || court.status === 'MAINTENANCE'}
                             onClick={() => handleBook(court.id)}
-                            className={`px-4 py-2 rounded-md font-button text-[16px] font-semibold transition-colors active:scale-95 ${
-                              isBooked 
+                            className={`px-4 py-2 rounded-md font-button text-[16px] font-semibold transition-colors active:scale-95 ${isBooked
                                 ? 'bg-surface-container-highest text-on-surface-variant cursor-not-allowed'
                                 : 'bg-primary-container text-white hover:bg-primary-container/90 shadow-[0_4px_14px_0_rgba(255,107,0,0.39)]'
-                            }`}
+                              }`}
                           >
-                              {isBooked ? 'Unavailable' : 'Book Now'}
+                            {isBooked ? 'Unavailable' : 'Book Now'}
                           </button>
                         </div>
                       </div>
@@ -255,16 +252,15 @@ export default function BookingPage() {
                       </div>
                       <div className="text-right flex flex-col items-end gap-2">
                         <div className="font-headline-md text-[20px] font-bold text-white">$30<span className="text-body-md text-[14px] font-normal text-on-surface-variant">/hr</span></div>
-                        <button 
+                        <button
                           disabled={isBooked || bookingLoading || court.status === 'MAINTENANCE'}
                           onClick={() => handleBook(court.id)}
-                          className={`px-4 py-2 rounded-md font-button text-[16px] font-semibold transition-colors active:scale-95 ${
-                            isBooked
+                          className={`px-4 py-2 rounded-md font-button text-[16px] font-semibold transition-colors active:scale-95 ${isBooked
                               ? 'bg-surface-container-highest text-on-surface-variant cursor-not-allowed'
                               : 'bg-surface-container-highest border border-outline-variant text-white hover:border-primary hover:text-primary'
-                          }`}
+                            }`}
                         >
-                            {isBooked ? 'Unavailable' : 'Select'}
+                          {isBooked ? 'Unavailable' : 'Select'}
                         </button>
                       </div>
                     </div>
@@ -275,19 +271,19 @@ export default function BookingPage() {
           )}
         </section>
       </main>
-      
+
       {/* BottomNavBar */}
       <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 z-50 rounded-t-xl bg-surface-container/90 backdrop-blur-md shadow-[0px_-8px_24px_rgba(0,0,0,0.5)] border-t border-[#2A2A2A]">
         <button onClick={() => router.push('/')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-          <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>sports_tennis</span>
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>sports_tennis</span>
           <span className="font-label-md text-[12px] font-semibold">Home</span>
         </button>
         <button className="flex flex-col items-center justify-center text-primary font-bold hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-          <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>event_note</span>
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>event_note</span>
           <span className="font-label-md text-[12px] font-semibold">Bookings</span>
         </button>
         <button onClick={() => router.push('/scan')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-          <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>qr_code_scanner</span>
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>qr_code_scanner</span>
           <span className="font-label-md text-[12px] font-semibold">Scan</span>
         </button>
       </nav>

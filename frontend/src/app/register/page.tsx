@@ -35,16 +35,12 @@ export default function RegisterPage() {
         <div className="mb-8 flex flex-col items-center">
           <div className="w-32 h-32 mb-2 rounded-full overflow-hidden bg-surface-container flex items-center justify-center shadow-[0px_8px_24px_rgba(0,0,0,0.5)] border border-[#2A2A2A]">
             <img 
-              alt="Apex Badminton Logo" 
+              alt="KMITL Badminton Logo" 
               className="w-full h-full object-cover" 
-              src="/logo.jpg" 
-              onError={(e) => {
-                // Fallback if logo.jpg doesn't exist yet
-                (e.target as HTMLImageElement).src = "https://lh3.googleusercontent.com/aida-public/AB6AXuA9ufthUuxh5dWIL4bluPC_-EgGRKNDVZo_9zS-_3AX985RaArbVg6VZMOcfSjMTJt6s7yiLK0t07ZHyOwYmpcVpbt0I1G8nM3aNkXMsv_pm8SWQq-inB4F3ICF5Gg3nI-5k6_gdZiccWTAalrDuP2h-yBwN83Yxqs8PdB8nCH49-gR6e_g5NaDZfS2DavqyNfskg6Id8enrw3M608HilHt2Tm0RKYSy0FC9alKOa0Crgdlx0YpTsUlrQ";
-              }}
+              src="/kmitl-logo.png" 
             />
           </div>
-          <h1 className="font-display-lg text-[32px] font-bold text-primary tracking-tight text-center uppercase">APEX BADMINTON</h1>
+          <h1 className="font-display-lg text-[32px] font-bold text-primary tracking-tight text-center uppercase">KMITL BADMINTON</h1>
           <p className="font-body-md text-[14px] text-on-surface-variant text-center mt-1">Create your account</p>
         </div>
 

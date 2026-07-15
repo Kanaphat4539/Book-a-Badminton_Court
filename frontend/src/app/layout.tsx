@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Apex Badminton - Book a Court",
+  title: "KMITL Badminton - Book a Court",
   description: "Premium Court Booking",
 };
 

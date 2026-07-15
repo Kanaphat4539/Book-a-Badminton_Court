@@ -1,4 +1,3 @@
-version: "3.8"
 
 services:
   mysql:
@@ -22,7 +21,7 @@ services:
     container_name: badminton_backend
     restart: always
     ports:
-      - "4000:4000"
+      - "4001:4000"
     environment:
       - PORT=4000
       - DB_TYPE=mysql
@@ -41,9 +40,9 @@ services:
     container_name: badminton_frontend
     restart: always
     ports:
-      - "3002:3000"
+      - "3001:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:4000
+      - NEXT_PUBLIC_API_URL=http://localhost:4001
     depends_on:
       - backend
 

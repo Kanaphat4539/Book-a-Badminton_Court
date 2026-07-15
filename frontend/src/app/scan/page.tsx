@@ -98,7 +98,7 @@ export default function ScanPage() {
         
         {/* Header */}
         <div className="flex items-center justify-between mb-8 mt-4">
-          <h1 className="font-display-sm text-[24px] font-bold text-white">Scan QR Code</h1>
+          <h1 className="font-display-sm text-[24px] font-bold">Scan QR Code</h1>
           <button 
             className="text-primary font-button text-[14px] font-semibold hover:opacity-80 transition-opacity" 
             onClick={() => router.push('/')}

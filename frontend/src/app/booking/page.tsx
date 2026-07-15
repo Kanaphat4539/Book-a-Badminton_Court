@@ -20,7 +20,8 @@ export default function BookingPage() {
   useEffect(() => {
     const today = new Date();
     const generatedDates = [];
-    for (let i = 0; i < 7; i++) {
+    // Generate only today for day-by-day booking policy
+    for (let i = 0; i < 1; i++) {
       const nextDate = new Date(today);
       nextDate.setDate(today.getDate() + i);
       generatedDates.push({

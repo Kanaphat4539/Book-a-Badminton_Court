@@ -22,17 +22,21 @@ export class BookingsService {
     const endHours = (hours + 1).toString().padStart(2, '0');
     const endTime = `${endHours}:${minutes.toString().padStart(2, '0')}:00`;
 
-    // 1. Check if user already has a booking today (limit 1 hr/day)
+    const today = new Date().toISOString().split('T')[0];
+    if (date !== today) {
+      throw new BadRequestException('Day-by-day policy: You can only book courts for today.');
+    }
+
+    // 1. Check if user already has an active booking (limit 1 active booking at a time)
     const existingUserBooking = await this.bookingsRepository.findOne({
-      where: {
-        user: { id: userId },
-        booking_date: date,
-        status: BookingStatus.PENDING, // Or CHECKED_IN
-      }
+      where: [
+        { user: { id: userId }, status: BookingStatus.PENDING },
+        { user: { id: userId }, status: BookingStatus.CHECKED_IN }
+      ]
     });
 
     if (existingUserBooking) {
-      throw new BadRequestException('You already have a booking for this date.');
+      throw new BadRequestException('You already have an active booking. Please complete or cancel it first.');
     }
 
     // 2. Check if the court is available at this time

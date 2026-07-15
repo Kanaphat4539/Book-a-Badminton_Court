@@ -100,12 +100,18 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="bg-background text-on-background antialiased min-h-screen flex flex-col pt-24 pb-24 selection:bg-primary selection:text-white font-sans">
+    <div className="bg-gradient-to-br from-orange-50 via-white to-orange-100 text-on-surface antialiased min-h-screen flex flex-col pt-24 pb-24 selection:bg-primary selection:text-white font-sans relative overflow-hidden">
+      {/* Decorative blobs */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[0%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
+        <div className="absolute top-[30%] right-[-10%] w-[400px] h-[400px] bg-yellow-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
+        <div className="absolute bottom-[10%] left-[20%] w-[600px] h-[600px] bg-primary/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
+      </div>
 
       {/* TopAppBar */}
       <div className="fixed top-0 w-full z-50 shadow-sm">
-        <header className="bg-[#F26522] flex justify-between items-center px-container-padding h-16 text-white">
-          <div className="flex items-center gap-sm cursor-pointer" onClick={() => router.push('/')}>
+        <header className="bg-[#F26522] flex justify-between items-center px-container-padding h-16 text-white shadow-sm">
+          <div className="flex items-center gap-4 cursor-pointer" onClick={() => router.push('/')}>
             <img alt="KMITL Badminton Logo" className="h-10 w-10 rounded-full bg-white p-0.5 object-cover shadow-sm" src="/kmitl-logo.png" />
             <span className="font-display-sm text-[22px] md:text-[24px] font-bold tracking-tight text-white">KMITL BADMINTON</span>
           </div>
@@ -118,19 +124,19 @@ export default function BookingPage() {
         </div>
       </div>
 
-      <main className="flex-grow w-full max-w-3xl mx-auto px-container-padding flex flex-col gap-6">
+      <main className="flex-grow w-full max-w-3xl mx-auto px-container-padding flex flex-col gap-8 relative z-10">
 
         {/* Header Section */}
         <section className="mt-4">
-          <h1 className="font-display-lg text-[32px] font-bold mb-2">Reserve a Court</h1>
-          <p className="font-body-lg text-[16px] text-on-surface-variant">Select your preferred date, time, and court to start playing.</p>
+          <h1 className="font-display-lg text-[36px] font-extrabold mb-2 text-gray-900 drop-shadow-sm tracking-tight">Reserve a Court</h1>
+          <p className="font-body-lg text-[16px] text-gray-600 font-medium">Select your preferred date, time, and court to start playing.</p>
         </section>
 
         {/* Date Selector (Horizontal Calendar) */}
         <section>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="font-headline-md text-[20px] font-semibold">Date</h2>
-            <span className="font-label-md text-[12px] font-semibold text-primary uppercase">
+            <h2 className="font-headline-md text-[22px] font-extrabold text-gray-900">Date</h2>
+            <span className="font-label-md text-[13px] font-bold text-primary uppercase bg-white/80 backdrop-blur-md px-3 py-1 rounded-full shadow-sm border border-white">
               {new Date(selectedDate || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </span>
           </div>
@@ -141,13 +147,13 @@ export default function BookingPage() {
                 <button
                   key={d.date}
                   onClick={() => setSelectedDate(d.date)}
-                  className={`flex flex-col items-center justify-center min-w-[64px] h-20 rounded-lg snap-center shrink-0 transition-colors border ${isActive
-                      ? 'bg-primary-container text-white shadow-[0_0_15px_rgba(255,107,0,0.3)] border-transparent'
-                      : 'bg-surface-container hover:bg-surface-container-high border-outline-variant/30 text-on-surface-variant'
+                  className={`flex flex-col items-center justify-center min-w-[75px] h-24 rounded-2xl snap-center shrink-0 transition-all duration-300 border backdrop-blur-sm ${isActive
+                      ? 'bg-gradient-to-br from-primary to-[#E55B13] text-white shadow-[0_8px_20px_rgba(255,107,0,0.4)] border-transparent transform -translate-y-1'
+                      : 'bg-white/60 hover:bg-white/90 border-white text-gray-600 hover:shadow-md'
                     }`}
                 >
-                  <span className={`font-label-md text-[12px] uppercase mb-1 ${isActive ? 'text-white/90' : ''}`}>{d.day}</span>
-                  <span className={`font-headline-md text-[20px] font-bold ${isActive ? 'text-white' : ''}`}>{d.num}</span>
+                  <span className={`font-label-md text-[13px] uppercase mb-1 font-bold ${isActive ? 'text-white/90' : ''}`}>{d.day}</span>
+                  <span className={`font-headline-md text-[24px] font-black ${isActive ? 'text-white' : 'text-gray-900'}`}>{d.num}</span>
                 </button>
               );
             })}
@@ -156,7 +162,7 @@ export default function BookingPage() {
 
         {/* Time Slots */}
         <section>
-          <h2 className="font-headline-md text-[20px] font-semibold mb-4">Time Slots</h2>
+          <h2 className="font-headline-md text-[22px] font-extrabold mb-4 text-gray-900">Time Slots</h2>
           {loading ? (
             <p className="text-on-surface-variant text-sm">Loading times...</p>
           ) : (
@@ -167,8 +173,8 @@ export default function BookingPage() {
 
                 if (isFullyBooked) {
                   return (
-                    <button key={time} disabled className="py-2 px-1 rounded-md bg-surface-container opacity-30 cursor-not-allowed flex items-center justify-center gap-1 relative overflow-hidden">
-                      <span className="font-body-md text-[14px] line-through">{time}</span>
+                    <button key={time} disabled className="py-3 px-2 rounded-xl bg-gray-200/50 border border-gray-300/50 opacity-60 cursor-not-allowed flex items-center justify-center gap-1 relative overflow-hidden">
+                      <span className="font-body-md text-[15px] font-semibold text-gray-500 line-through">{time}</span>
                     </button>
                   );
                 }
@@ -177,12 +183,12 @@ export default function BookingPage() {
                   <button
                     key={time}
                     onClick={() => setSelectedTime(time)}
-                    className={`py-2 px-1 rounded-md flex items-center justify-center transition-colors ${isSelected
-                        ? 'bg-primary-container text-white shadow-[0_0_10px_rgba(255,107,0,0.4)]'
-                        : 'bg-surface-container border border-outline-variant/30 hover:border-primary'
+                    className={`py-3 px-2 rounded-xl flex items-center justify-center transition-all duration-300 font-medium text-[15px] border backdrop-blur-sm ${isSelected
+                        ? 'bg-gradient-to-br from-primary to-[#E55B13] text-white shadow-[0_6px_16px_rgba(255,107,0,0.4)] border-transparent transform -translate-y-0.5'
+                        : 'bg-white/60 border-white text-gray-700 hover:bg-white/90 hover:shadow-md hover:border-primary/30'
                       }`}
                   >
-                    <span className={`font-body-md text-[14px] ${isSelected ? 'font-bold' : ''}`}>{time}</span>
+                    <span className={`font-body-md text-[15px] ${isSelected ? 'font-bold' : 'font-semibold'}`}>{time}</span>
                   </button>
                 );
               })}
@@ -208,30 +214,30 @@ export default function BookingPage() {
 
                 if (isProTier) {
                   return (
-                    <div key={court.id} className={`group relative rounded-xl overflow-hidden bg-surface-container border ${isBooked ? 'border-surface-container-high opacity-50' : 'border-surface-container-high hover:border-primary/50'} transition-all duration-300`}>
-                      <div className="h-48 w-full relative">
-                        <img className="object-cover w-full h-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlv85Ujefo4LbDgoUY4F4dsbrTyG2TghyekyI9vwKhgxG38nziYzECIjwK0fBMXAQpZBNOYY3SlOtWlI-JK2QAcs40vdjkShWG7_5tjvsZrMxmgwkEx-AVsJvFCaFTsBXLEukXNeGR1Yrp-Z8PWg7SgyyxB296wmCSsDgiieR-SYbNoZSWQZICGtyyehykB5Lb_eLQoQF4DT4mKmz4wE1yAUpqz3rQZfhlgKT44LlDuKpI-d4E0TbbpQ" alt="Premium Court" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent"></div>
-                        <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded text-primary font-label-md text-[12px] font-bold border border-primary/20">
+                    <div key={court.id} className={`group relative rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl border-2 ${isBooked ? 'border-gray-200 opacity-60' : 'border-white hover:border-primary/40 shadow-[0_12px_32px_rgba(0,0,0,0.08)] hover:shadow-[0_16px_48px_rgba(255,107,0,0.12)]'} transition-all duration-500 transform ${!isBooked && 'hover:-translate-y-1'}`}>
+                      <div className="h-56 w-full relative">
+                        <img className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlv85Ujefo4LbDgoUY4F4dsbrTyG2TghyekyI9vwKhgxG38nziYzECIjwK0fBMXAQpZBNOYY3SlOtWlI-JK2QAcs40vdjkShWG7_5tjvsZrMxmgwkEx-AVsJvFCaFTsBXLEukXNeGR1Yrp-Z8PWg7SgyyxB296wmCSsDgiieR-SYbNoZSWQZICGtyyehykB5Lb_eLQoQF4DT4mKmz4wE1yAUpqz3rQZfhlgKT44LlDuKpI-d4E0TbbpQ" alt="Premium Court" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent"></div>
+                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-primary font-label-md text-[13px] font-extrabold border border-white shadow-lg tracking-wider">
                           PRO TIER
                         </div>
                       </div>
-                      <div className="p-4 relative flex justify-between items-end">
+                      <div className="p-6 relative flex justify-between items-end bg-white/40">
                         <div>
-                          <h3 className="font-headline-md text-[20px] font-bold mb-1">{court.name}</h3>
-                          <div className="flex items-center gap-2 text-on-surface-variant font-body-md text-[14px]">
-                            <span className="material-symbols-outlined text-[16px]">sports_gymnastics</span>
+                          <h3 className="font-headline-md text-[24px] font-extrabold mb-1 text-gray-900 drop-shadow-sm">{court.name}</h3>
+                          <div className="flex items-center gap-2 text-gray-600 font-body-md text-[15px] font-medium">
+                            <span className="material-symbols-outlined text-[18px]">sports_gymnastics</span>
                             <span>Wooden Sprung Floor</span>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="font-display-sm text-[24px] font-bold mb-1">$45<span className="text-body-md text-[14px] font-normal text-on-surface-variant">/hr</span></div>
+                        <div className="text-right flex flex-col items-end gap-2">
+                          <div className="font-display-sm text-[28px] font-black text-gray-900">$45<span className="text-body-md text-[15px] font-bold text-gray-500 ml-1">/hr</span></div>
                           <button
                             disabled={isBooked || bookingLoading || court.status === 'MAINTENANCE'}
                             onClick={() => handleBook(court.id)}
-                            className={`px-4 py-2 rounded-md font-button text-[16px] font-semibold transition-colors active:scale-95 ${isBooked
-                                ? 'bg-surface-container-highest text-on-surface-variant cursor-not-allowed'
-                                : 'bg-primary-container text-white hover:bg-primary-container/90 shadow-[0_4px_14px_0_rgba(255,107,0,0.39)]'
+                            className={`px-6 py-2.5 rounded-xl font-button text-[16px] font-bold transition-all duration-300 active:scale-95 ${isBooked
+                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-primary to-[#E55B13] text-white hover:shadow-[0_8px_20px_rgba(255,107,0,0.4)] hover:-translate-y-0.5'
                               }`}
                           >
                             {isBooked ? 'Unavailable' : 'Book Now'}
@@ -243,26 +249,27 @@ export default function BookingPage() {
                 }
 
                 return (
-                  <div key={court.id} className={`group relative rounded-xl overflow-hidden bg-surface-container border ${isBooked ? 'border-surface-container-high opacity-50' : 'border-surface-container-high hover:border-primary/50'} transition-all duration-300 flex`}>
-                    <div className="w-1/3 relative">
-                      <img className="object-cover w-full h-full" src={index % 2 === 0 ? "https://lh3.googleusercontent.com/aida-public/AB6AXuDZxYRA_Mll_KqyTaSJjBkB7TOcBRT9FkZjqOs8kxnj9dy5YOCEzgfc1e1eQ8pxNWfR2OA_dcljj9z68srM3Z12pWAZzDxc0IJAsDwyrE0VlK-MTqlDQ3-KldTJ9qpLJ11HgHNNavMQ67mINC3SL12rIsf0oDAOru5Hxa32xfyp1-8B0cbdiZph--nGQqZaguxMbSuT40NwPL_ygf1Ox1p7zcBIlL7geO6skgsQh0DwKpaiPw4E5LDO0w" : "https://lh3.googleusercontent.com/aida-public/AB6AXuClklh1l82ImMLEWFHMinGs1JgKfVQ5h7G4MXQ1UceGCrh7o20G0wW869g41CZ62XgSWTgNOCbzD0TD6TyvcNGsgu-qhXsxtJYj1eJDX_9Qvxkd9Ko_ora5MEw7cNz6oGGhE7ieiUkZI_k9MyTa0mZjAZqmOtvTAq0vaprYIHEA9r5BQWKk3wzlU8yzgRZ1CEaDtCL-UrJsBfYFey7l7W73YmgRvTIUCD5xQV4UnyMV0A_1cdWaGfEqgQ"} alt="Standard Court" />
+                  <div key={court.id} className={`group relative rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl border-2 ${isBooked ? 'border-gray-200 opacity-60' : 'border-white hover:border-primary/30 shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_rgba(255,107,0,0.1)]'} transition-all duration-500 flex flex-col sm:flex-row transform ${!isBooked && 'hover:-translate-y-1'}`}>
+                    <div className="w-full sm:w-2/5 h-48 sm:h-auto relative overflow-hidden">
+                      <img className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105" src={index % 2 === 0 ? "https://lh3.googleusercontent.com/aida-public/AB6AXuDZxYRA_Mll_KqyTaSJjBkB7TOcBRT9FkZjqOs8kxnj9dy5YOCEzgfc1e1eQ8pxNWfR2OA_dcljj9z68srM3Z12pWAZzDxc0IJAsDwyrE0VlK-MTqlDQ3-KldTJ9qpLJ11HgHNNavMQ67mINC3SL12rIsf0oDAOru5Hxa32xfyp1-8B0cbdiZph--nGQqZaguxMbSuT40NwPL_ygf1Ox1p7zcBIlL7geO6skgsQh0DwKpaiPw4E5LDO0w" : "https://lh3.googleusercontent.com/aida-public/AB6AXuClklh1l82ImMLEWFHMinGs1JgKfVQ5h7G4MXQ1UceGCrh7o20G0wW869g41CZ62XgSWTgNOCbzD0TD6TyvcNGsgu-qhXsxtJYj1eJDX_9Qvxkd9Ko_ora5MEw7cNz6oGGhE7ieiUkZI_k9MyTa0mZjAZqmOtvTAq0vaprYIHEA9r5BQWKk3wzlU8yzgRZ1CEaDtCL-UrJsBfYFey7l7W73YmgRvTIUCD5xQV4UnyMV0A_1cdWaGfEqgQ"} alt="Standard Court" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent sm:hidden"></div>
                     </div>
-                    <div className="w-2/3 p-4 flex justify-between items-center bg-surface-container">
+                    <div className="w-full sm:w-3/5 p-6 flex flex-row justify-between items-center bg-white/40">
                       <div>
-                        <h3 className="font-headline-md text-[20px] font-bold mb-1">{court.name}</h3>
-                        <div className="flex items-center gap-2 text-on-surface-variant font-body-md text-[14px]">
-                          <span className="material-symbols-outlined text-[16px]">layers</span>
+                        <h3 className="font-headline-md text-[22px] font-extrabold mb-1 text-gray-900">{court.name}</h3>
+                        <div className="flex items-center gap-2 text-gray-600 font-body-md text-[14px] font-medium">
+                          <span className="material-symbols-outlined text-[18px]">layers</span>
                           <span>Synthetic Mat</span>
                         </div>
                       </div>
                       <div className="text-right flex flex-col items-end gap-2">
-                        <div className="font-headline-md text-[20px] font-bold">$30<span className="text-body-md text-[14px] font-normal text-on-surface-variant">/hr</span></div>
+                        <div className="font-headline-md text-[22px] font-black text-gray-900">$30<span className="text-body-md text-[14px] font-bold text-gray-500 ml-1">/hr</span></div>
                         <button
                           disabled={isBooked || bookingLoading || court.status === 'MAINTENANCE'}
                           onClick={() => handleBook(court.id)}
-                          className={`px-4 py-2 rounded-md font-button text-[16px] font-semibold transition-colors active:scale-95 ${isBooked
-                              ? 'bg-surface-container-highest text-on-surface-variant cursor-not-allowed'
-                              : 'bg-surface-container-highest border border-outline-variant hover:border-primary hover:text-primary'
+                          className={`px-6 py-2.5 rounded-xl font-button text-[15px] font-bold transition-all duration-300 active:scale-95 ${isBooked
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                              : 'bg-white border-2 border-primary text-primary hover:bg-primary hover:text-white hover:shadow-[0_4px_12px_rgba(255,107,0,0.3)]'
                             }`}
                         >
                           {isBooked ? 'Unavailable' : 'Select'}

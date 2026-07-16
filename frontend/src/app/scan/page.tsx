@@ -108,7 +108,7 @@ export default function ScanPage() {
           <h1 className="font-display-sm text-[24px] font-bold text-gray-900 dark:text-orange-50 transition-colors duration-300">Scan QR Code</h1>
           <div className="flex items-center gap-4">
             <div className="bg-white/80 dark:bg-[#1a0a00]/80 rounded-full shadow-sm border border-gray-200 dark:border-[#ff6b00]/20 transition-colors duration-300">
-              <ThemeToggle />
+              <ThemeToggle className="w-11 h-11 flex items-center justify-center rounded-full text-gray-800 dark:text-orange-50 hover:bg-gray-100 dark:hover:bg-[#3a1b00] transition-colors" iconClassName="text-[28px]" />
             </div>
             <button 
               className="text-primary font-button text-[14px] font-semibold hover:opacity-80 transition-opacity" 

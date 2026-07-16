@@ -126,10 +126,10 @@ export default function Dashboard() {
               <img alt="KMITL Badminton Logo" className="h-10 w-10 rounded-full bg-white p-0.5 object-cover shadow-sm" src="/kmitl-logo.png" />
               <span className="font-display-sm text-[22px] md:text-[24px] font-bold tracking-tight text-white">KMITL BADMINTON</span>
             </div>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <button className="hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-200 text-white" onClick={handleLogout}>
-                <span className="material-symbols-outlined font-headline-md text-[24px]" style={{ fontVariationSettings: "'FILL' 0" }}>logout</span>
+            <div className="flex items-center gap-1">
+              <ThemeToggle className="w-11 h-11 rounded-full hover:bg-black/10 transition-all active:scale-95 text-white flex items-center justify-center" iconClassName="text-[28px]" />
+              <button className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={handleLogout}>
+                <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>logout</span>
               </button>
             </div>
           </header>
@@ -198,10 +198,10 @@ export default function Dashboard() {
                       <img alt="KMITL Badminton Logo" className="h-10 w-10 rounded-full bg-white p-0.5 object-cover shadow-sm" src="/kmitl-logo.png" />
                       <span className="font-display-sm text-[22px] md:text-[24px] font-bold tracking-tight text-white">KMITL BADMINTON</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <ThemeToggle />
-                      <button className="hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-200 text-white" onClick={handleLogout}>
-                        <span className="material-symbols-outlined font-headline-md text-[24px]" style={{ fontVariationSettings: "'FILL' 0" }}>logout</span>
+                    <div className="flex items-center gap-1">
+                      <ThemeToggle className="w-11 h-11 rounded-full hover:bg-black/10 transition-all active:scale-95 text-white flex items-center justify-center" iconClassName="text-[28px]" />
+                      <button className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={handleLogout}>
+                        <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>logout</span>
                       </button>
                     </div>
                   </header>
@@ -276,20 +276,22 @@ export default function Dashboard() {
               )}
 
               {/* Quick Actions */}
-              <section className="grid grid-cols-2 gap-5">
+              <section className="grid grid-cols-2 gap-4 md:gap-5">
                 <button
-                  className="h-32 flex flex-col items-center justify-center gap-3 rounded-3xl transition-all active:scale-95 bg-gradient-to-br from-primary to-[#E55B13] text-white shadow-[0_8px_24px_rgba(255,107,0,0.35)] hover:shadow-[0_12px_32px_rgba(255,107,0,0.45)] hover:-translate-y-1"
+                  className="h-32 flex flex-col items-center justify-center gap-2 rounded-3xl transition-all active:scale-95 bg-gradient-to-br from-primary via-[#ff7e22] to-[#E55B13] text-white shadow-[0_8px_24px_rgba(255,107,0,0.35)] hover:shadow-[0_12px_32px_rgba(255,107,0,0.45)] hover:-translate-y-1 relative overflow-hidden group"
                   onClick={() => router.push('/booking')}
                 >
-                  <span className="material-symbols-outlined text-[36px]">sports_tennis</span>
-                  <span className="font-button text-[17px] font-bold tracking-wide">Book Court</span>
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-2xl -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
+                  <span className="material-symbols-outlined text-[38px] drop-shadow-sm">sports_tennis</span>
+                  <span className="font-button text-[16px] font-bold tracking-wide drop-shadow-sm">Book Court</span>
                 </button>
                 <button
-                  className="h-32 flex flex-col items-center justify-center gap-3 rounded-3xl transition-all duration-300 active:scale-95 bg-white/70 dark:bg-[#2a1300]/60 backdrop-blur-xl border-2 border-white dark:border-[#ff6b00]/20 text-gray-800 dark:text-orange-50 shadow-[0_8px_24px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:border-primary/30 dark:hover:border-primary/40"
+                  className="h-32 flex flex-col items-center justify-center gap-2 rounded-3xl transition-all duration-300 active:scale-95 bg-white/70 dark:bg-[#1a0a00]/70 backdrop-blur-xl border-2 border-white dark:border-[#ff6b00]/30 text-gray-800 dark:text-orange-50 shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(255,107,0,0.15)] hover:-translate-y-1 hover:border-primary/40 group relative overflow-hidden"
                   onClick={() => router.push('/scan')}
                 >
-                  <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'FILL' 0" }}>qr_code_scanner</span>
-                  <span className="font-button text-[17px] font-bold tracking-wide">Scan QR</span>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/10 dark:bg-primary/20 rounded-full blur-2xl -ml-8 -mb-8 transition-transform group-hover:scale-150"></div>
+                  <span className="material-symbols-outlined text-[38px] text-gray-700 dark:text-orange-200 group-hover:text-primary transition-colors drop-shadow-sm" style={{ fontVariationSettings: "'FILL' 0" }}>qr_code_scanner</span>
+                  <span className="font-button text-[16px] font-bold tracking-wide">Scan QR</span>
                 </button>
               </section>
 
@@ -297,6 +299,11 @@ export default function Dashboard() {
               <section>
                 <div className="flex justify-between items-center mb-5">
                   <h2 className="font-headline-md text-[22px] font-extrabold text-gray-900 dark:text-orange-50 transition-colors duration-300">Recent Bookings</h2>
+                  {bookings.length > 3 && (
+                    <button onClick={() => router.push('/booking')} className="text-primary font-label-md text-[14px] font-bold hover:underline transition-all">
+                      View all
+                    </button>
+                  )}
                 </div>
                 <div className="space-y-4">
                   {bookings.length === 0 && (
@@ -310,27 +317,36 @@ export default function Dashboard() {
                       </button>
                     </div>
                   )}
-                  {bookings.map(booking => (
-                    <div key={booking.id} className="bg-white/70 backdrop-blur-xl p-5 rounded-2xl flex justify-between items-center border border-white/60 shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all">
-                      <div>
-                        <p className="font-headline-md text-[18px] font-extrabold mb-1 text-gray-900">{booking.court?.name || 'Court'}</p>
-                        <p className="font-body-md text-[14px] text-gray-500 font-semibold">{booking.booking_date}</p>
+                  {bookings.slice(0, 3).map(booking => (
+                    <div key={booking.id} className="bg-white/70 dark:bg-[#1a0a00]/70 backdrop-blur-xl p-5 rounded-3xl flex justify-between items-center border border-white/80 dark:border-[#ff6b00]/30 shadow-[0_8px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_24px_rgba(255,107,0,0.05)] hover:shadow-[0_12px_32px_rgba(255,107,0,0.1)] hover:-translate-y-0.5 transition-all relative overflow-hidden group">
+                      {/* Left Accent Bar */}
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-primary to-[#E55B13] opacity-80 group-hover:opacity-100 transition-opacity"></div>
+                      
+                      <div className="pl-2">
+                        <p className="font-headline-md text-[18px] font-extrabold mb-1 text-gray-900 dark:text-orange-50 transition-colors duration-300">{booking.court?.name || 'Court'}</p>
+                        <div className="flex items-center gap-1.5 mt-1.5 text-gray-500 dark:text-orange-200/70 transition-colors duration-300">
+                          <span className="material-symbols-outlined text-[16px]">calendar_month</span>
+                          <p className="font-body-md text-[14px] font-semibold">{booking.booking_date}</p>
+                        </div>
                       </div>
                       <div className="text-right flex flex-col items-end gap-2">
-                        <p className="font-headline-md text-[18px] font-black text-primary">{booking.start_time.slice(0, 5)}</p>
+                        <div className="flex items-center gap-1.5 text-primary">
+                          <span className="material-symbols-outlined text-[18px]">schedule</span>
+                          <p className="font-headline-md text-[19px] font-black tracking-tight">{booking.start_time.slice(0, 5)}</p>
+                        </div>
                         <div className="flex items-center gap-3">
                           {booking.status === 'PENDING' && (
                             <button
                               onClick={() => handleCancelBooking(booking.id)}
-                              className="text-[13px] font-bold text-red-500 hover:text-red-700 uppercase tracking-wider transition-colors"
+                              className="text-[12px] font-bold text-red-500 hover:text-red-700 uppercase tracking-wider transition-colors active:scale-95 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-md"
                             >
                               Cancel
                             </button>
                           )}
-                          <span className={`text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${booking.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
-                            booking.status === 'CANCELLED' ? 'bg-red-100 text-red-700 border border-red-200' :
-                              booking.status === 'CHECKED_IN' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
-                                'bg-orange-100 text-orange-700 border border-orange-200'
+                          <span className={`text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border shadow-sm ${booking.status === 'COMPLETED' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' :
+                            booking.status === 'CANCELLED' ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800' :
+                              booking.status === 'CHECKED_IN' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800' :
+                                'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800'
                             }`}>
                             {booking.status}
                           </span>
@@ -344,14 +360,14 @@ export default function Dashboard() {
 
             {/* BottomNavBar */}
             {user.role !== 'ADMIN' && (
-              <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 z-50 rounded-t-xl bg-surface-container/90 backdrop-blur-md shadow-[0px_-8px_24px_rgba(0,0,0,0.5)] border-t border-[#2A2A2A]">
+              <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 z-50 rounded-t-xl bg-white/90 dark:bg-[#140900]/95 backdrop-blur-md shadow-[0px_-8px_24px_rgba(0,0,0,0.05)] border-t border-gray-100 dark:border-[#ff6b00]/20 transition-colors duration-300">
                 <button className="flex flex-col items-center justify-center text-primary font-bold hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>sports_tennis</span>
-                  <span className="font-label-md text-[12px] font-semibold">Home</span>
+                  <span className="material-symbols-outlined drop-shadow-sm" style={{ fontVariationSettings: "'FILL' 1" }}>sports_tennis</span>
+                  <span className="font-label-md text-[12px] font-semibold tracking-wide">Home</span>
                 </button>
-                <button onClick={() => router.push('/booking')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
+                <button onClick={() => router.push('/booking')} className="flex flex-col items-center justify-center text-gray-500 dark:text-orange-300/60 hover:text-primary dark:hover:text-primary transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
                   <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>event_note</span>
-                  <span className="font-label-md text-[12px] font-semibold">Bookings</span>
+                  <span className="font-label-md text-[12px] font-semibold tracking-wide">Bookings</span>
                 </button>
                 <button onClick={() => router.push('/scan')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
                   <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>qr_code_scanner</span>

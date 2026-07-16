@@ -35,9 +35,9 @@ export default function BookingPage() {
     setSelectedDate(generatedDates[0].date);
   }, []);
 
-  // Time slots from 09:00 to 21:00
-  const timeSlots = Array.from({ length: 13 }, (_, i) => {
-    return `${(i + 9).toString().padStart(2, '0')}:00`;
+  // Time slots from 06:00 to 23:00
+  const timeSlots = Array.from({ length: 18 }, (_, i) => {
+    return `${(i + 6).toString().padStart(2, '0')}:00`;
   });
 
   // Fetch availability when date changes
@@ -116,10 +116,10 @@ export default function BookingPage() {
             <img alt="KMITL Badminton Logo" className="h-10 w-10 rounded-full bg-white p-0.5 object-cover shadow-sm" src="/kmitl-logo.png" />
             <span className="font-display-sm text-[22px] md:text-[24px] font-bold tracking-tight text-white">KMITL BADMINTON</span>
           </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <button className="hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-200 text-white" onClick={() => router.push('/')}>
-              <span className="material-symbols-outlined font-headline-md text-[24px]" style={{ fontVariationSettings: "'FILL' 0" }}>home</span>
+          <div className="flex items-center gap-1">
+            <ThemeToggle className="w-11 h-11 rounded-full hover:bg-black/10 transition-all active:scale-95 text-white flex items-center justify-center" iconClassName="text-[28px]" />
+            <button className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => router.push('/')}>
+              <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>home</span>
             </button>
           </div>
         </header>
@@ -131,9 +131,11 @@ export default function BookingPage() {
       <main className="flex-grow w-full max-w-3xl mx-auto px-container-padding flex flex-col gap-8 relative z-10">
 
         {/* Header Section */}
-        <section className="mt-4">
-          <h1 className="font-display-lg text-[36px] font-extrabold mb-2 text-gray-900 dark:text-orange-50 drop-shadow-sm tracking-tight transition-colors duration-300">Reserve a Court</h1>
-          <p className="font-body-lg text-[16px] text-gray-600 dark:text-orange-200/70 font-medium transition-colors duration-300">Select your preferred date, time, and court to start playing.</p>
+        <section className="px-container-padding mt-6 mb-2">
+          <h1 className="font-display-lg text-[32px] font-extrabold mb-1 text-gray-900 dark:text-orange-50 drop-shadow-sm tracking-tight transition-colors duration-300">Reserve a Court</h1>
+          <p className="font-body-lg text-[15px] text-gray-600 dark:text-orange-200/70 font-medium transition-colors duration-300 leading-relaxed">
+            Select your preferred date, time, and court to start playing.
+          </p>
         </section>
 
         {/* Date Selector (Horizontal Calendar) */}
@@ -152,8 +154,8 @@ export default function BookingPage() {
                   key={d.date}
                   onClick={() => setSelectedDate(d.date)}
                   className={`flex flex-col items-center justify-center min-w-[75px] h-24 rounded-2xl snap-center shrink-0 transition-all duration-300 border backdrop-blur-sm ${isActive
-                    ? 'bg-primary text-white border-primary shadow-[0_4px_16px_rgba(255,107,0,0.3)]'
-                    : 'bg-white/70 dark:bg-[#2a1300]/60 border-white dark:border-[#ff6b00]/20 text-gray-700 dark:text-orange-200 hover:bg-white dark:hover:bg-[#3a1b00]'
+                    ? 'bg-gradient-to-br from-primary to-[#E55B13] text-white border-transparent shadow-[0_4px_8px_rgba(255,107,0,0.15)] transform -translate-y-0.5'
+                    : 'bg-white/70 dark:bg-[#2a1300]/60 border-white dark:border-[#ff6b00]/20 text-gray-700 dark:text-orange-200 hover:bg-white dark:hover:bg-[#3a1b00] hover:shadow-sm'
                     }`}
                 >
                   <span className={`font-label-md text-[13px] uppercase mb-1 font-bold ${isActive ? 'text-white/90' : 'text-gray-500 dark:text-orange-300/60'}`}>{d.day}</span>
@@ -166,7 +168,7 @@ export default function BookingPage() {
 
         {/* Time Slots */}
         <section>
-          <h2 className="font-headline-md text-[22px] font-extrabold mb-4 text-gray-900">Time Slots</h2>
+          <h2 className="font-headline-md text-[22px] font-extrabold mb-4 text-gray-900 dark:text-orange-50 transition-colors duration-300">Time Slots</h2>
           {loading ? (
             <p className="text-on-surface-variant text-sm">Loading times...</p>
           ) : (
@@ -177,8 +179,8 @@ export default function BookingPage() {
 
                 if (isFullyBooked) {
                   return (
-                    <button key={time} disabled className="py-3 px-2 rounded-xl bg-gray-200/50 border border-gray-300/50 opacity-60 cursor-not-allowed flex items-center justify-center gap-1 relative overflow-hidden">
-                      <span className="font-body-md text-[15px] font-semibold text-gray-500 line-through">{time}</span>
+                    <button key={time} disabled className="py-3 px-2 rounded-xl bg-gray-200/50 dark:bg-[#3a1b00]/50 border border-gray-300/50 dark:border-[#ff6b00]/20 opacity-60 cursor-not-allowed flex items-center justify-center gap-1 relative overflow-hidden transition-colors duration-300">
+                      <span className="font-body-md text-[15px] font-semibold text-gray-500 dark:text-orange-300/50 line-through transition-colors duration-300">{time}</span>
                     </button>
                   );
                 }
@@ -189,7 +191,7 @@ export default function BookingPage() {
                     onClick={() => setSelectedTime(time)}
                     className={`py-3 px-2 rounded-xl flex items-center justify-center transition-all duration-300 font-medium text-[15px] border backdrop-blur-sm ${isSelected
                       ? 'bg-gradient-to-br from-primary to-[#E55B13] text-white shadow-[0_6px_16px_rgba(255,107,0,0.4)] border-transparent transform -translate-y-0.5'
-                      : 'bg-white/60 border-white text-gray-700 hover:bg-white/90 hover:shadow-md hover:border-primary/30'
+                      : 'bg-white/60 dark:bg-[#1a0a00]/60 border-white dark:border-[#ff6b00]/30 text-gray-700 dark:text-orange-200 hover:bg-white/90 dark:hover:bg-[#2a1300] hover:shadow-md hover:border-primary/30 dark:hover:border-primary/50'
                       }`}
                   >
                     <span className={`font-body-md text-[15px] ${isSelected ? 'font-bold' : 'font-semibold'}`}>{time}</span>
@@ -235,7 +237,10 @@ export default function BookingPage() {
                           </div>
                         </div>
                         <div className="text-right flex flex-col items-end gap-2">
-                          <div className="font-display-sm text-[28px] font-black text-gray-900 dark:text-orange-50 transition-colors duration-300">$45<span className="text-body-md text-[15px] font-bold text-gray-500 dark:text-orange-300/60 ml-1">/hr</span></div>
+                          <div className="flex flex-col items-end gap-0.5">
+                            <div className="font-display-sm text-[28px] font-black text-emerald-600 dark:text-emerald-400 transition-colors duration-300 uppercase tracking-tight">Free</div>
+                            <div className="text-[11px] font-bold text-gray-500 dark:text-orange-300/80 bg-gray-100 dark:bg-[#3a1b00]/80 px-2 py-0.5 rounded-md border border-gray-200 dark:border-[#ff6b00]/20">1 hr / day max</div>
+                          </div>
                           <button
                             disabled={isBooked || bookingLoading || court.status === 'MAINTENANCE'}
                             onClick={() => handleBook(court.id)}
@@ -267,7 +272,10 @@ export default function BookingPage() {
                         </div>
                       </div>
                       <div className="text-right flex flex-col items-end gap-2">
-                        <div className="font-headline-md text-[22px] font-black text-gray-900 dark:text-orange-50 transition-colors duration-300">$30<span className="text-body-md text-[14px] font-bold text-gray-500 dark:text-orange-300/60 ml-1">/hr</span></div>
+                        <div className="flex flex-col items-end gap-0.5">
+                          <div className="font-headline-md text-[24px] font-black text-emerald-600 dark:text-emerald-400 transition-colors duration-300 uppercase tracking-tight">Free</div>
+                          <div className="text-[11px] font-bold text-gray-500 dark:text-orange-300/80 bg-gray-100 dark:bg-[#3a1b00]/80 px-2 py-0.5 rounded-md border border-gray-200 dark:border-[#ff6b00]/20">1 hr / day max</div>
+                        </div>
                         <button
                           disabled={isBooked || bookingLoading || court.status === 'MAINTENANCE'}
                           onClick={() => handleBook(court.id)}
@@ -289,18 +297,18 @@ export default function BookingPage() {
       </main>
 
       {/* BottomNavBar */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 z-50 rounded-t-xl bg-surface-container/90 backdrop-blur-md shadow-[0px_-8px_24px_rgba(0,0,0,0.5)] border-t border-[#2A2A2A]">
-        <button onClick={() => router.push('/')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
+      <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 z-50 rounded-t-xl bg-white/90 dark:bg-[#140900]/95 backdrop-blur-md shadow-[0px_-8px_24px_rgba(0,0,0,0.05)] border-t border-gray-100 dark:border-[#ff6b00]/20 transition-colors duration-300">
+        <button onClick={() => router.push('/')} className="flex flex-col items-center justify-center text-gray-500 dark:text-orange-300/60 hover:text-primary dark:hover:text-primary transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>sports_tennis</span>
-          <span className="font-label-md text-[12px] font-semibold">Home</span>
+          <span className="font-label-md text-[12px] font-semibold tracking-wide">Home</span>
         </button>
         <button className="flex flex-col items-center justify-center text-primary font-bold hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>event_note</span>
-          <span className="font-label-md text-[12px] font-semibold">Bookings</span>
+          <span className="material-symbols-outlined drop-shadow-sm" style={{ fontVariationSettings: "'FILL' 1" }}>event_note</span>
+          <span className="font-label-md text-[12px] font-semibold tracking-wide">Bookings</span>
         </button>
-        <button onClick={() => router.push('/scan')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
+        <button onClick={() => router.push('/scan')} className="flex flex-col items-center justify-center text-gray-500 dark:text-orange-300/60 hover:text-primary dark:hover:text-primary transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>qr_code_scanner</span>
-          <span className="font-label-md text-[12px] font-semibold">Scan</span>
+          <span className="font-label-md text-[12px] font-semibold tracking-wide">Scan</span>
         </button>
       </nav>
     </div>

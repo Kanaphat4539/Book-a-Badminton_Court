@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -20,7 +21,7 @@ export default function LoginPage() {
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       toast.success('Login successful!');
-      window.location.href = '/';
+      window.location.href = '/dashboard';
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Login failed');
     } finally {
@@ -40,6 +41,15 @@ export default function LoginPage() {
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/30 dark:bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
       <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-yellow-300/40 dark:bg-yellow-600/30 rounded-full mix-blend-multiply filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
       <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-primary/20 dark:bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
+
+      {/* Back to Home Button */}
+      <Link 
+        href="/"
+        className="absolute top-6 left-6 z-[100] flex items-center gap-2 bg-white/80 dark:bg-[#2a1300]/80 backdrop-blur-md px-5 py-2.5 rounded-full shadow-md border border-gray-200 dark:border-[#ff6b00]/20 text-gray-800 dark:text-orange-50 hover:bg-gray-100 dark:hover:bg-[#3a1b00] transition-colors font-bold text-[14px]"
+      >
+        <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+        Home
+      </Link>
 
       {/* Floating Theme Toggle */}
       <div className="absolute top-6 right-6 z-[100] bg-white/80 dark:bg-[#2a1300]/80 backdrop-blur-md rounded-full shadow-md border border-gray-200 dark:border-[#ff6b00]/20 transition-colors duration-300">

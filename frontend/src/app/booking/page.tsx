@@ -10,6 +10,7 @@ export default function BookingPage() {
   const router = useRouter();
 
   // States
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dates, setDates] = useState<{ date: string, day: string, num: string }[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
@@ -91,7 +92,7 @@ export default function BookingPage() {
         startTime: selectedTime + ':00'
       });
       toast.success('Court booked successfully!');
-      router.push('/');
+      router.push('/dashboard');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to book court');
     } finally {
@@ -112,14 +113,17 @@ export default function BookingPage() {
       {/* TopAppBar */}
       <div className="fixed top-0 w-full z-50 shadow-sm">
         <header className="bg-[#F26522] dark:bg-[#C24500] flex justify-between items-center px-container-padding h-16 text-white shadow-sm transition-colors duration-300">
-          <div className="flex items-center gap-4 cursor-pointer" onClick={() => router.push('/')}>
+          <div className="flex items-center gap-4 cursor-pointer" onClick={() => router.push('/dashboard')}>
             <img alt="KMITL Badminton Logo" className="h-10 w-10 rounded-full bg-white p-0.5 object-cover shadow-sm" src="/kmitl-logo.png" />
             <span className="font-display-sm text-[22px] md:text-[24px] font-bold tracking-tight text-white">KMITL BADMINTON</span>
           </div>
           <div className="flex items-center gap-1">
             <ThemeToggle className="w-11 h-11 rounded-full hover:bg-black/10 transition-all active:scale-95 text-white flex items-center justify-center" iconClassName="text-[28px]" />
-            <button className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => router.push('/')}>
+            <button className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => router.push('/dashboard')}>
               <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>home</span>
+            </button>
+            <button className="md:hidden w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => setIsSidebarOpen(true)}>
+              <span className="material-symbols-outlined text-[28px]">menu</span>
             </button>
           </div>
         </header>
@@ -298,7 +302,7 @@ export default function BookingPage() {
 
       {/* BottomNavBar */}
       <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 z-50 rounded-t-xl bg-white/90 dark:bg-[#140900]/95 backdrop-blur-md shadow-[0px_-8px_24px_rgba(0,0,0,0.05)] border-t border-gray-100 dark:border-[#ff6b00]/20 transition-colors duration-300">
-        <button onClick={() => router.push('/')} className="flex flex-col items-center justify-center text-gray-500 dark:text-orange-300/60 hover:text-primary dark:hover:text-primary transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
+        <button onClick={() => router.push('/dashboard')} className="flex flex-col items-center justify-center text-gray-500 dark:text-orange-300/60 hover:text-primary dark:hover:text-primary transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>sports_tennis</span>
           <span className="font-label-md text-[12px] font-semibold tracking-wide">Home</span>
         </button>
@@ -310,7 +314,44 @@ export default function BookingPage() {
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>qr_code_scanner</span>
           <span className="font-label-md text-[12px] font-semibold tracking-wide">Scan</span>
         </button>
+        <button onClick={() => router.push('/news')} className="flex flex-col items-center justify-center text-gray-500 dark:text-orange-300/60 hover:text-primary dark:hover:text-primary transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>article</span>
+          <span className="font-label-md text-[12px] font-semibold tracking-wide">News</span>
+        </button>
       </nav>
+
+      {/* Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-[100] flex justify-end">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
+          <div className="relative w-[280px] bg-white dark:bg-[#140900] h-full shadow-2xl flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
+            <div className="flex justify-between items-center mb-8">
+              <span className="font-display-sm text-[20px] font-bold dark:text-orange-50 text-gray-900">KMITL PCC Menu</span>
+              <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white">
+                <span className="material-symbols-outlined text-[28px]">close</span>
+              </button>
+            </div>
+            <nav className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4">
+                <button onClick={() => { setIsSidebarOpen(false); router.push('/dashboard'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Home</button>
+                <button onClick={() => { setIsSidebarOpen(false); router.push('/booking'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Book Courts</button>
+                <button onClick={() => { setIsSidebarOpen(false); router.push('/scan'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Scan QR</button>
+                <button onClick={() => { setIsSidebarOpen(false); router.push('/news'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">News <span className="w-2 h-2 rounded-full bg-green-500 inline-block ml-1"></span></button>
+              </div>
+              
+              <div>
+                <h3 className="font-bold text-[18px] text-gray-900 dark:text-orange-50 mb-3">Settings</h3>
+                <div className="flex flex-col gap-3 pl-4 border-l-2 border-gray-200 dark:border-gray-800">
+                  <div className="flex items-center justify-between text-[15px] text-gray-600 dark:text-gray-400 hover:text-primary">
+                    <span>Dark Mode</span>
+                    <ThemeToggle />
+                  </div>
+                </div>
+              </div>
+            </nav>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
+import Script from 'next/script';
 
 
 const inter = Inter({
@@ -30,6 +31,40 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-full font-sans bg-background text-on-surface">
+        <Script
+          id="storage-polyfill"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                window.localStorage.getItem('test');
+              } catch (e) {
+                var memStorage = {};
+                var memStorage2 = {};
+                try {
+                  Object.defineProperty(window, 'localStorage', {
+                    value: {
+                      getItem: function(k) { return memStorage[k] || null; },
+                      setItem: function(k, v) { memStorage[k] = v; },
+                      removeItem: function(k) { delete memStorage[k]; },
+                      clear: function() { memStorage = {}; }
+                    },
+                    writable: true
+                  });
+                  Object.defineProperty(window, 'sessionStorage', {
+                    value: {
+                      getItem: function(k) { return memStorage2[k] || null; },
+                      setItem: function(k, v) { memStorage2[k] = v; },
+                      removeItem: function(k) { delete memStorage2[k]; },
+                      clear: function() { memStorage2 = {}; }
+                    },
+                    writable: true
+                  });
+                } catch (e2) {}
+              }
+            `,
+          }}
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

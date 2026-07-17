@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Booking, BookingStatus } from './entities/booking.entity';
@@ -119,6 +119,7 @@ export class BookingsService {
     }
 
     booking.status = BookingStatus.CANCELLED;
+    Logger.log(`[Booking Cancelled] Booking ID: ${bookingId}, User ID: ${userId}`, 'BookingsService');
     return this.bookingsRepository.save(booking);
   }
 

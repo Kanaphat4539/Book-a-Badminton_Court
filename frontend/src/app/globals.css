@@ -2,6 +2,15 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Enable class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  body {
+    @apply transition-colors duration-500 ease-in-out;
+  }
+}
+
 @theme inline {
   --font-sans: var(--font-inter);
   --font-headline-md: var(--font-inter);

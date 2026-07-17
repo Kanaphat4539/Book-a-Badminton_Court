@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useTheme } from 'next-themes';
+import './theme-toggle.css';
 
 interface ThemeToggleProps {
   className?: string;
@@ -21,14 +22,32 @@ export function ThemeToggle({ className, iconClassName }: ThemeToggleProps) {
   }
 
   return (
-    <button
-      onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-      className={`transition-colors flex items-center justify-center ${className || 'p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10'}`}
-      title="Toggle theme"
-    >
-      <span className={`material-symbols-outlined ${iconClassName || 'text-gray-900 dark:text-white'}`}>
-        {theme === 'light' ? 'dark_mode' : 'light_mode'}
-      </span>
-    </button>
+    <div className={className || 'flex items-center justify-center p-2'} title="Toggle theme">
+      <label className="theme">
+        <span className="theme__toggle-wrap" style={{ fontSize: '12px' }}>
+          <input 
+            id="theme-toggle"
+            className="theme__toggle" 
+            type="checkbox" 
+            role="switch" 
+            name="theme" 
+            value="dark"
+            checked={theme === 'dark'}
+            onChange={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+          />
+          <span className="theme__icon">
+            <span className="theme__icon-part"></span>
+            <span className="theme__icon-part"></span>
+            <span className="theme__icon-part"></span>
+            <span className="theme__icon-part"></span>
+            <span className="theme__icon-part"></span>
+            <span className="theme__icon-part"></span>
+            <span className="theme__icon-part"></span>
+            <span className="theme__icon-part"></span>
+            <span className="theme__icon-part"></span>
+          </span>
+        </span>
+      </label>
+    </div>
   );
 }

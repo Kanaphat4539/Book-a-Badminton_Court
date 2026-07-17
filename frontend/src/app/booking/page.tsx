@@ -118,7 +118,7 @@ export default function BookingPage() {
             <span className="font-display-sm text-[22px] md:text-[24px] font-bold tracking-tight text-white">KMITL BADMINTON</span>
           </div>
           <div className="flex items-center gap-1">
-            <ThemeToggle className="w-11 h-11 rounded-full hover:bg-black/10 transition-all active:scale-95 text-white flex items-center justify-center" iconClassName="text-[28px]" />
+
             <button className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => router.push('/dashboard')}>
               <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>home</span>
             </button>

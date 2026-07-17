@@ -36,8 +36,9 @@ export default function LandingPage() {
       {/* Fixed Navbar */}
       <nav className={`fixed top-0 w-full z-50 px-6 md:px-12 lg:px-24 py-4 flex items-center justify-between transition-all duration-300 ${scrolled ? 'bg-black/80 backdrop-blur-md shadow-lg border-b border-white/10' : 'bg-black/20 backdrop-blur-sm border-b border-white/10'}`}>
         <div className="flex items-center gap-12">
-          <Link href="/" className="font-display-sm text-[20px] md:text-[24px] font-extrabold tracking-tight text-white flex items-center gap-2 drop-shadow-sm">
-            <span className="text-[#F26522]">KMITL</span> PCC
+          <Link href="/" className="font-display-sm text-[20px] md:text-[24px] font-extrabold tracking-tight flex items-center gap-2 drop-shadow-md hover:scale-[1.02] transition-transform duration-300">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F26522] to-yellow-400">KMITL</span> 
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">PCC BADMINTON</span>
           </Link>
           <div className="hidden lg:flex items-center gap-8 font-medium text-[15px]">
             <Link href="#services" className="text-white/80 hover:text-white transition-colors">Services</Link>

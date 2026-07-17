@@ -43,9 +43,11 @@ export default function RegisterPage() {
       <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-primary/20 dark:bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
 
       {/* Floating Theme Toggle */}
-      <div className="absolute top-6 right-6 z-[100] bg-white/80 dark:bg-[#2a1300]/80 backdrop-blur-md rounded-full shadow-md border border-gray-200 dark:border-[#ff6b00]/20 transition-colors duration-300">
-        <ThemeToggle className="w-12 h-12 flex items-center justify-center rounded-full text-gray-800 dark:text-orange-50 hover:bg-gray-100 dark:hover:bg-[#3a1b00] transition-colors" iconClassName="text-[28px]" />
+      <div className="absolute top-4 right-4 md:top-6 md:right-6 z-[100]">
+        <ThemeToggle className="flex items-center justify-center transition-colors hover:opacity-80" />
       </div>
+
+
 
       <main className="w-full max-w-md relative z-10 flex flex-col items-center">
         {/* Logo Section */}

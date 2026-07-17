@@ -1,11 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { useTheme } from 'next-themes';
+
+function GalahhadThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  return (
+    <div style={{ width: '48px', height: '32px' }}>
+      <div style={{ opacity: mounted ? 1 : 0, transition: 'opacity 0.2s', pointerEvents: mounted ? 'auto' : 'none' }}>
+        <label className="ui-switch">
+          <input
+            type="checkbox"
+            checked={mounted ? theme === 'dark' : false}
+            onChange={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+          />
+          <div className="slider">
+            <div className="circle"></div>
+          </div>
+        </label>
+      </div>
+    </div>
+  );
+}
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,27 +59,30 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center p-6 text-on-surface dark:text-orange-50 font-sans relative overflow-hidden transition-colors duration-300 bg-cover bg-center"
-      style={{ backgroundImage: `url('https://images.unsplash.com/photo-1661020812032-90582fe13ca6?w=1920&auto=format&fit=crop&q=80')` }}
+      style={{ backgroundImage: `url('https://images.unsplash.com/photo-1626926938421-90124a4b83fa?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDN8fGJhZG1pbnRvbnxlbnwwfHwwfHx8MA%3D%3D')` }}
     >
       {/* Subtle overlay for text readability */}
       <div className="absolute inset-0 bg-white/40 dark:bg-black/60 backdrop-blur-[2px] transition-colors duration-300 z-0"></div>
 
       {/* Decorative blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/30 dark:bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
-      <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-yellow-300/40 dark:bg-yellow-600/30 rounded-full mix-blend-multiply filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
-      <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-primary/20 dark:bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/30 dark:bg-primary/20 rounded-full filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
+      <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-yellow-300/40 dark:bg-yellow-600/30 rounded-full filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
+      <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-primary/20 dark:bg-primary/20 rounded-full filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
 
-      {/* Back to Home Button */}
-      <a
-        href="/"
-        className="btn absolute top-6 left-6 z-[100] flex items-center justify-center p-3"
-      >
-        <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-      </a>
+      {/* Top Controls Container */}
+      <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-[100]">
+        {/* Back to Home Button */}
+        <a
+          href="/"
+          className="btn flex items-center justify-center p-3"
+        >
+          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+        </a>
 
-      {/* Floating Theme Toggle */}
-      <div className="absolute top-4 right-4 md:top-6 md:right-6 z-[100]">
-        <ThemeToggle className="flex items-center justify-center transition-colors hover:opacity-80" />
+        {/* Theme Toggle */}
+        <div className="flex items-center justify-center">
+          <GalahhadThemeToggle />
+        </div>
       </div>
 
       <main className="w-full max-w-md relative z-10 flex flex-col items-center">
@@ -62,19 +92,19 @@ export default function LoginPage() {
             <img
               alt="KMITL Badminton Logo"
               className="w-full h-full object-cover scale-[1.3] origin-center"
-              src="https://dynamic.design.com/preview/logodraft/e902d866-a857-4c09-8dae-7acb2556679c/image/extra-large.en-us.png"
+              src="https://dynamic.design.com/preview/logodraft/19a68c63-7360-49b5-81f0-76059ea64263/image/extra-large.en-us.png"
             />
           </div>
-          <h1 className="font-display-lg text-[32px] font-extrabold text-gray-900 dark:text-orange-50 tracking-tight text-center uppercase drop-shadow-sm transition-colors duration-300">KMITL <span className="text-primary">BADMINTON</span></h1>
-          <p className="font-body-md text-[15px] text-gray-600 dark:text-orange-200/70 text-center mt-1 font-medium tracking-wide uppercase transition-colors duration-300">Premium Court Booking</p>
+          <h1 className="font-display-lg text-[32px] font-extrabold text-gray-900 dark:text-orange-50 tracking-tight text-center uppercase drop-shadow-sm">KMITL <span className="text-primary">BADMINTON</span></h1>
+          <p className="font-body-md text-[15px] text-gray-600 dark:text-orange-200/70 text-center mt-1 font-medium tracking-wide uppercase">Premium Court Booking</p>
         </div>
 
         {/* Login Card */}
-        <div className="w-full bg-white/40 dark:bg-[#2a1300]/60 backdrop-blur-2xl rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/50 dark:border-[#ff6b00]/20 p-8 transition-all hover:shadow-[0_8px_40px_rgba(255,107,0,0.15)]">
+        <div className="w-full bg-white/40 dark:bg-[#2a1300]/60 backdrop-blur-2xl rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/50 dark:border-[#ff6b00]/20 p-8 transition-colors duration-300 hover:shadow-[0_8px_40px_rgba(255,107,0,0.15)]">
           <form onSubmit={handleLogin} className="flex flex-col gap-5">
             {/* Username Input */}
             <div className="flex flex-col gap-1.5">
-              <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="username">Username / Email</label>
+              <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider" htmlFor="username">Username / Email</label>
               <div className="relative group">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-orange-300/50 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>person</span>
                 <input
@@ -91,7 +121,7 @@ export default function LoginPage() {
 
             {/* Password Input */}
             <div className="flex flex-col gap-1.5">
-              <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="password">Password</label>
+              <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider" htmlFor="password">Password</label>
               <div className="relative group">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-orange-300/50 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>lock</span>
                 <input

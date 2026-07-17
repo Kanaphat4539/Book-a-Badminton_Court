@@ -41,12 +41,10 @@ export class BookingsService {
 
     // 2. Check if the court is available at this time
     const overlappingBooking = await this.bookingsRepository.findOne({
-      where: {
-        court: { id: courtId },
-        booking_date: date,
-        start_time: startTime,
-        status: BookingStatus.PENDING,
-      }
+      where: [
+        { court: { id: courtId }, booking_date: date, start_time: startTime, status: BookingStatus.PENDING },
+        { court: { id: courtId }, booking_date: date, start_time: startTime, status: BookingStatus.CHECKED_IN }
+      ]
     });
 
     if (overlappingBooking) {
@@ -101,6 +99,12 @@ export class BookingsService {
       throw new BadRequestException(`Cannot check in. Status is currently ${booking.status}`);
     }
 
+    const now = new Date();
+    const bookingDateTime = new Date(`${booking.booking_date}T${booking.start_time}`);
+    if (now < bookingDateTime) {
+      throw new BadRequestException('You cannot check in before the booking time starts.');
+    }
+
     booking.status = BookingStatus.CHECKED_IN;
     return this.bookingsRepository.save(booking);
   }
@@ -120,6 +124,24 @@ export class BookingsService {
 
     booking.status = BookingStatus.CANCELLED;
     Logger.log(`[Booking Cancelled] Booking ID: ${bookingId}, User ID: ${userId}`, 'BookingsService');
+    return this.bookingsRepository.save(booking);
+  }
+
+  async finishBooking(bookingId: number) {
+    const booking = await this.bookingsRepository.findOne({
+      where: { id: bookingId }
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+
+    if (booking.status !== BookingStatus.CHECKED_IN) {
+      throw new BadRequestException(`Cannot finish. Status is currently ${booking.status}`);
+    }
+
+    booking.status = BookingStatus.COMPLETED;
+    Logger.log(`[Booking Finished Early] Booking ID: ${bookingId}`, 'BookingsService');
     return this.bookingsRepository.save(booking);
   }
 

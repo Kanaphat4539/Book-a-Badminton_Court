@@ -69,14 +69,18 @@ export default function BookingPage() {
   const isTimeFullyBooked = (time: string) => {
     if (!courts.length) return false;
     const formattedTime = time + ':00';
-    // If all courts have this time booked, it's fully booked
-    return courts.every(c => c.bookings?.some((b: any) => b.start_time === formattedTime));
+    // If all courts have this time booked with an active status, it's fully booked
+    return courts.every(c => c.bookings?.some((b: any) => 
+      b.start_time === formattedTime && (b.status === 'PENDING' || b.status === 'CHECKED_IN')
+    ));
   };
 
   const isCourtBookedForSelectedTime = (court: any) => {
     if (!selectedTime) return false;
     const formattedTime = selectedTime + ':00';
-    return court.bookings?.some((b: any) => b.start_time === formattedTime);
+    return court.bookings?.some((b: any) => 
+      b.start_time === formattedTime && (b.status === 'PENDING' || b.status === 'CHECKED_IN')
+    );
   };
 
   const handleBook = async (courtId: number) => {
@@ -99,6 +103,17 @@ export default function BookingPage() {
       setBookingLoading(false);
       fetchAvailability(selectedDate);
     }
+  };
+
+  const isTimeInPast = (timeStr: string) => {
+    if (!selectedDate) return false;
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    if (selectedDate !== todayStr) return false;
+    
+    const slotHour = parseInt(timeStr.split(':')[0], 10);
+    const currentHour = now.getHours();
+    return currentHour > slotHour;
   };
 
   return (
@@ -179,9 +194,10 @@ export default function BookingPage() {
             <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
               {timeSlots.map(time => {
                 const isFullyBooked = isTimeFullyBooked(time);
+                const isPast = isTimeInPast(time);
                 const isSelected = selectedTime === time;
 
-                if (isFullyBooked) {
+                if (isFullyBooked || isPast) {
                   return (
                     <button key={time} disabled className="py-3 px-2 rounded-xl bg-gray-200/50 dark:bg-[#3a1b00]/50 border border-gray-300/50 dark:border-[#ff6b00]/20 opacity-60 cursor-not-allowed flex items-center justify-center gap-1 relative overflow-hidden transition-colors duration-300">
                       <span className="font-body-md text-[15px] font-semibold text-gray-500 dark:text-orange-300/50 line-through transition-colors duration-300">{time}</span>

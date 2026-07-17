@@ -130,7 +130,13 @@ export default function ScanPage() {
             {loading ? (
               <p className="animate-pulse text-primary font-bold">Processing Check-in...</p>
             ) : (
-              <p>Point your camera at the QR code on the court to check in.</p>
+              <div className="flex flex-col gap-2">
+                <p>Point your camera at the QR code on the court to check in.</p>
+                <div className="bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 p-3 rounded-xl border border-orange-200 dark:border-orange-800/30 text-[13px] font-semibold mt-2">
+                  <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">info</span>
+                  Note: You can only scan the QR code when it is exactly time for your booking.
+                </div>
+              </div>
             )}
           </div>
         </div>

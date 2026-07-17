@@ -55,4 +55,18 @@ export class UsersService implements OnModuleInit {
   async findById(id: number): Promise<User | null> {
     return this.usersRepository.findOneBy({ id });
   }
+
+  async findAll(): Promise<User[]> {
+    return this.usersRepository.find({
+      where: { role: UserRole.USER },
+      order: { id: 'DESC' }
+    });
+  }
+
+  async remove(id: number): Promise<void> {
+    const user = await this.findById(id);
+    if (user) {
+      await this.usersRepository.remove(user);
+    }
+  }
 }

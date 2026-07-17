@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/theme-toggle';
+import QRCode from 'react-qr-code';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -13,8 +14,55 @@ export default function Dashboard() {
   const [allBookings, setAllBookings] = useState<any[]>([]);
   const [timeLeft, setTimeLeft] = useState<string>('--:--');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [bookingTimeRemaining, setBookingTimeRemaining] = useState<string>('--:--');
+  const [mounted, setMounted] = useState(false);
+
+  // Countdown timer for admin selected booking
+  useEffect(() => {
+    if (!selectedBooking || selectedBooking.status !== 'CHECKED_IN') return;
+
+    const updateTimer = () => {
+      const now = new Date();
+      // Calculate 1 hour from start_time based on booking date
+      // format is like booking_date "2026-07-17", start_time "23:00:00"
+      const startTimeStr = `${selectedBooking.booking_date}T${selectedBooking.start_time}`;
+      const startTime = new Date(startTimeStr);
+      const endTime = new Date(startTime.getTime() + 60 * 60000); // 1 hour
+
+      const diff = endTime.getTime() - now.getTime();
+      if (diff <= 0) {
+        setBookingTimeRemaining('00:00:00');
+        return;
+      }
+
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diff / 1000 / 60) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+      setBookingTimeRemaining(
+        `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+      );
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [selectedBooking]);
+
+  const handleFinishBooking = async (bookingId: number) => {
+    if (!confirm('Are you sure you want to finish this booking early?')) return;
+    try {
+      await api.post(`/bookings/${bookingId}/finish`);
+      toast.success('Booking finished successfully');
+      setSelectedBooking(null);
+      fetchAllBookings();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to finish booking');
+    }
+  };
 
   useEffect(() => {
+    setMounted(true);
     const userStr = localStorage.getItem('user');
     const token = localStorage.getItem('token');
 
@@ -110,6 +158,7 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [activeBooking, user]);
 
+  if (!mounted) return null;
   if (!user) return null;
 
   if (user.role === 'ADMIN') {
@@ -163,7 +212,11 @@ export default function Dashboard() {
             <div className="space-y-4">
               {allBookings.length === 0 && <p className="text-gray-500 dark:text-orange-200/70 font-medium text-[15px] bg-white/50 dark:bg-[#2a1300]/40 p-6 rounded-2xl text-center transition-colors duration-300">No bookings found.</p>}
               {allBookings.map(booking => (
-                <div key={booking.id} className="bg-white/70 dark:bg-[#2a1300]/60 backdrop-blur-xl p-5 rounded-2xl flex justify-between items-center border border-white/60 dark:border-[#ff6b00]/20 shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all duration-300">
+                <div 
+                  key={booking.id} 
+                  className="bg-white/70 dark:bg-[#2a1300]/60 backdrop-blur-xl p-5 rounded-2xl flex justify-between items-center border border-white/60 dark:border-[#ff6b00]/20 shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all duration-300 cursor-pointer"
+                  onClick={() => setSelectedBooking(booking)}
+                >
                   <div>
                     <p className="font-headline-md text-[18px] font-bold text-gray-900 dark:text-orange-50 transition-colors duration-300">{booking.user?.name} <span className="text-gray-500 dark:text-orange-300/60 font-semibold text-[14px]">(@{booking.user?.username})</span></p>
                     <p className="text-[15px] text-gray-600 dark:text-orange-200/70 mt-1 font-medium transition-colors duration-300">{booking.court?.name} • {booking.booking_date}</p>
@@ -198,8 +251,9 @@ export default function Dashboard() {
               <nav className="flex flex-col gap-6">
                 <div className="flex flex-col gap-4">
                   <button onClick={() => { setIsSidebarOpen(false); router.push('/dashboard'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Home</button>
-                  <button onClick={() => { setIsSidebarOpen(false); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">About</button>
-                  <button onClick={() => { setIsSidebarOpen(false); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">News <span className="w-2 h-2 rounded-full bg-green-500 inline-block ml-1"></span></button>
+                  <button onClick={() => { setIsSidebarOpen(false); router.push('/admin/users'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Manage Users</button>
+                  <button onClick={() => { setIsSidebarOpen(false); router.push('/scan'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Scan QR</button>
+                  <button onClick={() => { setIsSidebarOpen(false); router.push('/news'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">News <span className="w-2 h-2 rounded-full bg-green-500 inline-block ml-1"></span></button>
                 </div>
                 
                 <div>
@@ -219,6 +273,88 @@ export default function Dashboard() {
                    </button>
                 </div>
               </nav>
+            </div>
+          </div>
+        )}
+
+        {/* Admin Booking Modal */}
+        {selectedBooking && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setSelectedBooking(null)}></div>
+            <div className="relative bg-white dark:bg-[#1a0a00] w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl border border-white/20 dark:border-[#ff6b00]/30 animate-in zoom-in-95 duration-200">
+              <button 
+                onClick={() => setSelectedBooking(null)} 
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                <span className="material-symbols-outlined text-[28px]">close</span>
+              </button>
+              
+              <div className="text-center mb-6">
+                <h3 className="font-display-sm text-[24px] font-bold text-gray-900 dark:text-orange-50 mb-1">Booking Details</h3>
+                <p className="text-gray-500 dark:text-orange-200/70">{selectedBooking.user?.name} (@{selectedBooking.user?.username})</p>
+                <p className="text-primary font-bold mt-1">{selectedBooking.court?.name} • {selectedBooking.start_time.slice(0,5)} - {selectedBooking.end_time.slice(0,5)}</p>
+              </div>
+
+              {selectedBooking.status === 'PENDING' && (() => {
+                const now = new Date();
+                const bookingDateTime = new Date(`${selectedBooking.booking_date}T${selectedBooking.start_time}`);
+                const isEarly = now < bookingDateTime;
+
+                return (
+                  <div className="flex flex-col items-center gap-6 mt-4">
+                    {isEarly ? (
+                      <div className="bg-orange-50 dark:bg-[#3a1b00]/40 p-6 rounded-2xl border border-orange-100 dark:border-orange-900/50 w-full text-center">
+                        <span className="material-symbols-outlined text-[48px] text-orange-400 mb-2">schedule</span>
+                        <p className="text-sm font-bold text-orange-800 dark:text-orange-300">Too Early for Check-in</p>
+                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
+                          QR Code will be available when the booking time starts.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                          <QRCode 
+                            value={selectedBooking.court?.id?.toString() || 'court'} 
+                            size={200}
+                            level="H"
+                          />
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-orange-200/80 text-center px-4">
+                          Ask the user to scan this QR code with their app to check in and start their session.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {selectedBooking.status === 'CHECKED_IN' && (
+                <div className="flex flex-col items-center gap-6 mt-4">
+                  <div className="text-center p-6 bg-orange-50 dark:bg-[#3a1b00]/40 rounded-2xl border border-orange-100 dark:border-orange-900/50 w-full">
+                    <p className="text-sm font-bold text-orange-800 dark:text-orange-300 uppercase tracking-wider mb-2">Time Remaining</p>
+                    <p className="text-5xl font-mono font-bold text-gray-900 dark:text-white">{bookingTimeRemaining}</p>
+                  </div>
+                  
+                  <button 
+                    onClick={() => handleFinishBooking(selectedBooking.id)}
+                    className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined">stop_circle</span>
+                    Finish Early
+                  </button>
+                </div>
+              )}
+
+              {(selectedBooking.status === 'COMPLETED' || selectedBooking.status === 'CANCELLED') && (
+                <div className="flex flex-col items-center gap-4 mt-6 p-6 bg-gray-50 dark:bg-[#2a1300]/50 rounded-2xl">
+                  <span className="material-symbols-outlined text-[48px] text-gray-400 dark:text-gray-500">
+                    {selectedBooking.status === 'COMPLETED' ? 'check_circle' : 'cancel'}
+                  </span>
+                  <p className="text-lg font-bold text-gray-700 dark:text-gray-300">
+                    This booking is {selectedBooking.status.toLowerCase()}.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

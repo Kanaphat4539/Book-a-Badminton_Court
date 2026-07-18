@@ -134,9 +134,7 @@ export default function BookingPage() {
           </div>
           <div className="flex items-center gap-1">
 
-            <button className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => router.push('/dashboard')}>
-              <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>home</span>
-            </button>
+
             <button className="md:hidden w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => setIsSidebarOpen(true)}>
               <span className="material-symbols-outlined text-[28px]">menu</span>
             </button>

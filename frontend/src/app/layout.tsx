@@ -24,14 +24,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      translate="no"
       className={`${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-        <Script
+        <script
           id="storage-polyfill"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               try {

@@ -32,7 +32,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen font-sans bg-[#f8f9fa] dark:bg-[#0a0400] text-gray-900 dark:text-gray-100 transition-colors duration-300">
-      
+
       {/* Fixed Navbar */}
       <nav className={`fixed top-0 w-full z-50 px-6 md:px-12 lg:px-24 py-4 flex items-center justify-between transition-all duration-300 ${scrolled ? 'bg-black/80 backdrop-blur-md shadow-lg border-b border-white/10' : 'bg-black/20 backdrop-blur-sm border-b border-white/10'}`}>
         <div className="flex items-center gap-12">
@@ -44,7 +44,7 @@ export default function LandingPage() {
                 src="https://dynamic.design.com/preview/logodraft/19a68c63-7360-49b5-81f0-76059ea64263/image/extra-large.en-us.png"
               />
             </div>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F26522] to-yellow-400">KMITL</span> 
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F26522] to-yellow-400">KMITL</span>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">PCC BADMINTON</span>
           </Link>
           <div className="hidden lg:flex items-center gap-8 font-medium text-[15px]">
@@ -55,13 +55,13 @@ export default function LandingPage() {
             <Link href="#rules" className="text-white/80 hover:text-white transition-colors">Rules</Link>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2 md:gap-4">
           <ThemeToggle className="hidden md:flex w-10 h-10 items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors" iconClassName="text-[24px]" />
           <Link href="/login" className="hidden md:flex bg-white text-black font-bold text-[14px] px-6 py-2.5 rounded-full hover:bg-gray-200 transition-colors shadow-lg active:scale-95">
             Log in to Console
           </Link>
-          <button 
+          <button
             className="lg:hidden w-11 h-11 flex items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors"
             onClick={() => setIsSidebarOpen(true)}
           >
@@ -81,7 +81,7 @@ export default function LandingPage() {
                 <span className="material-symbols-outlined text-[28px]">close</span>
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-6">
               <nav className="flex flex-col gap-6">
                 <div className="flex flex-col gap-4">
@@ -92,7 +92,7 @@ export default function LandingPage() {
                   <Link href="#tips" onClick={() => setIsSidebarOpen(false)} className="font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-[#F26522] transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Tips</Link>
                   <Link href="#rules" onClick={() => setIsSidebarOpen(false)} className="font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-[#F26522] transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Rules</Link>
                 </div>
-                
+
                 <div className="mt-4">
                   <h3 className="font-bold text-[18px] text-gray-900 dark:text-orange-50 mb-3">Settings</h3>
                   <div className="flex items-center justify-between text-[16px] text-gray-600 dark:text-gray-400 font-medium bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl">
@@ -116,7 +116,7 @@ export default function LandingPage() {
       <header id="hero" className="relative w-full h-screen flex flex-col justify-center px-8 md:px-12 lg:px-24 overflow-hidden bg-black">
         {/* Background Images */}
         {heroImages.map((img, index) => (
-          <div 
+          <div
             key={img}
             className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out z-0 ${index === currentHeroImage ? 'opacity-100' : 'opacity-0'}`}
             style={{ backgroundImage: `url('${img}')` }}
@@ -126,7 +126,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-black/40 z-0"></div>
         <div className="relative z-10 max-w-7xl w-full mx-auto">
           <h1 className="font-display-lg text-[42px] sm:text-[56px] md:text-[80px] font-extrabold text-white leading-[1.05] drop-shadow-xl mb-6 tracking-tight">
-            Connect with <br/>
+            Connect with <br />
             {'{'}KMITL PCC <br className="md:hidden" /> BADMINTON{'}'}
           </h1>
           <Link href="/login" className="font-bold text-[18px] md:text-[22px] text-[#F26522] hover:text-[#ff7e22] transition-colors inline-flex items-center gap-2 w-fit bg-white/10 hover:bg-white/20 px-6 py-3 rounded-full backdrop-blur-sm border border-white/20 shadow-lg">
@@ -142,7 +142,7 @@ export default function LandingPage() {
             <h2 className="font-display-lg text-[40px] md:text-[56px] font-extrabold text-gray-900 dark:text-white tracking-tight">Services</h2>
             <p className="text-[18px] text-gray-600 dark:text-gray-400 mt-2">Brief overview of each service</p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Card 1 */}
             <div className="bg-gray-50 dark:bg-[#140900] p-10 rounded-3xl border border-gray-100 dark:border-white/5 hover:border-[#F26522]/50 transition-all hover:shadow-xl group">
@@ -233,8 +233,8 @@ export default function LandingPage() {
               <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6 block">event_seat</span>
               <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">Book a Court</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-[15px]">
-                Click the <strong>"Book Court"</strong> button on the Home page. Select your desired time slot:<br/>
-                <span className="inline-flex items-center gap-1 mt-2"><span className="text-green-500 font-bold">✅ Select</span> = Available</span><br/>
+                Click the <strong>"Book Court"</strong> button on the Home page. Select your desired time slot:<br />
+                <span className="inline-flex items-center gap-1 mt-2"><span className="text-green-500 font-bold">✅ Select</span> = Available</span><br />
                 <span className="inline-flex items-center gap-1 mt-1"><span className="text-red-500 font-bold">❌ Unavailable</span> = Fully booked</span>
               </p>
             </div>
@@ -381,7 +381,7 @@ export default function LandingPage() {
       <footer className="bg-black text-white pt-20 pb-10 px-6 md:px-12 lg:px-24">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 border-b border-white/10 pb-16 mb-8">
-            
+
             <div className="col-span-1 lg:col-span-2">
               <h2 className="font-display-sm text-[28px] font-extrabold mb-6"><span className="text-[#F26522]">KMITL</span> PCC BADMINTON</h2>
               <p className="text-gray-400 max-w-md">

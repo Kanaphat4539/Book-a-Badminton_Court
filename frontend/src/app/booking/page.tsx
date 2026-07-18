@@ -129,7 +129,7 @@ export default function BookingPage() {
       <div className="fixed top-0 w-full z-50 shadow-sm">
         <header className="bg-[#F26522] dark:bg-[#C24500] flex justify-between items-center px-container-padding h-16 text-white shadow-sm transition-colors duration-300">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => router.push('/dashboard')}>
-            <img alt="KMITL Badminton Logo" className="h-10 w-10 rounded-full bg-white p-0.5 object-cover shadow-sm" src="/kmitl-logo.png" />
+
             <span className="font-display-sm text-[22px] md:text-[24px] font-bold tracking-tight text-white">KMITL BADMINTON</span>
           </div>
           <div className="flex items-center gap-1">

@@ -62,7 +62,7 @@ export default function LandingPage() {
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <ThemeToggle className="hidden md:flex w-10 h-10 items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors" iconClassName="text-[24px]" />
+          <ThemeToggle className="hidden lg:flex w-10 h-10 items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors" iconClassName="text-[24px]" />
           <Link href="/login" className="hidden md:flex bg-white text-black font-bold text-[14px] px-6 py-2.5 rounded-full hover:bg-gray-200 transition-colors shadow-lg active:scale-95">
             Log in to Console
           </Link>

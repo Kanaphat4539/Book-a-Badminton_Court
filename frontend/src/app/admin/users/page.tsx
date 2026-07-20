@@ -80,7 +80,7 @@ export default function ManageUsers() {
             <span className="font-display-sm text-[22px] md:text-[24px] font-bold tracking-tight text-white">KMITL BADMINTON</span>
           </div>
           <div className="flex items-center gap-1">
-            <button className="md:hidden w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => setIsSidebarOpen(true)}>
+            <button className="lg:hidden w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => setIsSidebarOpen(true)}>
               <span className="material-symbols-outlined text-[28px]">menu</span>
             </button>
           </div>

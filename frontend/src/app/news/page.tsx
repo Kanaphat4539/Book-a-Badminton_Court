@@ -18,7 +18,7 @@ export default function NewsPage() {
         </h1>
         <div className="flex items-center gap-4">
 
-          <button className="md:hidden w-11 h-11 flex items-center justify-center rounded-full bg-white/80 dark:bg-[#1a0a00]/80 shadow-sm border border-gray-200 dark:border-[#ff6b00]/20 text-gray-800 dark:text-orange-50 hover:bg-gray-100 dark:hover:bg-[#3a1b00] transition-colors" onClick={() => setIsSidebarOpen(true)}>
+          <button className="lg:hidden w-11 h-11 flex items-center justify-center rounded-full bg-white/80 dark:bg-[#1a0a00]/80 shadow-sm border border-gray-200 dark:border-[#ff6b00]/20 text-gray-800 dark:text-orange-50 hover:bg-gray-100 dark:hover:bg-[#3a1b00] transition-colors" onClick={() => setIsSidebarOpen(true)}>
             <span className="material-symbols-outlined text-[28px]">menu</span>
           </button>
         </div>

@@ -178,10 +178,10 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center gap-1">
 
-              <button className="hidden md:flex w-11 h-11 items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={handleLogout}>
+              <button className="hidden lg:flex w-11 h-11 items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={handleLogout}>
                 <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>logout</span>
               </button>
-              <button className="md:hidden w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => setIsSidebarOpen(true)}>
+              <button className="lg:hidden w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => setIsSidebarOpen(true)}>
                 <span className="material-symbols-outlined text-[28px]">menu</span>
               </button>
             </div>
@@ -379,10 +379,10 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center gap-1">
 
-                      <button className="hidden md:flex w-11 h-11 items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={handleLogout}>
+                      <button className="hidden lg:flex w-11 h-11 items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={handleLogout}>
                         <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>logout</span>
                       </button>
-                      <button className="md:hidden w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => setIsSidebarOpen(true)}>
+                      <button className="lg:hidden w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => setIsSidebarOpen(true)}>
                         <span className="material-symbols-outlined text-[28px]">menu</span>
                       </button>
                     </div>
@@ -578,7 +578,7 @@ export default function Dashboard() {
                   <button onClick={() => { setIsSidebarOpen(false); router.push('/dashboard'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Home</button>
                   <button onClick={() => { setIsSidebarOpen(false); router.push('/booking'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Book Courts</button>
                   <button onClick={() => { setIsSidebarOpen(false); router.push('/scan'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Scan QR</button>
-                  <button onClick={() => { setIsSidebarOpen(false); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">News <span className="w-2 h-2 rounded-full bg-green-500 inline-block ml-1"></span></button>
+                  <button onClick={() => { setIsSidebarOpen(false); router.push('/news'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">News <span className="w-2 h-2 rounded-full bg-green-500 inline-block ml-1"></span></button>
                 </div>
                 
                 <div>

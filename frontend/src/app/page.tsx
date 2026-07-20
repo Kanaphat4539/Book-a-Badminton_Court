@@ -81,7 +81,7 @@ export default function LandingPage() {
           >
             <span className="material-symbols-outlined text-[28px]">menu</span>
           </button>
-          <div className="hidden md:flex md:ml-2">
+          <div className="hidden lg:flex lg:ml-2">
             <ThemeToggle className="w-10 h-10 flex items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors" iconClassName="text-[24px]" />
           </div>
         </div>

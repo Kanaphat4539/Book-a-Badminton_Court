@@ -36,6 +36,12 @@ export class BookingsController {
     return this.bookingsService.cancelBooking(+id, req.user.userId);
   }
 
+  @Post(':id/finish')
+  @Roles(UserRole.ADMIN)
+  async finishBooking(@Param('id') id: string) {
+    return this.bookingsService.finishBooking(+id);
+  }
+
   @Post('reset')
   @Roles(UserRole.ADMIN)
   async resetBookings() {

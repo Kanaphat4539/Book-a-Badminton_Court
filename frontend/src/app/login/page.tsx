@@ -1,9 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { useTheme } from 'next-themes';
+
+function GalahhadThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  return (
+    <div style={{ width: '48px', height: '32px' }}>
+      <div style={{ opacity: mounted ? 1 : 0, transition: 'opacity 0.2s', pointerEvents: mounted ? 'auto' : 'none' }}>
+        <label className="ui-switch">
+          <input
+            type="checkbox"
+            checked={mounted ? theme === 'dark' : false}
+            onChange={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+          />
+          <div className="slider">
+            <div className="circle"></div>
+          </div>
+        </label>
+      </div>
+    </div>
+  );
+}
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,7 +48,7 @@ export default function LoginPage() {
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       toast.success('Login successful!');
-      window.location.href = '/';
+      window.location.href = '/dashboard';
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Login failed');
     } finally {
@@ -28,97 +57,122 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background text-on-surface font-sans">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-6 text-on-surface dark:text-orange-50 font-sans relative overflow-hidden transition-colors duration-300 bg-cover bg-center"
+      style={{ backgroundImage: `url('https://images.unsplash.com/photo-1626926938421-90124a4b83fa?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDN8fGJhZG1pbnRvbnxlbnwwfHwwfHx8MA%3D%3D')` }}
+    >
+      {/* Subtle overlay for text readability */}
+      <div className="absolute inset-0 bg-white/40 dark:bg-black/60 backdrop-blur-[2px] transition-colors duration-300 z-0"></div>
+
+      {/* Decorative blobs */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/30 dark:bg-primary/20 rounded-full filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
+      <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-yellow-300/40 dark:bg-yellow-600/30 rounded-full filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
+      <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-primary/20 dark:bg-primary/20 rounded-full filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
+
+      {/* Top Controls Container */}
+      <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-[100]">
+        {/* Back to Home Button */}
+        <a
+          href="/"
+          className="btn flex items-center justify-center p-3"
+        >
+          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+        </a>
+
+        {/* Theme Toggle */}
+        <div className="flex items-center justify-center">
+          <GalahhadThemeToggle />
+        </div>
+      </div>
+
       <main className="w-full max-w-md relative z-10 flex flex-col items-center">
         {/* Logo Section */}
         <div className="mb-8 flex flex-col items-center">
-          <div className="w-32 h-32 mb-2 rounded-full overflow-hidden bg-surface-container flex items-center justify-center shadow-[0px_8px_24px_rgba(0,0,0,0.5)] border border-[#2A2A2A]">
-            <img 
-              alt="Apex Badminton Logo" 
-              className="w-full h-full object-cover" 
-              src="/logo.jpg" 
-              onError={(e) => {
-                // Fallback if logo.jpg doesn't exist yet
-                (e.target as HTMLImageElement).src = "https://lh3.googleusercontent.com/aida-public/AB6AXuA9ufthUuxh5dWIL4bluPC_-EgGRKNDVZo_9zS-_3AX985RaArbVg6VZMOcfSjMTJt6s7yiLK0t07ZHyOwYmpcVpbt0I1G8nM3aNkXMsv_pm8SWQq-inB4F3ICF5Gg3nI-5k6_gdZiccWTAalrDuP2h-yBwN83Yxqs8PdB8nCH49-gR6e_g5NaDZfS2DavqyNfskg6Id8enrw3M608HilHt2Tm0RKYSy0FC9alKOa0Crgdlx0YpTsUlrQ";
-              }}
+          <div className="w-28 h-28 mb-4 rounded-full overflow-hidden bg-white flex items-center justify-center shadow-xl border-4 border-white">
+            <img
+              alt="KMITL Badminton Logo"
+              className="w-full h-full object-cover scale-[1.3] origin-center"
+              src="https://dynamic.design.com/preview/logodraft/19a68c63-7360-49b5-81f0-76059ea64263/image/extra-large.en-us.png"
             />
           </div>
-          <h1 className="font-display-lg text-[32px] font-bold text-primary tracking-tight text-center uppercase">APEX BADMINTON</h1>
-          <p className="font-body-md text-[14px] text-on-surface-variant text-center mt-1">Premium Court Booking</p>
+          <h1 className="font-display-lg text-[32px] font-extrabold text-gray-900 dark:text-orange-50 tracking-tight text-center uppercase drop-shadow-sm">KMITL <span className="text-primary">BADMINTON</span></h1>
+          <p className="font-body-md text-[15px] text-gray-600 dark:text-orange-200/70 text-center mt-1 font-medium tracking-wide uppercase">Premium Court Booking</p>
         </div>
 
         {/* Login Card */}
-        <div className="w-full bg-[#1E1E1E] rounded-xl shadow-[0px_8px_24px_rgba(0,0,0,0.5)] border border-[#2A2A2A] p-6">
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+        <div className="w-full bg-white/40 dark:bg-[#2a1300]/60 backdrop-blur-2xl rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/50 dark:border-[#ff6b00]/20 p-8 transition-colors duration-300 hover:shadow-[0_8px_40px_rgba(255,107,0,0.15)]">
+          <form onSubmit={handleLogin} className="flex flex-col gap-5">
             {/* Username Input */}
-            <div className="flex flex-col gap-1">
-              <label className="font-label-md text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider" htmlFor="username">Username / Email</label>
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" style={{fontVariationSettings: "'FILL' 0"}}>person</span>
-                <input 
-                  className="input-field w-full h-12 rounded-lg pl-10 pr-3 font-body-md text-[14px] text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" 
-                  id="username" 
+            <div className="flex flex-col gap-1.5">
+              <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider" htmlFor="username">Username / Email</label>
+              <div className="relative group">
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-orange-300/50 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>person</span>
+                <input
+                  className="w-full h-14 rounded-xl pl-12 pr-4 font-body-md text-[15px] text-gray-900 dark:text-orange-50 bg-white/60 dark:bg-[#140900]/80 border border-white/60 dark:border-[#ff6b00]/30 placeholder:text-gray-500 dark:placeholder:text-orange-300/40 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
+                  id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="athlete@example.com or admin" 
-                  required 
+                  placeholder="athlete@example.com or admin"
+                  required
                   type="text"
                 />
               </div>
             </div>
 
             {/* Password Input */}
-            <div className="flex flex-col gap-1">
-              <label className="font-label-md text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider" htmlFor="password">Password</label>
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" style={{fontVariationSettings: "'FILL' 0"}}>lock</span>
-                <input 
-                  className="input-field w-full h-12 rounded-lg pl-10 pr-3 font-body-md text-[14px] text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" 
-                  id="password" 
+            <div className="flex flex-col gap-1.5">
+              <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider" htmlFor="password">Password</label>
+              <div className="relative group">
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-orange-300/50 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>lock</span>
+                <input
+                  className="w-full h-14 rounded-xl pl-12 pr-4 font-body-md text-[15px] text-gray-900 dark:text-orange-50 bg-white/80 dark:bg-[#140900]/80 border border-gray-200 dark:border-[#ff6b00]/30 placeholder:text-gray-400 dark:placeholder:text-orange-300/40 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
+                  id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••" 
-                  required 
+                  placeholder="••••••••"
+                  required
                   type="password"
                 />
               </div>
               <div className="flex justify-end mt-1">
-                <a className="font-label-md text-[12px] font-semibold text-primary hover:text-primary/80 transition-colors" href="#">Forgot Password?</a>
+                <a className="font-label-md text-[13px] font-semibold text-primary hover:text-primary/80 transition-colors" href="#">Forgot Password?</a>
               </div>
             </div>
 
             {/* Login Button */}
-            <button 
-              className="btn-primary w-full h-12 rounded-lg font-button text-[16px] font-semibold flex items-center justify-center mt-2 disabled:opacity-50" 
+            <button
+              className="w-full h-14 rounded-xl font-button text-[16px] font-bold text-white bg-primary hover:bg-[#E55B13] active:scale-[0.98] transition-all flex items-center justify-center mt-4 disabled:opacity-50 shadow-[0_4px_14px_rgba(255,107,0,0.4)] hover:shadow-[0_6px_20px_rgba(255,107,0,0.6)]"
               type="submit"
               disabled={loading}
             >
               {loading ? 'Logging in...' : 'Login'}
-              {!loading && <span className="material-symbols-outlined ml-2 text-[18px]" style={{fontVariationSettings: "'FILL' 1"}}>arrow_forward</span>}
+              {!loading && <span className="material-symbols-outlined ml-2 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>arrow_forward</span>}
             </button>
           </form>
 
           {/* Quick Login for Demo */}
-          <div className="mt-4 flex justify-center gap-4 text-xs">
-            <button 
+          <div className="mt-5 flex justify-center gap-6 text-sm">
+            <button
               onClick={() => { setUsername('admin'); setPassword('password'); }}
-              className="text-on-surface-variant hover:text-primary transition-colors"
+              className="text-gray-500 font-medium hover:text-primary transition-colors flex items-center gap-1"
             >
-              [Fill Admin]
+              <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+              Admin
             </button>
-            <button 
+            <button
               onClick={() => { setUsername('user'); setPassword('password'); }}
-              className="text-on-surface-variant hover:text-primary transition-colors"
+              className="text-gray-500 font-medium hover:text-primary transition-colors flex items-center gap-1"
             >
-              [Fill User]
+              <span className="material-symbols-outlined text-[16px]">person</span>
+              User
             </button>
           </div>
 
           {/* Sign Up Link */}
-          <div className="mt-6 pt-4 border-t border-[#2A2A2A] text-center">
-            <p className="font-body-md text-[14px] text-on-surface-variant">
-              Don't have an account? 
-              <a className="font-button text-[16px] font-semibold text-primary hover:text-primary/80 transition-colors ml-2" href="/register">Sign Up</a>
+          <div className="mt-8 pt-6 border-t border-gray-200/60 text-center">
+            <p className="font-body-md text-[15px] text-gray-600">
+              Don't have an account?
+              <a className="font-button text-[16px] font-bold text-primary hover:text-primary/80 transition-colors ml-2" href="/register">Sign Up</a>
             </p>
           </div>
         </div>

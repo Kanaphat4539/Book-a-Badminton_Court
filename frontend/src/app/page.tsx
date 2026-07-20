@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 const heroImages = [
@@ -11,6 +12,7 @@ const heroImages = [
 ];
 
 export default function LandingPage() {
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentHeroImage, setCurrentHeroImage] = useState(0);
@@ -35,7 +37,15 @@ export default function LandingPage() {
 
       {/* Fixed Navbar */}
       <nav className={`fixed top-0 w-full z-50 px-6 md:px-12 lg:px-24 py-4 flex items-center justify-between transition-all duration-300 ${scrolled ? 'bg-black/80 backdrop-blur-md shadow-lg border-b border-white/10' : 'bg-black/20 backdrop-blur-sm border-b border-white/10'}`}>
-        <div className="flex items-center gap-12">
+        <div className="flex items-center gap-6 lg:gap-8">
+          <button 
+            onClick={() => router.back()} 
+            className="hidden md:flex w-10 h-10 items-center justify-center rounded-full text-white bg-white/10 hover:bg-white/20 transition-colors shadow-sm"
+            title="Go Back"
+          >
+            <span className="material-symbols-outlined text-[24px]">arrow_back</span>
+          </button>
+          
           <Link href="/" className="font-display-sm text-[20px] md:text-[24px] font-extrabold tracking-tight flex items-center gap-2 drop-shadow-md hover:scale-[1.02] transition-transform duration-300">
             <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden bg-white flex items-center justify-center shadow-sm">
               <img
@@ -61,8 +71,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-4">
-          <ThemeToggle className="hidden md:flex w-10 h-10 items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors" iconClassName="text-[24px]" />
+        <div className="flex items-center gap-2 md:gap-6">
           <Link href="/login" className="hidden md:flex bg-white text-black font-bold text-[14px] px-6 py-2.5 rounded-full hover:bg-gray-200 transition-colors shadow-lg active:scale-95">
             Log in to Console
           </Link>
@@ -72,6 +81,9 @@ export default function LandingPage() {
           >
             <span className="material-symbols-outlined text-[28px]">menu</span>
           </button>
+          <div className="hidden md:flex md:ml-2">
+            <ThemeToggle className="w-10 h-10 flex items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors" iconClassName="text-[24px]" />
+          </div>
         </div>
       </nav>
 

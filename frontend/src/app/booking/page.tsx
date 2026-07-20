@@ -70,7 +70,7 @@ export default function BookingPage() {
     if (!courts.length) return false;
     const formattedTime = time + ':00';
     // If all courts have this time booked with an active status, it's fully booked
-    return courts.every(c => c.bookings?.some((b: any) => 
+    return courts.every(c => c.bookings?.some((b: any) =>
       b.start_time === formattedTime && (b.status === 'PENDING' || b.status === 'CHECKED_IN')
     ));
   };
@@ -78,7 +78,7 @@ export default function BookingPage() {
   const isCourtBookedForSelectedTime = (court: any) => {
     if (!selectedTime) return false;
     const formattedTime = selectedTime + ':00';
-    return court.bookings?.some((b: any) => 
+    return court.bookings?.some((b: any) =>
       b.start_time === formattedTime && (b.status === 'PENDING' || b.status === 'CHECKED_IN')
     );
   };
@@ -110,7 +110,7 @@ export default function BookingPage() {
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
     if (selectedDate !== todayStr) return false;
-    
+
     const slotHour = parseInt(timeStr.split(':')[0], 10);
     const currentHour = now.getHours();
     return currentHour > slotHour;
@@ -354,7 +354,7 @@ export default function BookingPage() {
                 <button onClick={() => { setIsSidebarOpen(false); router.push('/scan'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Scan QR</button>
                 <button onClick={() => { setIsSidebarOpen(false); router.push('/news'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">News <span className="w-2 h-2 rounded-full bg-green-500 inline-block ml-1"></span></button>
               </div>
-              
+
               <div>
                 <h3 className="font-bold text-[18px] text-gray-900 dark:text-orange-50 mb-3">Settings</h3>
                 <div className="flex flex-col gap-3 pl-4 border-l-2 border-gray-200 dark:border-gray-800">

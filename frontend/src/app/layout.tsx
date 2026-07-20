@@ -24,16 +24,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      translate="no"
       className={`${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-      </head>
-      <body className="min-h-full font-sans bg-background text-on-surface" suppressHydrationWarning>
-        <Script
+        <script
           id="storage-polyfill"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               try {
@@ -65,11 +63,12 @@ export default function RootLayout({
             `,
           }}
         />
+      </head>
+      <body className="min-h-full font-sans bg-background text-on-surface" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange
         >
           {children}
           <Toaster position="top-center" theme="system" />

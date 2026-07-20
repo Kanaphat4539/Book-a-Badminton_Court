@@ -129,14 +129,12 @@ export default function BookingPage() {
       <div className="fixed top-0 w-full z-50 shadow-sm">
         <header className="bg-[#F26522] dark:bg-[#C24500] flex justify-between items-center px-container-padding h-16 text-white shadow-sm transition-colors duration-300">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => router.push('/dashboard')}>
-            <img alt="KMITL Badminton Logo" className="h-10 w-10 rounded-full bg-white p-0.5 object-cover shadow-sm" src="/kmitl-logo.png" />
+
             <span className="font-display-sm text-[22px] md:text-[24px] font-bold tracking-tight text-white">KMITL BADMINTON</span>
           </div>
           <div className="flex items-center gap-1">
 
-            <button className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => router.push('/dashboard')}>
-              <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>home</span>
-            </button>
+
             <button className="md:hidden w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => setIsSidebarOpen(true)}>
               <span className="material-symbols-outlined text-[28px]">menu</span>
             </button>
@@ -187,6 +185,94 @@ export default function BookingPage() {
 
         {/* Time Slots */}
         <section>
+          <style dangerouslySetInnerHTML={{
+            __html: `
+            .btn-time-slot {
+              position: relative;
+              padding: 10px 20px;
+              border-radius: 7px;
+              border: 1px solid rgb(239, 68, 68);
+              font-size: 14px;
+              text-transform: uppercase;
+              font-weight: 600;
+              letter-spacing: 2px;
+              background: transparent;
+              color: rgb(239, 68, 68); /* Adjusted for visibility */
+              overflow: hidden;
+              box-shadow: 0 0 0 0 transparent;
+              -webkit-transition: all 0.2s ease-in;
+              -moz-transition: all 0.2s ease-in;
+              transition: all 0.2s ease-in;
+              width: 100%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+
+            .dark .btn-time-slot {
+              color: #fff;
+            }
+
+            .btn-time-slot:hover {
+              background: rgb(239, 68, 68);
+              box-shadow: 0 0 30px 5px rgba(239, 68, 68, 0.815);
+              -webkit-transition: all 0.2s ease-out;
+              -moz-transition: all 0.2s ease-out;
+              transition: all 0.2s ease-out;
+              color: #fff;
+            }
+
+            .btn-time-slot.selected {
+              background: rgb(239, 68, 68);
+              box-shadow: 0 0 30px 5px rgba(239, 68, 68, 0.815);
+              color: #fff;
+            }
+
+            .btn-time-slot:hover::before {
+              -webkit-animation: sh02 0.5s 0s linear;
+              -moz-animation: sh02 0.5s 0s linear;
+              animation: sh02 0.5s 0s linear;
+            }
+
+            .btn-time-slot::before {
+              content: '';
+              display: block;
+              width: 0px;
+              height: 86%;
+              position: absolute;
+              top: 7%;
+              left: 0%;
+              opacity: 0;
+              background: #fff;
+              box-shadow: 0 0 50px 30px #fff;
+              -webkit-transform: skewX(-20deg);
+              -moz-transform: skewX(-20deg);
+              -ms-transform: skewX(-20deg);
+              -o-transform: skewX(-20deg);
+              transform: skewX(-20deg);
+            }
+
+            @keyframes sh02 {
+              from {
+                opacity: 0;
+                left: 0%;
+              }
+              50% {
+                opacity: 1;
+              }
+              to {
+                opacity: 0;
+                left: 100%;
+              }
+            }
+
+            .btn-time-slot:active {
+              box-shadow: 0 0 0 0 transparent;
+              -webkit-transition: box-shadow 0.2s ease-in;
+              -moz-transition: box-shadow 0.2s ease-in;
+              transition: box-shadow 0.2s ease-in;
+            }
+          `}} />
           <h2 className="font-headline-md text-[22px] font-extrabold mb-4 text-gray-900 dark:text-orange-50 transition-colors duration-300">Time Slots</h2>
           {loading ? (
             <p className="text-on-surface-variant text-sm">Loading times...</p>
@@ -209,12 +295,9 @@ export default function BookingPage() {
                   <button
                     key={time}
                     onClick={() => setSelectedTime(time)}
-                    className={`py-3 px-2 rounded-xl flex items-center justify-center transition-all duration-300 font-medium text-[15px] border backdrop-blur-sm ${isSelected
-                      ? 'bg-gradient-to-br from-primary to-[#E55B13] text-white shadow-[0_6px_16px_rgba(255,107,0,0.4)] border-transparent transform -translate-y-0.5'
-                      : 'bg-white/60 dark:bg-[#1a0a00]/60 border-white dark:border-[#ff6b00]/30 text-gray-700 dark:text-orange-200 hover:bg-white/90 dark:hover:bg-[#2a1300] hover:shadow-md hover:border-primary/30 dark:hover:border-primary/50'
-                      }`}
+                    className={`btn-time-slot ${isSelected ? 'selected' : ''}`}
                   >
-                    <span className={`font-body-md text-[15px] ${isSelected ? 'font-bold' : 'font-semibold'}`}>{time}</span>
+                    <span>{time}</span>
                   </button>
                 );
               })}

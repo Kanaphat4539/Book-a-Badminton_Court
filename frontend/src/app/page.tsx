@@ -127,7 +127,13 @@ export default function LandingPage() {
         <div className="relative z-10 max-w-7xl w-full mx-auto">
           <h1 className="font-display-lg text-[42px] sm:text-[56px] md:text-[80px] font-extrabold text-white leading-[1.05] drop-shadow-xl mb-6 tracking-tight">
             Connect with <br />
-            {'{'}KMITL PCC <br className="md:hidden" /> BADMINTON{'}'}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F26522] to-yellow-400 dark:from-primary dark:to-[#ffb693] filter drop-shadow-md">
+              KMITL&nbsp;
+            </span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-400 dark:from-blue-400 dark:to-cyan-300 filter drop-shadow-md">
+              PCC
+            </span>
+            <br className="md:hidden" /> BADMINTON
           </h1>
           <Link href="/login" className="font-bold text-[18px] md:text-[22px] text-[#F26522] hover:text-[#ff7e22] transition-colors inline-flex items-center gap-2 w-fit bg-white/10 hover:bg-white/20 px-6 py-3 rounded-full backdrop-blur-sm border border-white/20 shadow-lg">
             / Start Booking <span className="material-symbols-outlined font-bold text-[20px] md:text-[24px]">arrow_forward_ios</span>
@@ -234,7 +240,7 @@ export default function LandingPage() {
               <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">Book a Court</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-[15px]">
                 Click the <strong>"Book Court"</strong> button on the Home page. Select your desired time slot:<br />
-                <span className="inline-flex items-center gap-1 mt-2"><span className="text-green-500 font-bold">✅ Select</span> = Available</span><br />
+                <span className="inline-flex items-center gap-1 mt-2"><span className="text-green-500 font-bold">✅ Books</span> = Available</span><br />
                 <span className="inline-flex items-center gap-1 mt-1"><span className="text-red-500 font-bold">❌ Unavailable</span> = Fully booked</span>
               </p>
             </div>

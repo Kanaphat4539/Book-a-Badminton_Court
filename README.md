@@ -33,28 +33,28 @@ flowchart TB
         end
 
         subgraph Database ["ฐานข้อมูล (Self-Hosted DB)"]
-            DB[("MySQL Container / SQLite\n(TypeORM)")]
+            DB[("MySQL Container / SQLite<br/>TypeORM")]
         end
     end
 
     subgraph Third_Party_Services ["3rd-Party Services & CDNs (บริการภายนอกที่เว็บนี้ดึงมาใช้)"]
-        Google_Fonts["Google Fonts & Material Symbols\n(CDN ฟอนต์และไอคอน)"]
-        Image_CDNs["Image Providers / CDNs\n(Unsplash, Wikimedia, Dynamic Design)"]
+        Google_Fonts["Google Fonts & Material Symbols<br/>(CDN ฟอนต์และไอคอน)"]
+        Image_CDNs["Image Providers / CDNs<br/>(Unsplash, Wikimedia, Dynamic Design)"]
     end
 
-    subgraph Not_Used_3rd_Party ["3rd-Party ที่ 'ไม่มี' การเชื่อมต่อในเว็บนี้ (Not Used)"]
-        No_OAuth["❌ ไม่มี Third-Party OAuth\n(Google Sign-in, LINE Login, Auth0)"]
-        No_Payment["❌ ไม่มี Payment Gateway\n(Stripe, Omise, 2C2P)"]
-        No_Email_SMS["❌ ไม่มี Email / SMS Provider\n(SendGrid, Twilio, LINE Notify)"]
-        No_Cloud_DB["❌ ไม่มี Cloud BaaS\n(Firebase, Supabase)"]
+    subgraph Not_Used_3rd_Party ["3rd-Party ที่ไม่มีการเชื่อมต่อในเว็บนี้ (Not Used)"]
+        No_OAuth["❌ ไม่มี Third-Party OAuth<br/>(Google Sign-in, LINE Login, Auth0)"]
+        No_Payment["❌ ไม่มี Payment Gateway<br/>(Stripe, Omise, 2C2P)"]
+        No_Email_SMS["❌ ไม่มี Email / SMS Provider<br/>(SendGrid, Twilio, LINE Notify)"]
+        No_Cloud_DB["❌ ไม่มี Cloud BaaS<br/>(Firebase, Supabase)"]
     end
 
     %% Interactions
-    Browser -->|เปิดหน้าเว็บ| FE_UI
-    FE_UI -->|เรียกใช้ฟอนต์และไอคอน| Google_Fonts
-    FE_UI -->|โหลดรูปภาพแบนเนอร์/ภาพประกอบ| Image_CDNs
-    FE_UI -->|ยิง API Request (Axios)| Backend_API
-    Backend_API -->|อ่าน/เขียนข้อมูล| DB
+    Browser -->|"เปิดหน้าเว็บ"| FE_UI
+    FE_UI -->|"เรียกใช้ฟอนต์และไอคอน"| Google_Fonts
+    FE_UI -->|"โหลดรูปภาพแบนเนอร์/ภาพประกอบ"| Image_CDNs
+    FE_UI -->|"ยิง API Request (Axios)"| Backend_API
+    Backend_API -->|"อ่านและเขียนข้อมูล"| DB
 ```
 
 ---

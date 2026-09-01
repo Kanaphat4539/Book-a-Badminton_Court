@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 
 const heroImages = [
   'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1920&q=80',
@@ -14,6 +15,25 @@ export default function LandingPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentHeroImage, setCurrentHeroImage] = useState(0);
+
+  // Scroll-driven animation for Hero section
+  const heroContainerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroContainerRef,
+    offset: ['start start', 'end start']
+  });
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  const heroScale = useTransform(smoothProgress, [0, 1], [1, 0.6]);
+  const heroOpacity = useTransform(smoothProgress, [0, 1], [1, 0.6]);
+  
+  // Pull the main content up exactly by the amount the hero shrinks (100vh - 60vh = 40vh)
+  const mainMargin = useTransform(smoothProgress, [0, 1], ['0vh', '-40vh']);
 
   useEffect(() => {
     const heroInterval = setInterval(() => {
@@ -119,37 +139,50 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* 1. Hero Section (Image Slider) */}
-      <header id="hero" className="relative w-full h-screen flex flex-col justify-center px-8 md:px-12 lg:px-24 overflow-hidden bg-black">
-        {/* Background Images */}
-        {heroImages.map((img, index) => (
-          <div
-            key={img}
-            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out z-0 ${index === currentHeroImage ? 'opacity-100' : 'opacity-0'}`}
-            style={{ backgroundImage: `url('${img}')` }}
-          />
-        ))}
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/40 z-0"></div>
-        <div className="relative z-10 max-w-7xl w-full mx-auto">
-          <h1 className="font-display-lg text-[42px] sm:text-[56px] md:text-[80px] font-extrabold text-white leading-[1.05] drop-shadow-xl mb-6 tracking-tight">
-            Connect with <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F26522] to-yellow-400 dark:from-primary dark:to-[#ffb693] filter drop-shadow-md">
-              KMITL&nbsp;
-            </span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-400 dark:from-blue-400 dark:to-cyan-300 filter drop-shadow-md">
-              PCC
-            </span>
-            <br className="md:hidden" /> BADMINTON
-          </h1>
-          <Link href="/login" className="font-bold text-[18px] md:text-[22px] text-[#F26522] hover:text-[#ff7e22] transition-colors inline-flex items-center gap-2 w-fit bg-white/10 hover:bg-white/20 px-6 py-3 rounded-full backdrop-blur-sm border border-white/20 shadow-lg">
-            / Start Booking <span className="material-symbols-outlined font-bold text-[20px] md:text-[24px]">arrow_forward_ios</span>
-          </Link>
-        </div>
-      </header>
+      {/* 1. Hero Section (Image Slider) with Scroll-driven Animation */}
+      <div id="hero" ref={heroContainerRef} className="h-screen w-full">
+        <motion.header 
+          className="relative w-full h-screen flex flex-col justify-center px-8 md:px-12 lg:px-24 overflow-hidden bg-black origin-top z-0"
+          style={{
+            scale: heroScale,
+            opacity: heroOpacity
+          }}
+        >
+          {/* Background Images */}
+          {heroImages.map((img, index) => (
+            <div
+              key={img}
+              className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out z-0 ${index === currentHeroImage ? 'opacity-100' : 'opacity-0'}`}
+              style={{ backgroundImage: `url('${img}')` }}
+            />
+          ))}
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black/40 z-0"></div>
+          <div className="relative z-10 max-w-7xl w-full mx-auto">
+            <h1 className="font-display-lg text-[42px] sm:text-[56px] md:text-[80px] font-extrabold text-white leading-[1.05] drop-shadow-xl mb-6 tracking-tight">
+              Connect with <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F26522] to-yellow-400 dark:from-primary dark:to-[#ffb693] filter drop-shadow-md">
+                KMITL&nbsp;
+              </span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-400 dark:from-blue-400 dark:to-cyan-300 filter drop-shadow-md">
+                PCC
+              </span>
+              <br className="md:hidden" /> BADMINTON
+            </h1>
+            <Link href="/login" className="font-bold text-[18px] md:text-[22px] text-[#F26522] hover:text-[#ff7e22] transition-colors inline-flex items-center gap-2 w-fit bg-white/10 hover:bg-white/20 px-6 py-3 rounded-full backdrop-blur-sm border border-white/20 shadow-lg">
+              / Start Booking <span className="material-symbols-outlined font-bold text-[20px] md:text-[24px]">arrow_forward_ios</span>
+            </Link>
+          </div>
+        </motion.header>
+      </div>
 
-      {/* 2. Services Section (Solid Background) */}
-      <section id="services" className="py-24 px-6 md:px-12 lg:px-24 bg-white dark:bg-[#0a0400]">
+      {/* Main Content that follows the Hero perfectly */}
+      <motion.main 
+        className="relative z-10 bg-white dark:bg-[#0a0400]"
+        style={{ marginTop: mainMargin }}
+      >
+        {/* 2. Services Section (Solid Background) */}
+        <section id="services" className="py-24 px-6 md:px-12 lg:px-24">
         <div className="max-w-7xl mx-auto">
           <div className="mb-16">
             <h2 className="font-display-lg text-[40px] md:text-[56px] font-extrabold text-gray-900 dark:text-white tracking-tight">Services</h2>
@@ -432,6 +465,7 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+      </motion.main>
 
     </div>
   );

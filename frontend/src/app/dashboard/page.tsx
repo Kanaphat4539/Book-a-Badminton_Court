@@ -164,10 +164,21 @@ export default function Dashboard() {
   if (user.role === 'ADMIN') {
     return (
       <div className="bg-gradient-to-br from-orange-50 via-white to-orange-100 text-on-surface antialiased min-h-screen flex flex-col pt-24 pb-24 font-sans relative overflow-hidden">
-        {/* Decorative blobs */}
+        {/* Decorative blobs & Floating Elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
           <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
           <div className="absolute bottom-[20%] right-[-10%] w-[600px] h-[600px] bg-yellow-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
+          
+          {/* Floating Graphics */}
+          <div className="absolute top-[15%] left-[5%] animate-float-slow opacity-80">
+            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Badminton.png" alt="Badminton" className="w-24 h-24 drop-shadow-2xl opacity-70 hover:opacity-100 transition-opacity" />
+          </div>
+          <div className="absolute top-[30%] right-[8%] animate-float-fast opacity-80">
+            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Trophy.png" alt="Trophy" className="w-20 h-20 drop-shadow-2xl opacity-70 hover:opacity-100 transition-opacity" />
+          </div>
+          <div className="absolute bottom-[15%] left-[12%] animate-float opacity-80">
+            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Fire.png" alt="Fire" className="w-16 h-16 drop-shadow-2xl opacity-70 hover:opacity-100 transition-opacity" />
+          </div>
         </div>
         {/* TopAppBar */}
         <div className="fixed top-0 w-full z-50 shadow-sm">
@@ -364,11 +375,25 @@ export default function Dashboard() {
 
   return (
               <div className="bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-[#2a1300] dark:via-[#140900] dark:to-[#2a1300] text-on-surface dark:text-orange-50 antialiased min-h-screen flex flex-col pt-24 pb-24 font-sans relative overflow-hidden transition-colors duration-300">
-                {/* Decorative blobs */}
+                {/* Decorative blobs & Floating Elements */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
                   <div className="absolute top-[0%] left-[-10%] w-[500px] h-[500px] bg-primary/10 dark:bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 transition-colors duration-300"></div>
                   <div className="absolute top-[40%] right-[-10%] w-[400px] h-[400px] bg-yellow-200/50 dark:bg-yellow-600/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 transition-colors duration-300"></div>
                   <div className="absolute bottom-[-10%] left-[20%] w-[600px] h-[600px] bg-primary/10 dark:bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 transition-colors duration-300"></div>
+                  
+                  {/* Floating Graphics */}
+                  <div className="absolute top-[10%] left-[5%] md:left-[10%] animate-float-slow opacity-80">
+                    <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Badminton.png" alt="Badminton" className="w-24 h-24 md:w-32 md:h-32 drop-shadow-2xl opacity-70" />
+                  </div>
+                  <div className="absolute top-[20%] right-[5%] md:right-[15%] animate-float-fast opacity-80">
+                    <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Trophy.png" alt="Trophy" className="w-20 h-20 md:w-28 md:h-28 drop-shadow-2xl opacity-70" />
+                  </div>
+                  <div className="absolute bottom-[20%] left-[10%] md:left-[15%] animate-float-delayed opacity-80">
+                    <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Fire.png" alt="Fire" className="w-16 h-16 md:w-24 md:h-24 drop-shadow-2xl opacity-70" />
+                  </div>
+                  <div className="absolute bottom-[10%] right-[10%] animate-float opacity-80">
+                    <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Party%20Popper.png" alt="Party" className="w-20 h-20 md:w-24 md:h-24 drop-shadow-2xl opacity-70" />
+                  </div>
                 </div>
                 {/* TopAppBar */}
                 <div className="fixed top-0 w-full z-50 shadow-sm">

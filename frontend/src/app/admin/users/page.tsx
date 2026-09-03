@@ -4,12 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { ThemeToggle } from '@/components/theme-toggle';
+import MainLayout from '@/components/MainLayout';
 
 export default function ManageUsers() {
   const router = useRouter();
   const [users, setUsers] = useState<any[]>([]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
 
@@ -56,41 +55,11 @@ export default function ManageUsers() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/login');
-  };
-
   if (!mounted) return null;
 
   return (
-    <div className="bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-[#2a1300] dark:via-[#140900] dark:to-[#2a1300] text-on-surface dark:text-orange-50 antialiased min-h-screen flex flex-col pt-24 pb-24 selection:bg-primary selection:text-white font-sans relative overflow-hidden transition-colors duration-300">
-      {/* Decorative blobs */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[0%] left-[-10%] w-[500px] h-[500px] bg-primary/10 dark:bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 transition-colors duration-300"></div>
-        <div className="absolute top-[30%] right-[-10%] w-[400px] h-[400px] bg-yellow-200/50 dark:bg-yellow-600/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 transition-colors duration-300"></div>
-      </div>
-
-      {/* TopAppBar */}
-      <div className="fixed top-0 w-full z-50 shadow-sm">
-        <header className="bg-[#F26522] dark:bg-[#C24500] flex justify-between items-center px-container-padding h-16 text-white shadow-sm transition-colors duration-300">
-          <div className="flex items-center gap-4 cursor-pointer" onClick={() => router.push('/dashboard')}>
-
-            <span className="font-display-sm text-[22px] md:text-[24px] font-bold tracking-tight text-white">KMITL BADMINTON</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <button className="lg:hidden w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => setIsSidebarOpen(true)}>
-              <span className="material-symbols-outlined text-[28px]">menu</span>
-            </button>
-          </div>
-        </header>
-        <div className="bg-[#545454] dark:bg-[#1a0a00] h-8 flex items-center px-container-padding text-white font-body-md text-[12px] md:text-[14px] transition-colors duration-300">
-          สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง
-        </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto space-y-6 w-full px-container-padding mt-4 relative z-10">
+    <MainLayout>
+      <div className="max-w-5xl mx-auto space-y-6 w-full px-4 md:px-margin-screen mt-4 relative z-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="font-display-sm text-[28px] font-extrabold text-gray-900 dark:text-orange-50 drop-shadow-sm transition-colors duration-300">Manage Users</h1>
           <button
@@ -135,46 +104,6 @@ export default function ManageUsers() {
           )}
         </section>
       </div>
-
-      {/* Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
-          <div className="relative w-[280px] bg-white dark:bg-[#140900] h-full shadow-2xl flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
-            <div className="flex justify-between items-center mb-8">
-              <span className="font-display-sm text-[20px] font-bold dark:text-orange-50 text-gray-900">Admin Menu</span>
-              <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white">
-                <span className="material-symbols-outlined text-[28px]">close</span>
-              </button>
-            </div>
-            <nav className="flex flex-col gap-6">
-              <div className="flex flex-col gap-4">
-                <button onClick={() => { setIsSidebarOpen(false); router.push('/dashboard'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Home</button>
-                <button onClick={() => { setIsSidebarOpen(false); router.push('/admin/users'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Manage Users <span className="w-2 h-2 rounded-full bg-green-500 inline-block ml-1"></span></button>
-                <button onClick={() => { setIsSidebarOpen(false); router.push('/scan'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Scan QR</button>
-                <button onClick={() => { setIsSidebarOpen(false); router.push('/news'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">News</button>
-              </div>
-              
-              <div>
-                <h3 className="font-bold text-[18px] text-gray-900 dark:text-orange-50 mb-3">Settings</h3>
-                <div className="flex flex-col gap-3 pl-4 border-l-2 border-gray-200 dark:border-gray-800">
-                  <div className="flex items-center justify-between text-[15px] text-gray-600 dark:text-gray-400 hover:text-primary">
-                    <span>Dark Mode</span>
-                    <ThemeToggle />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-auto pt-6">
-                 <button onClick={handleLogout} className="w-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-colors">
-                   <span className="material-symbols-outlined">logout</span>
-                   Logout
-                 </button>
-              </div>
-            </nav>
-          </div>
-        </div>
-      )}
-    </div>
+    </MainLayout>
   );
 }

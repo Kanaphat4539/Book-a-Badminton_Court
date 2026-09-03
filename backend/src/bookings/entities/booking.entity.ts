@@ -1,13 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
-import { Court } from '../../courts/entities/court.entity';
-
-export enum BookingStatus {
-  PENDING = 'PENDING',
-  CHECKED_IN = 'CHECKED_IN',
-  CANCELLED = 'CANCELLED',
-  COMPLETED = 'COMPLETED',
-}
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Student } from '../../users/entities/student.entity';
+import { Admin } from '../../users/entities/admin.entity';
 
 @Entity('bookings')
 export class Booking {

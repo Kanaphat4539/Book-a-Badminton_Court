@@ -42,8 +42,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <header className="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
         <div className="h-16 px-4 md:px-margin-screen flex items-center justify-between max-w-2xl mx-auto">
           <div className="flex items-center gap-3 cursor-pointer min-w-0" onClick={() => router.push('/dashboard')}>
-            <div className="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-[0_4px_12px_rgba(255,94,30,0.25)] shrink-0">
-              <span className="material-symbols-outlined text-[22px]">sports_tennis</span>
+            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center shadow-[0_4px_12px_rgba(255,94,30,0.25)] shrink-0">
+              <img
+                alt="KMITL Badminton Logo"
+                className="w-full h-full object-cover scale-[1.3] origin-center"
+                src="https://dynamic.design.com/preview/logodraft/19a68c63-7360-49b5-81f0-76059ea64263/image/extra-large.en-us.png"
+              />
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-headline-sm text-base md:text-headline-sm text-on-surface leading-tight tracking-tight truncate">KMITL Badminton</span>

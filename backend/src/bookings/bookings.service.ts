@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Booking, BookingStatus } from './entities/booking.entity';
 import { Court } from '../courts/entities/court.entity';
 import { User } from '../users/entities/user.entity';
@@ -14,6 +14,7 @@ export class BookingsService {
     private courtsRepository: Repository<Court>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private dataSource: DataSource,
   ) {}
 
   async createBooking(userId: number, courtId: number, date: string, startTime: string) {
@@ -22,51 +23,61 @@ export class BookingsService {
     const endHours = (hours + 1).toString().padStart(2, '0');
     const endTime = `${endHours}:${minutes.toString().padStart(2, '0')}:00`;
 
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
     if (date !== today) {
       throw new BadRequestException('Day-by-day policy: You can only book courts for today.');
     }
 
-    // 1. Check if user already has an active booking (limit 1 active booking at a time)
-    const existingUserBooking = await this.bookingsRepository.findOne({
-      where: [
-        { user: { id: userId }, status: BookingStatus.PENDING },
-        { user: { id: userId }, status: BookingStatus.CHECKED_IN }
-      ]
-    });
-
-    if (existingUserBooking) {
-      throw new BadRequestException('You already have an active booking. Please complete or cancel it first.');
+    // Booking is only allowed between 08:00 and 23:00
+    const currentHour = now.getHours();
+    if (currentHour < 8 || currentHour >= 23) {
+      throw new BadRequestException('ระบบเปิดให้จองเวลา 08:00 - 23:00 น. เท่านั้น');
     }
 
-    // 2. Check if the court is available at this time
-    const overlappingBooking = await this.bookingsRepository.findOne({
-      where: [
-        { court: { id: courtId }, booking_date: date, start_time: startTime, status: BookingStatus.PENDING },
-        { court: { id: courtId }, booking_date: date, start_time: startTime, status: BookingStatus.CHECKED_IN }
-      ]
+    // Use a transaction with SERIALIZABLE isolation to prevent concurrent double bookings
+    return this.dataSource.transaction('SERIALIZABLE', async (manager) => {
+      // 1. Check if user already has an active booking (limit 1 active booking at a time)
+      const existingUserBooking = await manager.findOne(Booking, {
+        where: [
+          { user: { id: userId }, status: BookingStatus.PENDING },
+          { user: { id: userId }, status: BookingStatus.CHECKED_IN }
+        ]
+      });
+
+      if (existingUserBooking) {
+        throw new BadRequestException('You already have an active booking. Please complete or cancel it first.');
+      }
+
+      // 2. Check if the court is available at this time
+      const overlappingBooking = await manager.findOne(Booking, {
+        where: [
+          { court: { id: courtId }, booking_date: date, start_time: startTime, status: BookingStatus.PENDING },
+          { court: { id: courtId }, booking_date: date, start_time: startTime, status: BookingStatus.CHECKED_IN }
+        ]
+      });
+
+      if (overlappingBooking) {
+        throw new BadRequestException('This court is already booked at this time.');
+      }
+
+      const court = await manager.findOneBy(Court, { id: courtId });
+      if (!court) throw new NotFoundException('Court not found');
+
+      const user = await manager.findOneBy(User, { id: userId });
+      if (!user) throw new NotFoundException('User not found');
+
+      const newBooking = manager.create(Booking, {
+        user,
+        court,
+        booking_date: date,
+        start_time: startTime,
+        end_time: endTime,
+        status: BookingStatus.PENDING,
+      });
+
+      return manager.save(Booking, newBooking);
     });
-
-    if (overlappingBooking) {
-      throw new BadRequestException('This court is already booked at this time.');
-    }
-
-    const court = await this.courtsRepository.findOneBy({ id: courtId });
-    if (!court) throw new NotFoundException('Court not found');
-
-    const user = await this.usersRepository.findOneBy({ id: userId });
-    if (!user) throw new NotFoundException('User not found');
-
-    const newBooking = this.bookingsRepository.create({
-      user,
-      court,
-      booking_date: date,
-      start_time: startTime,
-      end_time: endTime,
-      status: BookingStatus.PENDING,
-    });
-
-    return this.bookingsRepository.save(newBooking);
   }
 
   async getMyBookings(userId: number) {

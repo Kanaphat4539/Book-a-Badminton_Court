@@ -14,7 +14,7 @@ export default function BookingPage() {
   const [dates, setDates] = useState<{ date: string, day: string, num: string, fullMonth: string }[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
-  const [courts, setCourts] = useState<any[]>([]);
+  const [courts, setCourts] = useState<{ id: number, name: string, description: string, status: string, availability?: any[], bookings?: any[] }[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleCloseRules = () => {
@@ -42,9 +42,9 @@ export default function BookingPage() {
     setSelectedDate(generatedDates[0].date);
   }, []);
 
-  // Time slots from 06:00 to 21:00
-  const timeSlots = Array.from({ length: 16 }, (_, i) => {
-    return `${(i + 6).toString().padStart(2, '0')}:00`;
+  // Time slots from 08:00 to 23:00 (15 slots, each 1 hour)
+  const timeSlots = Array.from({ length: 15 }, (_, i) => {
+    return `${(i + 8).toString().padStart(2, '0')}:00`;
   });
 
   // Fetch availability when date changes
@@ -59,13 +59,17 @@ export default function BookingPage() {
     }
   }, [selectedDate]);
 
-  const fetchAvailability = async (dateStr: string) => {
+  const fetchAvailability = async (date: string) => {
     setLoading(true);
     try {
-      const response = await api.get(`/courts/availability?date=${dateStr}`);
-      setCourts(response.data);
+      const response = await api.get(`/courts/availability?date=${date}`);
+      // Sort courts by name logically (e.g. Court 1, Court 2)
+      const sortedCourts = response.data.sort((a: { name: string }, b: { name: string }) => 
+        a.name.localeCompare(b.name, undefined, { numeric: true })
+      );
+      setCourts(sortedCourts);
       setSelectedTime(''); // Reset time when date changes
-    } catch (err) {
+    } catch (error) {
       toast.error('Failed to load courts');
     } finally {
       setLoading(false);
@@ -172,26 +176,27 @@ export default function BookingPage() {
         <div className="flex flex-col w-full pb-8">
           {/* Campus Sports Arena Context Card */}
           <section className="px-4 md:px-margin-screen pt-4 pb-2">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-surface-container-low to-surface-container-high p-4 md:p-card-padding shadow-sm">
-              <div className="absolute -right-6 -bottom-6 w-28 h-28 bg-primary-container/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#F26522] to-yellow-500 p-5 md:p-card-padding shadow-[0_8px_24px_rgba(242,101,34,0.3)]">
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 z-0"></div>
+              <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/20 rounded-full blur-3xl pointer-events-none z-0"></div>
               <div className="flex items-start justify-between relative z-10 gap-2">
                 <div className="flex flex-col min-w-0">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary/10 text-secondary w-fit mb-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse shrink-0"></span>
-                    <span className="font-label-sm text-[9px] md:text-label-sm uppercase tracking-wide truncate">เปิดให้บริการปกติ</span>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white w-fit mb-3 backdrop-blur-md border border-white/30 shadow-inner">
+                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shrink-0 shadow-[0_0_8px_#4ade80]"></span>
+                    <span className="font-label-sm text-[10px] md:text-label-sm uppercase tracking-widest font-black">เปิดให้บริการปกติ</span>
                   </div>
-                  <h1 className="font-headline-sm text-lg md:text-headline-sm text-on-surface truncate">จองคอร์ทแบดมินตัน</h1>
-                  <p className="font-body-sm text-[11px] md:text-body-sm text-on-surface-variant flex items-center gap-1 mt-0.5 truncate">
-                    <span className="material-symbols-outlined text-[15px] text-primary shrink-0">stadium</span>
-                    <span className="truncate">อาคารยิมเนเซียม 1 (Gymnasium 1) • วิทยาเขตลาดกระบัง</span>
+                  <h1 className="font-headline-sm text-xl md:text-[28px] text-white font-extrabold truncate drop-shadow-md">จองคอร์ทแบดมินตัน</h1>
+                  <p className="font-body-sm text-[12px] md:text-[14px] text-white/90 flex items-center gap-1.5 mt-1 truncate">
+                    <span className="material-symbols-outlined text-[16px] text-white shrink-0 drop-shadow-sm">stadium</span>
+                    <span className="truncate font-medium">อาคารยิมเนเซียม 1 (Gymnasium 1) • วิทยาเขตลาดกระบัง</span>
                   </p>
                 </div>
                 <div className="flex flex-col items-end shrink-0">
-                  <div className="px-2 py-1 md:px-2.5 rounded-xl bg-surface-container-lowest shadow-sm flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px] md:text-[16px] text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-                    <span className="font-label-sm text-[9px] md:text-label-sm text-on-surface font-semibold">โควตา นศ.</span>
+                  <div className="px-3 py-1.5 md:px-3 rounded-xl bg-white shadow-lg flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[16px] text-[#F26522]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                    <span className="font-label-sm text-[10px] md:text-label-sm text-[#F26522] font-black uppercase tracking-wider">โควตา นศ.</span>
                   </div>
-                  <span className="font-label-sm text-[9px] md:text-label-sm text-secondary font-bold mt-1">คงเหลือ 1 ชม./วัน</span>
+                  <span className="font-label-sm text-[10px] md:text-label-sm text-white font-bold mt-2 bg-black/20 px-2 py-0.5 rounded backdrop-blur-sm">คงเหลือ 1 ชม./วัน</span>
                 </div>
               </div>
             </div>

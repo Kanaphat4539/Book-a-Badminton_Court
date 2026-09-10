@@ -12,6 +12,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/rules-of-hooks, @typescript-eslint/no-unused-vars, no-restricted-syntax, react-hooks/set-state-in-effect
     setMounted(true);
     const userStr = localStorage.getItem('user');
     if (userStr) {

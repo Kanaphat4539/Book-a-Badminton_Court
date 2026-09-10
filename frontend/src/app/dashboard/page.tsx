@@ -9,7 +9,7 @@ import MainLayout from '@/components/MainLayout';
 
 export default function Dashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: number, name: string, username: string, role: string } | null>(null);
   const [bookings, setBookings] = useState<any[]>([]);
   const [allBookings, setAllBookings] = useState<any[]>([]);
   const [timeLeft, setTimeLeft] = useState<string>('--:--');
@@ -61,6 +61,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     const userStr = localStorage.getItem('user');
     const token = localStorage.getItem('token');
@@ -292,43 +293,47 @@ export default function Dashboard() {
     <MainLayout>
       <div className="flex flex-col w-full pb-10">
         
-        {/* Subtle decorative ambient backdrop glow */}
-        <div className="relative w-full px-4 md:px-margin-screen pt-4 pb-2">
+        {/* Sporty Dynamic Ambient Backdrop */}
+        <div className="relative w-full px-4 md:px-margin-screen pt-6 pb-6 mb-4 overflow-hidden rounded-b-[2.5rem] shadow-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#F26522] via-[#ff7e22] to-yellow-500 z-0 opacity-90 dark:opacity-100"></div>
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 z-0"></div>
+          <div className="absolute -top-24 -right-10 w-64 h-64 bg-white/20 blur-3xl rounded-full z-0 pointer-events-none"></div>
+          
           {/* User Welcome Greeting & Badges */}
-          <div className="flex items-start justify-between gap-gutter-md">
+          <div className="relative z-10 flex items-start justify-between gap-gutter-md">
             <div className="flex flex-col">
-              <div className="flex items-center gap-1.5 mb-1">
-                <span className="inline-block w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-                <span className="font-label-sm text-label-sm text-secondary tracking-wide uppercase font-bold">KMITL Sports Portal</span>
+              <div className="flex items-center gap-1.5 mb-1 bg-black/20 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
+                <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_#4ade80]"></span>
+                <span className="font-label-sm text-[10px] text-white tracking-widest uppercase font-black">KMITL Sports Portal</span>
               </div>
-              <h1 className="font-headline-lg text-headline-lg text-on-surface font-extrabold tracking-tight flex items-center gap-1.5">
-                Hi, {user.name} <span className="text-2xl animate-bounce">🏸</span>
+              <h1 className="font-headline-lg text-[28px] md:text-[36px] text-white font-black tracking-tight flex items-center gap-2 drop-shadow-md">
+                Hi, {user.name} <span className="text-3xl md:text-4xl animate-bounce">🏸</span>
               </h1>
-              <p className="font-body-md text-body-md text-on-surface-variant font-medium mt-0.5">
+              <p className="font-body-md text-[14px] md:text-[16px] text-white/90 font-medium mt-1">
                 Welcome back to KMITL Badminton
               </p>
             </div>
             {/* Student Badge Avatar / Tier */}
             <div className="flex flex-col items-end">
-              <span className="px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm font-bold shadow-sm flex items-center gap-1 uppercase">
-                <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+              <span className="px-3 py-1.5 rounded-full bg-white text-[#F26522] font-label-sm text-[11px] font-black shadow-lg flex items-center gap-1 uppercase tracking-wider">
+                <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
                 {user.role}
               </span>
             </div>
           </div>
 
           {/* Daily Quota Banner Bar */}
-          <div className="mt-4 w-full p-3 rounded-xl bg-surface-container-lowest shadow-sm flex items-center justify-between">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary shrink-0">
-                <span className="material-symbols-outlined text-[18px]">timelapse</span>
+          <div className="mt-6 w-full p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0 shadow-inner">
+                <span className="material-symbols-outlined text-[20px]">timelapse</span>
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">โควตานักศึกษาวันนี้</span>
-                <span className="font-label-lg text-label-lg text-on-surface truncate font-bold">คงเหลือ 1 ชม./วัน (Free Tier)</span>
+                <span className="font-label-sm text-[10px] text-white/80 uppercase tracking-widest font-bold">โควตานักศึกษาวันนี้</span>
+                <span className="font-label-lg text-[14px] text-white truncate font-extrabold drop-shadow-sm">คงเหลือ 1 ชม./วัน (Free Tier)</span>
               </div>
             </div>
-            <span className="px-2 py-0.5 rounded-md bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold shrink-0">
+            <span className="px-3 py-1.5 rounded-lg bg-green-500 text-white font-label-sm text-[12px] font-black shrink-0 shadow-md border border-green-400">
               1/1 พร้อมใช้
             </span>
           </div>

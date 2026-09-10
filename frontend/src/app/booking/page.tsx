@@ -10,11 +10,16 @@ export default function BookingPage() {
   const router = useRouter();
 
   // States
+  const [showRulesModal, setShowRulesModal] = useState(true);
   const [dates, setDates] = useState<{ date: string, day: string, num: string, fullMonth: string }[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [courts, setCourts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const handleCloseRules = () => {
+    setShowRulesModal(false);
+  };
 
   // Generate next 7 days for horizontal calendar
   useEffect(() => {
@@ -113,6 +118,56 @@ export default function BookingPage() {
 
   return (
     <MainLayout>
+      {/* Rules Modal */}
+      {showRulesModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="bg-surface relative w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-300">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/30 bg-surface-container-lowest">
+              <h2 className="font-headline-sm text-on-surface text-lg md:text-xl font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-[24px]">gavel</span>
+                กฎและกติกาการใช้สนาม
+              </h2>
+              <button 
+                onClick={handleCloseRules}
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-surface-container hover:bg-surface-container-highest text-on-surface-variant transition-colors"
+                title="ปิดหน้าต่างเพื่อดำเนินการจอง"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 overflow-y-auto flex-1 font-body-md text-on-surface-variant text-sm md:text-base space-y-4">
+              <div className="space-y-2">
+                <h3 className="font-bold text-on-surface">1. การแต่งกาย</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>ต้องสวมรองเท้าแบดมินตันพื้นยางดิบ (Non-marking) เท่านั้น</li>
+                  <li>สวมใส่ชุดกีฬาที่เหมาะสมสำหรับการออกกำลังกาย</li>
+                </ul>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-bold text-on-surface">2. การจองและการใช้งาน</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>นักศึกษาได้โควตา 1 ชั่วโมง/วัน/บัญชี</li>
+                  <li>กรุณามาถึงสนามก่อนเวลาจอง 10-15 นาที เพื่อทำการสแกน QR Code เช็คอิน</li>
+                  <li>หากไม่ทำการเช็คอินภายใน 15 นาที ระบบจะยกเลิกการจองอัตโนมัติ</li>
+                </ul>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-bold text-on-surface">3. บทลงโทษ (Blacklist)</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>หากจองแล้วไม่มาใช้งาน (No-show) เกิน 2 ครั้ง จะถูกระงับสิทธิ์การจอง 7 วัน</li>
+                </ul>
+              </div>
+              <p className="text-primary text-xs mt-4 p-3 bg-primary-container/30 rounded-xl">
+                * กรุณากดเครื่องหมายกากบาท (X) ด้านบนขวาเพื่อยอมรับเงื่อนไขและดำเนินการจอง
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="flex flex-col relative w-full pb-6 bg-surface min-h-screen">
         <div className="flex flex-col w-full pb-8">
           {/* Campus Sports Arena Context Card */}

@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 
-describe('UsersController', () => {
+// On the Guistee branch UsersController exposes no endpoints yet — this only
+// guards against the controller failing to instantiate.
+describe('UsersController (unit)', () => {
   let controller: UsersController;
 
   beforeEach(async () => {

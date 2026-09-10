@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import MainLayout from '@/components/MainLayout';
+import { generateHourlySlots, isSlotInPast } from '@/lib/time';
 
 export default function BookingPage() {
   const router = useRouter();
@@ -38,9 +39,7 @@ export default function BookingPage() {
   }, []);
 
   // Time slots from 06:00 to 21:00
-  const timeSlots = Array.from({ length: 16 }, (_, i) => {
-    return `${(i + 6).toString().padStart(2, '0')}:00`;
-  });
+  const timeSlots = generateHourlySlots(6, 16);
 
   // Fetch availability when date changes
   useEffect(() => {
@@ -76,16 +75,7 @@ export default function BookingPage() {
     ));
   };
 
-  const isTimeInPast = (timeStr: string) => {
-    if (!selectedDate) return false;
-    const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    if (selectedDate !== todayStr) return false;
-
-    const slotHour = parseInt(timeStr.split(':')[0], 10);
-    const currentHour = now.getHours();
-    return currentHour > slotHour;
-  };
+  const isTimeInPast = (timeStr: string) => isSlotInPast(selectedDate, timeStr);
 
   const handleNext = () => {
     if (!selectedTime) {

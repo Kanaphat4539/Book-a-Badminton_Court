@@ -12,6 +12,7 @@ import { CronModule } from './cron/cron.module';
 import { Admin } from './users/entities/admin.entity';
 import { Student } from './users/entities/student.entity';
 import { Booking } from './bookings/entities/booking.entity';
+import { Court } from './courts/entities/court.entity';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { Booking } from './bookings/entities/booking.entity';
       username: process.env.DB_USER || 'badminton_user',
       password: process.env.DB_PASSWORD || 'password',
       database: process.env.DB_NAME || 'database.sqlite',
-      entities: [Admin, Student, Booking],
+      entities: [Admin, Student, Booking, Court],
       synchronize: true, // Use only in dev, not in production
     }),
     ScheduleModule.forRoot(),

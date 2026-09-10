@@ -210,10 +210,11 @@ export default function Dashboard() {
             </div>
             <div className="flex gap-2">
               <button
-                className="bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-xl font-button text-[15px] font-bold transition-all shadow-[0_4px_12px_rgba(239,68,68,0.3)] hover:shadow-[0_6px_16px_rgba(239,68,68,0.4)] active:scale-95"
-                onClick={handleResetDatabase}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-button text-[15px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
+                onClick={() => router.push('/admin/users')}
               >
-                Reset Database
+                <span className="material-symbols-outlined text-[18px]">group</span>
+                Manage Users
               </button>
             </div>
           </div>

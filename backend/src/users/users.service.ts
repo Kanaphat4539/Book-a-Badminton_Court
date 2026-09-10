@@ -49,8 +49,20 @@ export class UsersService implements OnModuleInit {
     const passwordToHash = studentData.password || 'password';
     const hashedPassword = await bcrypt.hash(passwordToHash, saltOrRounds);
     
+    // Split "name" from frontend into first_name and last_name
+    const nameParts = (studentData.name || '').trim().split(' ');
+    const first_name = nameParts[0] || '';
+    const last_name = nameParts.slice(1).join(' ') || '';
+    
     const newStudent = this.studentRepository.create({
-      ...studentData,
+      stu_id: studentData.studentId || studentData.stu_id,
+      email: studentData.email,
+      first_name: studentData.first_name || first_name,
+      last_name: studentData.last_name || last_name,
+      tel: studentData.phone || studentData.tel,
+      major: studentData.major,
+      year: parseInt(studentData.year, 10) || 1,
+      username: studentData.username,
       password: hashedPassword,
     } as any);
     
@@ -70,5 +82,20 @@ export class UsersService implements OnModuleInit {
     if (student) {
       await this.studentRepository.remove(student);
     }
+  }
+
+  async createAdmin(adminData: any): Promise<Admin> {
+    const saltOrRounds = 10;
+    const passwordToHash = adminData.password || 'password';
+    const hashedPassword = await bcrypt.hash(passwordToHash, saltOrRounds);
+    
+    const newAdmin = this.adminRepository.create({
+      admin_id: adminData.admin_id || adminData.adminId || `A${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+      username: adminData.username,
+      name: adminData.name,
+      password: hashedPassword,
+    });
+    
+    return this.adminRepository.save(newAdmin);
   }
 }

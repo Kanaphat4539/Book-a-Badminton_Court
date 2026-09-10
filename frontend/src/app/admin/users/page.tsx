@@ -13,6 +13,11 @@ export default function ManageUsers() {
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
 
+  const [showAddAdmin, setShowAddAdmin] = useState(false);
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminName, setAdminName] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+
   useEffect(() => {
     setMounted(true);
     const userStr = localStorage.getItem('user');
@@ -41,6 +46,24 @@ export default function ManageUsers() {
       toast.error('Failed to load users');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.post('/users/admin', {
+        username: adminUsername,
+        name: adminName,
+        password: adminPassword,
+      });
+      toast.success('Admin created successfully');
+      setShowAddAdmin(false);
+      setAdminUsername('');
+      setAdminName('');
+      setAdminPassword('');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to create admin');
     }
   };
 
@@ -93,13 +116,22 @@ export default function ManageUsers() {
       <div className="max-w-5xl mx-auto space-y-6 w-full px-container-padding mt-4 relative z-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="font-display-sm text-[28px] font-extrabold text-gray-900 dark:text-orange-50 drop-shadow-sm transition-colors duration-300">Manage Users</h1>
-          <button
-            className="bg-white/80 dark:bg-[#2a1300]/60 text-gray-900 dark:text-orange-50 border border-gray-200 dark:border-[#ff6b00]/20 hover:bg-gray-100 dark:hover:bg-[#3a1b00] px-4 py-2 rounded-xl font-button text-[14px] font-bold transition-all shadow-sm flex items-center gap-2"
-            onClick={() => router.push('/dashboard')}
-          >
-            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-            Back to Dashboard
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="bg-primary text-white hover:bg-[#E55B13] px-4 py-2 rounded-xl font-button text-[14px] font-bold transition-all shadow-sm flex items-center gap-2"
+              onClick={() => setShowAddAdmin(true)}
+            >
+              <span className="material-symbols-outlined text-[18px]">person_add</span>
+              Add Admin
+            </button>
+            <button
+              className="bg-white/80 dark:bg-[#2a1300]/60 text-gray-900 dark:text-orange-50 border border-gray-200 dark:border-[#ff6b00]/20 hover:bg-gray-100 dark:hover:bg-[#3a1b00] px-4 py-2 rounded-xl font-button text-[14px] font-bold transition-all shadow-sm flex items-center gap-2"
+              onClick={() => router.push('/dashboard')}
+            >
+              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              Dashboard
+            </button>
+          </div>
         </div>
 
         <section className="bg-white/70 dark:bg-[#2a1300]/60 backdrop-blur-xl border border-white dark:border-[#ff6b00]/20 shadow-sm rounded-3xl p-6 md:p-8 transition-colors duration-300">
@@ -112,19 +144,19 @@ export default function ManageUsers() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {users.map(u => (
-                <div key={u.id} className="bg-white/80 dark:bg-[#1a0a00]/70 border border-gray-100 dark:border-[#ff6b00]/30 p-5 rounded-2xl flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow">
+                <div key={u.id || u.stu_id} className="bg-white/80 dark:bg-[#1a0a00]/70 border border-gray-100 dark:border-[#ff6b00]/30 p-5 rounded-2xl flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-headline-md text-[18px] font-bold text-gray-900 dark:text-orange-50">{u.name}</p>
+                      <p className="font-headline-md text-[18px] font-bold text-gray-900 dark:text-orange-50">{u.name || `${u.first_name} ${u.last_name}`}</p>
                       <p className="text-gray-500 dark:text-orange-300/60 font-semibold text-[14px]">@{u.username}</p>
                     </div>
                     <span className="bg-gray-100 dark:bg-[#3a1b00] text-gray-600 dark:text-orange-200/80 px-2.5 py-1 rounded-full text-[12px] font-bold">
-                      {u.role}
+                      {u.role || 'STUDENT'}
                     </span>
                   </div>
                   <button
                     className="mt-2 flex items-center justify-center gap-1.5 w-full bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 py-2 rounded-xl font-bold transition-colors text-[14px]"
-                    onClick={() => handleDeleteUser(u.id, u.username)}
+                    onClick={() => handleDeleteUser(u.id || u.stu_id, u.username)}
                   >
                     <span className="material-symbols-outlined text-[18px]">delete</span>
                     Delete User
@@ -135,6 +167,63 @@ export default function ManageUsers() {
           )}
         </section>
       </div>
+
+      {/* Add Admin Modal */}
+      {showAddAdmin && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddAdmin(false)}></div>
+          <div className="relative bg-white dark:bg-[#1a0a00] p-8 rounded-3xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-orange-50 mb-6">Add New Admin</h2>
+            <form onSubmit={handleAddAdmin} className="flex flex-col gap-4">
+              <div>
+                <label className="text-sm font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider">Username</label>
+                <input
+                  type="text"
+                  required
+                  value={adminUsername}
+                  onChange={(e) => setAdminUsername(e.target.value)}
+                  className="mt-1 w-full h-12 rounded-xl px-4 font-body-md text-[15px] bg-gray-50 dark:bg-[#2a1300] border border-gray-200 dark:border-[#ff6b00]/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={adminName}
+                  onChange={(e) => setAdminName(e.target.value)}
+                  className="mt-1 w-full h-12 rounded-xl px-4 font-body-md text-[15px] bg-gray-50 dark:bg-[#2a1300] border border-gray-200 dark:border-[#ff6b00]/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider">Password</label>
+                <input
+                  type="password"
+                  required
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="mt-1 w-full h-12 rounded-xl px-4 font-body-md text-[15px] bg-gray-50 dark:bg-[#2a1300] border border-gray-200 dark:border-[#ff6b00]/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="flex gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddAdmin(false)}
+                  className="flex-1 h-12 rounded-xl font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 h-12 rounded-xl font-bold bg-primary text-white hover:bg-[#E55B13]"
+                >
+                  Create Admin
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Sidebar Overlay */}
       {isSidebarOpen && (

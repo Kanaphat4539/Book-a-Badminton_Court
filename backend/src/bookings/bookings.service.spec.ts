@@ -7,6 +7,11 @@ import { Student } from '../users/entities/student.entity';
 import { Admin } from '../users/entities/admin.entity';
 
 const today = () => new Date().toISOString().split('T')[0];
+const tomorrow = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split('T')[0];
+};
 
 function repoMock() {
   return {
@@ -113,7 +118,7 @@ describe('BookingsService (unit)', () => {
 
     it('rejects check-in before the booking start time', async () => {
       bookings.findOne.mockResolvedValue({
-        status: BookingStatus.PENDING, booking_date: today(), time_in: '23:59:00',
+        status: BookingStatus.PENDING, booking_date: tomorrow(), time_in: '23:59:00',
       });
       await expect(service.checkIn(1, '64010001', 1)).rejects.toBeInstanceOf(BadRequestException);
     });

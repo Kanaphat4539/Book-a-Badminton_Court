@@ -32,6 +32,24 @@ export class UsersService implements OnModuleInit {
       });
       await this.adminRepository.save(newAdmin);
     }
+
+    // Seed default student user if not exists
+    const user = await this.studentRepository.findOneBy({ username: 'user' });
+    if (!user) {
+      const hashedPassword = await bcrypt.hash('password', 10);
+      const newStudent = this.studentRepository.create({
+        stu_id: '64010000',
+        email: 'user@kmitl.ac.th',
+        first_name: 'Normal',
+        last_name: 'User',
+        tel: '0812345678',
+        major: 'Computer Science',
+        year: 3,
+        username: 'user',
+        password: hashedPassword,
+      } as any);
+      await this.studentRepository.save(newStudent);
+    }
   }
 
   async findByUsername(username: string): Promise<{ user: any; role: UserRole } | null> {

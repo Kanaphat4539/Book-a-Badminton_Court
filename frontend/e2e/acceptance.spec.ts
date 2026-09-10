@@ -8,8 +8,8 @@ test.describe('Acceptance: student', () => {
     const unique = Date.now();
     await page.goto('/register');
 
-    await page.locator('#studentId').fill(`64010${unique % 1000}`);
-    await page.locator('#email').fill(`stud${unique}@example.com`);
+    await page.locator('#studentId').fill(`64010${(unique % 1000).toString().padStart(3, '0')}`);
+    await page.locator('#email').fill(`stud${unique}@kmitl.ac.th`);
     await page.locator('#name').fill('Test Student');
     await page.locator('#phone').fill('0812345678');
     await page.locator('#major').fill('Computer Science');

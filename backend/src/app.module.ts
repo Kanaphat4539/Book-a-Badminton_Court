@@ -25,6 +25,7 @@ import { Court } from './courts/entities/court.entity';
       database: process.env.DB_NAME || 'database.sqlite',
       entities: [Admin, Student, Booking, Court],
       synchronize: true, // Use only in dev, not in production
+      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : false,
     }),
     ScheduleModule.forRoot(),
     DatabaseModule,

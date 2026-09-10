@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { toast } from 'sonner';
+import MainLayout from '@/components/MainLayout';
 
 export default function ScanPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [scannedResult, setScannedResult] = useState<string | null>(null);
   const [myBookings, setMyBookings] = useState<any[]>([]);
+  const myBookingsRef = useRef<any[]>([]);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   useEffect(() => {
@@ -18,6 +20,7 @@ export default function ScanPage() {
       try {
         const response = await api.get('/bookings/me');
         setMyBookings(response.data);
+        myBookingsRef.current = response.data;
       } catch (err) {
         toast.error('Failed to load your bookings');
       }
@@ -26,23 +29,32 @@ export default function ScanPage() {
   }, []);
 
   useEffect(() => {
-    // Initialize QR scanner
-    scannerRef.current = new Html5QrcodeScanner(
-      "qr-reader",
-      { fps: 10, qrbox: { width: 250, height: 250 } },
-      /* verbose= */ false
-    );
+    // We use a small timeout to ensure the DOM is completely ready
+    // and to avoid React 18 strict mode double-invocation races.
+    const timer = setTimeout(() => {
+      const element = document.getElementById('qr-reader');
+      if (!element) return;
 
-    scannerRef.current.render(onScanSuccess, onScanFailure);
+      if (!scannerRef.current) {
+        scannerRef.current = new Html5QrcodeScanner(
+          'qr-reader',
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          false
+        );
+        scannerRef.current.render(onScanSuccess, onScanFailure);
+      }
+    }, 100);
 
     return () => {
+      clearTimeout(timer);
       if (scannerRef.current) {
         scannerRef.current.clear().catch(error => {
-          console.error("Failed to clear html5QrcodeScanner. ", error);
+          console.error('Failed to clear html5QrcodeScanner. ', error);
         });
+        scannerRef.current = null;
       }
     };
-  }, [myBookings]);
+  }, []);
 
   const onScanSuccess = async (decodedText: string, decodedResult: any) => {
     if (loading || scannedResult) return;
@@ -72,8 +84,8 @@ export default function ScanPage() {
   const handleCheckIn = async (courtId: number) => {
     setLoading(true);
     try {
-      // Find the pending booking for this court
-      const pendingBooking = myBookings.find(b => b.status === 'PENDING' && b.court.id === courtId);
+      // Find the pending booking for this court using the ref
+      const pendingBooking = myBookingsRef.current.find(b => b.status === 'PENDING' && b.court.id === courtId);
       
       if (!pendingBooking) {
         throw new Error('You do not have a pending booking for this court right now.');
@@ -81,63 +93,54 @@ export default function ScanPage() {
 
       await api.post(`/bookings/${pendingBooking.id}/check-in`, { courtId });
       toast.success('Check-in successful! Enjoy your game.');
-      router.push('/');
+      router.push('/dashboard');
     } catch (err: any) {
       toast.error(err.response?.data?.message || err.message || 'Check-in failed');
       setTimeout(() => {
         setScannedResult(null);
         setLoading(false);
-        router.push('/');
+        router.push('/dashboard');
       }, 3000);
     }
   };
 
   return (
-    <div className="bg-background text-on-background antialiased min-h-screen flex flex-col font-sans">
-      <div className="max-w-md w-full mx-auto flex-1 flex flex-col p-container-padding">
+    <MainLayout>
+      <div className="max-w-md w-full mx-auto flex-1 flex flex-col px-4 relative z-10">
         
         {/* Header */}
         <div className="flex items-center justify-between mb-8 mt-4">
-          <h1 className="font-display-sm text-[24px] font-bold">Scan QR Code</h1>
-          <button 
-            className="text-primary font-button text-[14px] font-semibold hover:opacity-80 transition-opacity" 
-            onClick={() => router.push('/')}
-          >
-            Cancel
-          </button>
+          <h1 className="font-headline-lg text-[24px] font-bold text-on-surface transition-colors duration-300">Scan QR Code</h1>
+          <div className="flex items-center gap-4">
+            <button 
+              className="text-primary font-label-lg text-[14px] hover:opacity-80 transition-opacity" 
+              onClick={() => router.push('/dashboard')}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="bg-surface p-2 rounded-2xl w-full max-w-sm overflow-hidden shadow-[0_0_30px_rgba(255,107,0,0.2)] border border-primary/30">
+          <div className="bg-white/70 dark:bg-[#1a0a00]/70 backdrop-blur-md p-2 rounded-2xl w-full max-w-sm overflow-hidden shadow-[0_0_30px_rgba(255,107,0,0.2)] border border-primary/30 dark:border-[#ff6b00]/30 transition-colors duration-300">
             <div id="qr-reader" className="w-full"></div>
           </div>
           
-          <div className="mt-8 text-center text-on-surface-variant font-body-md text-[14px]">
+          <div className="mt-8 text-center text-gray-600 dark:text-orange-200/70 font-body-md text-[14px] transition-colors duration-300">
             {loading ? (
               <p className="animate-pulse text-primary font-bold">Processing Check-in...</p>
             ) : (
-              <p>Point your camera at the QR code on the court to check in.</p>
+              <div className="flex flex-col gap-2">
+                <p>Point your camera at the QR code on the court to check in.</p>
+                <div className="bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 p-3 rounded-xl border border-orange-200 dark:border-orange-800/30 text-[13px] font-semibold mt-2">
+                  <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">info</span>
+                  Note: You can only scan the QR code when it is exactly time for your booking.
+                </div>
+              </div>
             )}
           </div>
         </div>
       </div>
-
-      {/* BottomNavBar */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 z-50 rounded-t-xl bg-surface-container/90 backdrop-blur-md shadow-[0px_-8px_24px_rgba(0,0,0,0.5)] border-t border-[#2A2A2A]">
-        <button onClick={() => router.push('/')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-          <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>sports_tennis</span>
-          <span className="font-label-md text-[12px] font-semibold">Home</span>
-        </button>
-        <button onClick={() => router.push('/booking')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-          <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>event_note</span>
-          <span className="font-label-md text-[12px] font-semibold">Bookings</span>
-        </button>
-        <button className="flex flex-col items-center justify-center text-primary font-bold hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-          <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>qr_code_scanner</span>
-          <span className="font-label-md text-[12px] font-semibold">Scan</span>
-        </button>
-      </nav>
-    </div>
+    </MainLayout>
   );
 }
-

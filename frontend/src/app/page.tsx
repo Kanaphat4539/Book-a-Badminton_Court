@@ -44,8 +44,13 @@ export default function LandingPage() {
                 src="https://dynamic.design.com/preview/logodraft/19a68c63-7360-49b5-81f0-76059ea64263/image/extra-large.en-us.png"
               />
             </div>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F26522] to-yellow-400">KMITL</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">PCC BADMINTON</span>
+            <div className="flex flex-col justify-center leading-[1.1]">
+              <div className="text-[18px] md:text-[22px]">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F26522] to-yellow-400">KMITL </span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">PCC</span>
+              </div>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 text-[14px] md:text-[18px] tracking-[0.15em]">BADMINTON</span>
+            </div>
           </Link>
           <div className="hidden lg:flex items-center gap-8 font-medium text-[15px]">
             <Link href="#services" className="text-white/80 hover:text-white transition-colors">Services</Link>
@@ -56,8 +61,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-4">
-          <ThemeToggle className="hidden md:flex w-10 h-10 items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors" iconClassName="text-[24px]" />
+        <div className="flex items-center gap-2 md:gap-6">
           <Link href="/login" className="hidden md:flex bg-white text-black font-bold text-[14px] px-6 py-2.5 rounded-full hover:bg-gray-200 transition-colors shadow-lg active:scale-95">
             Log in to Console
           </Link>
@@ -67,6 +71,9 @@ export default function LandingPage() {
           >
             <span className="material-symbols-outlined text-[28px]">menu</span>
           </button>
+          <div className="hidden md:flex md:ml-2">
+            <ThemeToggle className="w-10 h-10 flex items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors" iconClassName="text-[24px]" />
+          </div>
         </div>
       </nav>
 

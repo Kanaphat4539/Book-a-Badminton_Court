@@ -1,22 +1,13 @@
-import { Entity, PrimaryColumn, Column, OneToMany } from 'typeorm';
-import { Booking } from '../../bookings/entities/booking.entity';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-export enum CourtStatus {
-  AVAILABLE = 'AVAILABLE',
-  MAINTENANCE = 'MAINTENANCE',
-}
-
-@Entity('courts')
+@Entity('Court')
 export class Court {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'varchar', length: 50 })
   name: string;
 
-  @Column({ type: 'simple-enum', enum: CourtStatus, default: CourtStatus.AVAILABLE })
-  status: CourtStatus;
-
-  @OneToMany(() => Booking, (booking) => booking.court)
-  bookings: Booking[];
+  @Column({ type: 'boolean', default: true })
+  is_active: boolean;
 }

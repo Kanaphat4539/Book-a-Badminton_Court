@@ -4,16 +4,15 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { ThemeToggle } from '@/components/theme-toggle';
 import QRCode from 'react-qr-code';
+import MainLayout from '@/components/MainLayout';
 
 export default function Dashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: number, name: string, username: string, role: string } | null>(null);
   const [bookings, setBookings] = useState<any[]>([]);
   const [allBookings, setAllBookings] = useState<any[]>([]);
   const [timeLeft, setTimeLeft] = useState<string>('--:--');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [bookingTimeRemaining, setBookingTimeRemaining] = useState<string>('--:--');
   const [mounted, setMounted] = useState(false);
@@ -62,6 +61,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     const userStr = localStorage.getItem('user');
     const token = localStorage.getItem('token');
@@ -97,12 +97,6 @@ export default function Dashboard() {
     } catch (err) {
       console.error(err);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/login');
   };
 
   const handleCancelBooking = async (bookingId: number) => {
@@ -163,46 +157,20 @@ export default function Dashboard() {
 
   if (user.role === 'ADMIN') {
     return (
-      <div className="bg-gradient-to-br from-orange-50 via-white to-orange-100 text-on-surface antialiased min-h-screen flex flex-col pt-24 pb-24 font-sans relative overflow-hidden">
-        {/* Decorative blobs */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
-          <div className="absolute bottom-[20%] right-[-10%] w-[600px] h-[600px] bg-yellow-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
-        </div>
-        {/* TopAppBar */}
-        <div className="fixed top-0 w-full z-50 shadow-sm">
-          <header className="bg-[#F26522] flex justify-between items-center px-container-padding h-16 text-white shadow-sm">
-            <div className="flex items-center gap-4 cursor-pointer" onClick={() => router.push('/dashboard')}>
-
-              <span className="font-display-sm text-[22px] md:text-[24px] font-bold tracking-tight text-white">KMITL BADMINTON</span>
-            </div>
-            <div className="flex items-center gap-1">
-
-              <button className="hidden md:flex w-11 h-11 items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={handleLogout}>
-                <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>logout</span>
-              </button>
-              <button className="md:hidden w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => setIsSidebarOpen(true)}>
-                <span className="material-symbols-outlined text-[28px]">menu</span>
-              </button>
-            </div>
-          </header>
-          <div className="bg-[#545454] h-8 flex items-center px-container-padding text-white font-body-md text-[12px] md:text-[14px]">
-            สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง
-          </div>
-        </div>
-
-        <div className="max-w-5xl mx-auto space-y-6 w-full px-container-padding mt-4 relative z-10">
-          <div className="flex justify-between items-center bg-white/80 dark:bg-[#2a1300]/60 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-white/60 dark:border-[#ff6b00]/20 transition-colors duration-300">
+      <MainLayout>
+        <div className="max-w-5xl mx-auto space-y-6 w-full px-4 md:px-margin-screen mt-4 relative z-10">
+          <div className="flex justify-between items-center bg-surface-container-low p-6 rounded-3xl shadow-sm transition-colors duration-300">
             <div>
-              <h1 className="font-display-sm text-[28px] font-extrabold text-gray-900 dark:text-orange-50 drop-shadow-sm transition-colors duration-300">Admin Dashboard</h1>
-              <p className="font-body-md text-[15px] text-gray-600 dark:text-orange-200/70 font-medium transition-colors duration-300">Manage courts and view all bookings</p>
+              <h1 className="font-headline-lg text-[28px] font-bold text-on-surface transition-colors duration-300">Admin Dashboard</h1>
+              <p className="font-body-md text-[15px] text-on-surface-variant font-medium transition-colors duration-300">Manage courts and view all bookings</p>
             </div>
             <div className="flex gap-2">
               <button
-                className="bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-xl font-button text-[15px] font-bold transition-all shadow-[0_4px_12px_rgba(239,68,68,0.3)] hover:shadow-[0_6px_16px_rgba(239,68,68,0.4)] active:scale-95"
-                onClick={handleResetDatabase}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-button text-[15px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
+                onClick={() => router.push('/admin/users')}
               >
-                Reset Database
+                <span className="material-symbols-outlined text-[18px]">group</span>
+                Manage Users
               </button>
             </div>
           </div>
@@ -236,46 +204,6 @@ export default function Dashboard() {
             </div>
           </section>
         </div>
-
-        {/* Sidebar Overlay */}
-        {isSidebarOpen && (
-          <div className="fixed inset-0 z-[100] flex justify-end">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
-            <div className="relative w-[280px] bg-white dark:bg-[#140900] h-full shadow-2xl flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
-              <div className="flex justify-between items-center mb-8">
-                <span className="font-display-sm text-[20px] font-bold dark:text-orange-50 text-gray-900">KMITL PCC Menu</span>
-                <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white">
-                  <span className="material-symbols-outlined text-[28px]">close</span>
-                </button>
-              </div>
-              <nav className="flex flex-col gap-6">
-                <div className="flex flex-col gap-4">
-                  <button onClick={() => { setIsSidebarOpen(false); router.push('/dashboard'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Home</button>
-                  <button onClick={() => { setIsSidebarOpen(false); router.push('/admin/users'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Manage Users</button>
-                  <button onClick={() => { setIsSidebarOpen(false); router.push('/scan'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Scan QR</button>
-                  <button onClick={() => { setIsSidebarOpen(false); router.push('/news'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">News <span className="w-2 h-2 rounded-full bg-green-500 inline-block ml-1"></span></button>
-                </div>
-                
-                <div>
-                  <h3 className="font-bold text-[18px] text-gray-900 dark:text-orange-50 mb-3">Settings</h3>
-                  <div className="flex flex-col gap-3 pl-4 border-l-2 border-gray-200 dark:border-gray-800">
-                    <div className="flex items-center justify-between text-[15px] text-gray-600 dark:text-gray-400 hover:text-primary">
-                      <span>Dark Mode</span>
-                      <ThemeToggle />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-auto pt-6">
-                   <button onClick={handleLogout} className="w-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-colors">
-                     <span className="material-symbols-outlined">logout</span>
-                     Logout
-                   </button>
-                </div>
-              </nav>
-            </div>
-          </div>
-        )}
 
         {/* Admin Booking Modal */}
         {selectedBooking && (
@@ -358,250 +286,294 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-      </div>
+      </MainLayout>
     );
   }
 
   return (
-              <div className="bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-[#2a1300] dark:via-[#140900] dark:to-[#2a1300] text-on-surface dark:text-orange-50 antialiased min-h-screen flex flex-col pt-24 pb-24 font-sans relative overflow-hidden transition-colors duration-300">
-                {/* Decorative blobs */}
-                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                  <div className="absolute top-[0%] left-[-10%] w-[500px] h-[500px] bg-primary/10 dark:bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 transition-colors duration-300"></div>
-                  <div className="absolute top-[40%] right-[-10%] w-[400px] h-[400px] bg-yellow-200/50 dark:bg-yellow-600/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 transition-colors duration-300"></div>
-                  <div className="absolute bottom-[-10%] left-[20%] w-[600px] h-[600px] bg-primary/10 dark:bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 transition-colors duration-300"></div>
+    <MainLayout>
+      <div className="flex flex-col w-full pb-10">
+        
+        {/* Sporty Dynamic Ambient Backdrop */}
+        <div className="relative w-full px-4 md:px-margin-screen pt-6 pb-6 mb-4 overflow-hidden rounded-b-[2.5rem] shadow-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#F26522] via-[#ff7e22] to-yellow-500 z-0 opacity-90 dark:opacity-100"></div>
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 z-0"></div>
+          <div className="absolute -top-24 -right-10 w-64 h-64 bg-white/20 blur-3xl rounded-full z-0 pointer-events-none"></div>
+          
+          {/* User Welcome Greeting & Badges */}
+          <div className="relative z-10 flex items-start justify-between gap-gutter-md">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5 mb-1 bg-black/20 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
+                <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_#4ade80]"></span>
+                <span className="font-label-sm text-[10px] text-white tracking-widest uppercase font-black">KMITL Sports Portal</span>
+              </div>
+              <h1 className="font-headline-lg text-[28px] md:text-[36px] text-white font-black tracking-tight flex items-center gap-2 drop-shadow-md">
+                Hi, {user.name} <span className="text-3xl md:text-4xl animate-bounce">🏸</span>
+              </h1>
+              <p className="font-body-md text-[14px] md:text-[16px] text-white/90 font-medium mt-1">
+                Welcome back to KMITL Badminton
+              </p>
+            </div>
+            {/* Student Badge Avatar / Tier */}
+            <div className="flex flex-col items-end">
+              <span className="px-3 py-1.5 rounded-full bg-white text-[#F26522] font-label-sm text-[11px] font-black shadow-lg flex items-center gap-1 uppercase tracking-wider">
+                <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                {user.role}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Flow */}
+        <div className="px-4 md:px-margin-screen flex flex-col gap-6 mt-3">
+          
+          {/* 1. Upcoming Booking Card */}
+          {pendingBooking ? (
+            <section className="flex flex-col">
+              <div className="bg-surface-container-lowest rounded-2xl p-4 md:p-card-padding shadow-md relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-primary-fixed-dim/25 blur-2xl pointer-events-none"></div>
+                <div className="flex items-center justify-between mb-3.5">
+                  <div className="flex flex-col">
+                    <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">Upcoming Booking</h2>
+                    <span className="font-body-sm text-body-sm text-on-surface-variant">Your next court reservation</span>
+                  </div>
+                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+                    CONFIRMED
+                  </span>
                 </div>
-                {/* TopAppBar */}
-                <div className="fixed top-0 w-full z-50 shadow-sm">
-                  <header className="bg-[#F26522] dark:bg-[#C24500] flex justify-between items-center px-container-padding h-16 text-white shadow-sm transition-colors duration-300">
-                    <div className="flex items-center gap-4 cursor-pointer" onClick={() => router.push('/dashboard')}>
-
-                      <span className="font-display-sm text-[22px] md:text-[24px] font-bold tracking-tight text-white">KMITL BADMINTON</span>
+                
+                <div className="rounded-xl bg-surface-container-low p-3.5 flex flex-col gap-3 relative">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase font-semibold">Reserved Court</span>
+                      <div className="font-headline-md text-headline-md text-primary-container font-extrabold flex items-center gap-1">
+                        <span>{pendingBooking.court?.name}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-
-                      <button className="hidden md:flex w-11 h-11 items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={handleLogout}>
-                        <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>logout</span>
-                      </button>
-                      <button className="md:hidden w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => setIsSidebarOpen(true)}>
-                        <span className="material-symbols-outlined text-[28px]">menu</span>
-                      </button>
+                    <div className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center text-primary-container shadow-sm">
+                      <span className="material-symbols-outlined text-[24px]">stadium</span>
                     </div>
-                  </header>
-                  <div className="bg-[#545454] dark:bg-[#1a0a00] h-8 flex items-center px-container-padding text-white font-body-md text-[12px] md:text-[14px] transition-colors duration-300">
-                    สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="flex items-center gap-2 bg-surface-container-lowest py-2 px-2.5 rounded-lg shadow-sm">
+                      <span className="material-symbols-outlined text-[18px] text-primary">schedule</span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-label-sm text-label-sm text-on-surface-variant">Time</span>
+                        <span className="font-label-lg text-label-lg text-on-surface font-bold truncate">{pendingBooking.start_time.slice(0, 5)} - {pendingBooking.end_time.slice(0, 5)}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 bg-surface-container-lowest py-2 px-2.5 rounded-lg shadow-sm">
+                      <span className="material-symbols-outlined text-[18px] text-primary">calendar_today</span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-label-sm text-label-sm text-on-surface-variant">Date</span>
+                        <span className="font-label-lg text-label-lg text-on-surface font-bold truncate">{pendingBooking.booking_date}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-1.5 text-on-surface-variant pt-0.5">
+                    <span className="material-symbols-outlined text-[15px] text-primary">pin_drop</span>
+                    <span className="font-body-sm text-body-sm font-medium">Main Sports Complex • อาคารยิมเนเซียม 1</span>
                   </div>
                 </div>
 
-
-            <main className="max-w-5xl mx-auto space-y-8 w-full px-container-padding mt-6 relative z-10">
-
-              {/* Welcome Header */}
-              <section>
-                <h1 className="font-display-lg text-[36px] font-extrabold mb-1 text-gray-900 dark:text-orange-50 drop-shadow-sm tracking-tight transition-colors duration-300">Hi, {user.name}</h1>
-                <p className="font-body-lg text-[17px] text-gray-600 dark:text-orange-200/70 font-medium transition-colors duration-300">Welcome back to KMITL Badminton</p>
-              </section>
-
-              {/* Active Session Card */}
-              {activeBooking && (
-                <section className="bg-white/80 dark:bg-[#2a1300]/60 backdrop-blur-xl rounded-3xl p-6 md:p-8 border-2 border-primary/30 dark:border-[#ff6b00]/40 shadow-[0_12px_32px_rgba(255,107,0,0.15)] relative overflow-hidden transform hover:-translate-y-1 transition-all duration-300">
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-primary/30 to-transparent rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
-                  <div className="relative z-10">
-                    <h2 className="font-headline-md text-[20px] font-extrabold text-primary mb-1 uppercase tracking-wide">Currently Playing</h2>
-                    <p className="font-body-md text-[15px] text-gray-700 dark:text-orange-200 font-medium mb-6 transition-colors duration-300">You are checked in to <span className="font-bold text-gray-900 dark:text-orange-50">{activeBooking.court?.name}</span></p>
-
-                    <div className="text-center py-6 bg-white/60 dark:bg-[#140900]/60 backdrop-blur-md rounded-2xl border border-white dark:border-[#ff6b00]/30 shadow-inner transition-colors duration-300">
-                      <p className="font-label-md text-[13px] font-bold text-gray-500 dark:text-orange-300/60 mb-2 tracking-widest transition-colors duration-300">TIME REMAINING (ENDS AT {activeBooking.end_time.slice(0, 5)})</p>
-                      <div className="font-display-lg text-[56px] font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-[#E55B13] drop-shadow-sm">
-                        {timeLeft}
+                <div className="grid grid-cols-5 gap-2.5 mt-4">
+                  <button 
+                    onClick={() => router.push('/scan')}
+                    className="col-span-3 h-12 rounded-xl bg-gradient-to-r from-primary-container to-primary text-on-primary font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-[0_6px_18px_rgba(255,94,30,0.32)] active:scale-95 transition-transform cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
+                    <span>Check-in (เช็คอิน)</span>
+                  </button>
+                  <button 
+                    onClick={() => handleCancelBooking(pendingBooking.id)}
+                    className="col-span-2 h-12 rounded-xl bg-error-container text-on-error-container font-label-lg text-label-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition-transform hover:bg-opacity-90 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">close</span>
+                    <span>Cancel</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+          ) : activeBooking ? (
+            <section className="flex flex-col">
+              <div className="bg-surface-container-lowest rounded-2xl p-4 md:p-card-padding shadow-md relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-secondary/25 blur-2xl pointer-events-none"></div>
+                <div className="flex items-center justify-between mb-3.5">
+                  <div className="flex flex-col">
+                    <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">Currently Playing</h2>
+                    <span className="font-body-sm text-body-sm text-on-surface-variant">You are checked in</span>
+                  </div>
+                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary/10 text-secondary font-label-sm text-label-sm font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-ping"></span>
+                    ACTIVE
+                  </span>
+                </div>
+                
+                <div className="rounded-xl bg-surface-container-low p-3.5 flex flex-col gap-3 relative">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase font-semibold">Active Court</span>
+                      <div className="font-headline-md text-headline-md text-secondary font-extrabold flex items-center gap-1">
+                        <span>{activeBooking.court?.name}</span>
                       </div>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center text-secondary shadow-sm">
+                      <span className="material-symbols-outlined text-[24px]">stadium</span>
                     </div>
                   </div>
-                </section>
-              )}
-
-              {/* Upcoming Booking Card */}
-              {pendingBooking && !activeBooking && (
-                <section className="bg-white/70 dark:bg-[#2a1300]/60 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-white/60 dark:border-[#ff6b00]/20 shadow-[0_8px_32px_rgba(0,0,0,0.06)] relative overflow-hidden transform hover:-translate-y-1 transition-all duration-300">
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-blue-400/20 dark:from-[#ff6b00]/20 to-transparent rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
-                  <div className="relative z-10">
-                    <h2 className="font-headline-md text-[20px] font-extrabold mb-1 text-gray-900 dark:text-orange-50 transition-colors duration-300">Upcoming Booking</h2>
-                    <p className="font-body-md text-[15px] text-gray-600 dark:text-orange-200/70 font-medium mb-6 transition-colors duration-300">Your next court reservation</p>
-
-                    <div className="flex justify-between items-center mb-6 bg-white/60 dark:bg-[#140900]/60 p-5 rounded-2xl border border-white dark:border-[#ff6b00]/30 shadow-sm transition-colors duration-300">
-                      <div>
-                        <p className="font-headline-md text-[18px] font-extrabold text-primary">{pendingBooking.court?.name}</p>
-                        <p className="font-body-md text-[15px] text-gray-600 dark:text-orange-200/70 mt-1 font-medium transition-colors duration-300">{pendingBooking.booking_date}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-display-sm text-[28px] font-black text-gray-900 dark:text-orange-50 transition-colors duration-300">{pendingBooking.start_time.slice(0, 5)}</p>
-                        <p className="font-body-md text-[15px] text-gray-500 dark:text-orange-300/60 font-bold transition-colors duration-300">to {pendingBooking.end_time.slice(0, 5)}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-4 mt-2">
-                      <button
-                        className="flex-1 bg-gradient-to-r from-primary to-[#E55B13] text-white h-14 rounded-xl font-button text-[16px] font-bold flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(255,107,0,0.3)] hover:shadow-[0_10px_25px_rgba(255,107,0,0.4)] active:scale-95 transition-all"
-                        onClick={() => router.push('/scan')}
-                      >
-                        <span className="material-symbols-outlined text-[22px]">qr_code_scanner</span>
-                        Check-in
-                      </button>
-                      <button
-                        className="flex-1 bg-white dark:bg-[#1a0a00] border-2 border-red-500 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 h-14 rounded-xl font-button text-[16px] font-bold transition-colors active:scale-95"
-                        onClick={() => handleCancelBooking(pendingBooking.id)}
-                      >
-                        Cancel
-                      </button>
+                  
+                  <div className="text-center py-4 bg-surface-container-lowest rounded-lg shadow-sm border border-secondary/20">
+                    <p className="font-label-sm text-[13px] font-bold text-on-surface-variant mb-1 tracking-widest">TIME REMAINING (ENDS AT {activeBooking.end_time.slice(0, 5)})</p>
+                    <div className="font-headline-xl text-[48px] font-black text-secondary">
+                      {timeLeft}
                     </div>
                   </div>
-                </section>
-              )}
+                </div>
+              </div>
+            </section>
+          ) : null}
 
-              {/* Quick Actions */}
-              <section className="grid grid-cols-2 gap-4 md:gap-5">
-                <button
-                  className="h-32 flex flex-col items-center justify-center gap-2 rounded-3xl transition-all active:scale-95 bg-gradient-to-br from-primary via-[#ff7e22] to-[#E55B13] text-white shadow-[0_8px_24px_rgba(255,107,0,0.35)] hover:shadow-[0_12px_32px_rgba(255,107,0,0.45)] hover:-translate-y-1 relative overflow-hidden group"
-                  onClick={() => router.push('/booking')}
-                >
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-2xl -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
-                  <span className="material-symbols-outlined text-[38px] drop-shadow-sm">sports_tennis</span>
-                  <span className="font-button text-[16px] font-bold tracking-wide drop-shadow-sm">Book Court</span>
+          {/* 2. Quick Action Buttons */}
+          <section className="grid grid-cols-2 gap-3">
+            <div 
+              onClick={() => router.push('/booking')}
+              className="cursor-pointer group relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-container to-primary text-on-primary p-4 md:p-card-padding shadow-[0_8px_20px_rgba(255,94,30,0.28)] flex flex-col justify-between min-h-[140px] active:scale-[0.98] transition-transform"
+            >
+              <div className="absolute -right-3 -bottom-3 text-on-primary/15 pointer-events-none">
+                <span className="material-symbols-outlined text-[84px] leading-none">sports_tennis</span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-on-primary/20 backdrop-blur-md flex items-center justify-center shadow-inner">
+                <span className="material-symbols-outlined text-[22px] text-on-primary">edit_calendar</span>
+              </div>
+              <div className="flex flex-col z-10 mt-3">
+                <span className="font-headline-sm text-headline-sm font-extrabold leading-tight text-on-primary">Book Court</span>
+                <span className="font-body-sm text-body-sm text-on-primary/80 font-medium">จองคอร์ทแบดมินตัน</span>
+              </div>
+            </div>
+
+            <div 
+              onClick={() => router.push('/scan')}
+              className="cursor-pointer group relative overflow-hidden rounded-2xl bg-surface-container-lowest text-on-surface p-4 md:p-card-padding shadow-md flex flex-col justify-between min-h-[140px] active:scale-[0.98] transition-transform"
+            >
+              <div className="absolute -right-3 -bottom-3 text-surface-container-high/40 pointer-events-none">
+                <span className="material-symbols-outlined text-[84px] leading-none">qr_code_2</span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary-container">
+                <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_scanner</span>
+              </div>
+              <div className="flex flex-col z-10 mt-3">
+                <span className="font-headline-sm text-headline-sm font-extrabold leading-tight text-on-surface">Scan QR</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant font-medium">สแกนเข้าสนาม</span>
+              </div>
+            </div>
+          </section>
+
+
+
+          {/* 3. Recent Bookings Section */}
+          <section className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[20px] text-primary">history</span>
+                <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">Recent Bookings</h2>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">(ประวัติการจอง)</span>
+              </div>
+              {bookings.length > 3 && (
+                <button onClick={() => router.push('/booking')} className="font-label-md text-label-md text-primary font-bold hover:underline flex items-center gap-0.5">
+                  <span>View all</span>
+                  <span className="material-symbols-outlined text-[16px]">chevron_right</span>
                 </button>
-                <button
-                  className="h-32 flex flex-col items-center justify-center gap-2 rounded-3xl transition-all duration-300 active:scale-95 bg-white/70 dark:bg-[#1a0a00]/70 backdrop-blur-xl border-2 border-white dark:border-[#ff6b00]/30 text-gray-800 dark:text-orange-50 shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(255,107,0,0.15)] hover:-translate-y-1 hover:border-primary/40 group relative overflow-hidden"
-                  onClick={() => router.push('/scan')}
-                >
-                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/10 dark:bg-primary/20 rounded-full blur-2xl -ml-8 -mb-8 transition-transform group-hover:scale-150"></div>
-                  <span className="material-symbols-outlined text-[38px] text-gray-700 dark:text-orange-200 group-hover:text-primary transition-colors drop-shadow-sm" style={{ fontVariationSettings: "'FILL' 0" }}>qr_code_scanner</span>
-                  <span className="font-button text-[16px] font-bold tracking-wide">Scan QR</span>
-                </button>
-              </section>
-
-              {/* Recent Bookings */}
-              <section>
-                <div className="flex justify-between items-center mb-5">
-                  <h2 className="font-headline-md text-[22px] font-extrabold text-gray-900 dark:text-orange-50 transition-colors duration-300">Recent Bookings</h2>
-                  {bookings.length > 3 && (
-                    <button onClick={() => router.push('/booking')} className="text-primary font-label-md text-[14px] font-bold hover:underline transition-all">
-                      View all
-                    </button>
-                  )}
+              )}
+            </div>
+            
+            <div className="flex flex-col gap-2.5">
+              {bookings.length === 0 && (
+                <div className="bg-surface-container-lowest border border-outline-variant/30 shadow-sm rounded-xl p-6 text-center text-on-surface-variant">
+                  <p className="font-body-md text-body-md font-medium">No bookings yet.</p>
                 </div>
-                <div className="space-y-4">
-                  {bookings.length === 0 && (
-                    <div className="bg-white/60 dark:bg-[#2a1300]/60 backdrop-blur-xl border border-white dark:border-[#ff6b00]/20 shadow-sm rounded-3xl p-8 text-center transition-colors duration-300">
-                      <p className="font-body-md text-[16px] text-gray-500 dark:text-orange-200/70 font-medium transition-colors duration-300">No bookings yet.</p>
-                      <button
-                        className="mt-4 text-primary font-button text-[16px] font-bold hover:underline"
-                        onClick={() => router.push('/booking')}
-                      >
-                        Make your first booking
-                      </button>
-                    </div>
-                  )}
-                  {bookings.slice(0, 3).map(booking => (
-                    <div key={booking.id} className="bg-white/70 dark:bg-[#1a0a00]/70 backdrop-blur-xl p-5 rounded-3xl flex justify-between items-center border border-white/80 dark:border-[#ff6b00]/30 shadow-[0_8px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_24px_rgba(255,107,0,0.05)] hover:shadow-[0_12px_32px_rgba(255,107,0,0.1)] hover:-translate-y-0.5 transition-all relative overflow-hidden group">
-                      {/* Left Accent Bar */}
-                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-primary to-[#E55B13] opacity-80 group-hover:opacity-100 transition-opacity"></div>
-                      
-                      <div className="pl-2">
-                        <p className="font-headline-md text-[18px] font-extrabold mb-1 text-gray-900 dark:text-orange-50 transition-colors duration-300">{booking.court?.name || 'Court'}</p>
-                        <div className="flex items-center gap-1.5 mt-1.5 text-gray-500 dark:text-orange-200/70 transition-colors duration-300">
-                          <span className="material-symbols-outlined text-[16px]">calendar_month</span>
-                          <p className="font-body-md text-[14px] font-semibold">{booking.booking_date}</p>
-                        </div>
+              )}
+              {bookings.slice(0, 3).map(booking => {
+                const isPending = booking.status === 'PENDING';
+                const isCancelled = booking.status === 'CANCELLED';
+                const isCompleted = booking.status === 'COMPLETED';
+                const isCheckedIn = booking.status === 'CHECKED_IN';
+                
+                let accentColor = 'bg-primary-container';
+                let iconColor = 'text-primary';
+                let badgeClass = 'bg-primary-fixed text-on-primary-fixed';
+                let statusIcon = 'sports_tennis';
+                
+                if (isCancelled) {
+                  accentColor = 'bg-outline-variant';
+                  iconColor = 'text-on-surface-variant';
+                  badgeClass = 'bg-error-container text-on-error-container';
+                  statusIcon = 'sports_tennis';
+                } else if (isCompleted || isCheckedIn) {
+                  accentColor = 'bg-secondary';
+                  iconColor = 'text-secondary';
+                  badgeClass = 'bg-secondary-container text-on-secondary-container';
+                  statusIcon = 'sports_tennis';
+                }
+
+                return (
+                  <div key={booking.id} className="relative bg-surface-container-lowest rounded-xl p-3.5 shadow-sm flex items-center justify-between overflow-hidden">
+                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${accentColor}`}></div>
+                    <div className="flex items-center gap-3 pl-1 min-w-0">
+                      <div className={`w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0 ${iconColor}`}>
+                        <span className="material-symbols-outlined text-[22px]">{statusIcon}</span>
                       </div>
-                      <div className="text-right flex flex-col items-end gap-2">
-                        <div className="flex items-center gap-1.5 text-primary">
-                          <span className="material-symbols-outlined text-[18px]">schedule</span>
-                          <p className="font-headline-md text-[19px] font-black tracking-tight">{booking.start_time.slice(0, 5)}</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {booking.status === 'PENDING' && (
-                            <button
-                              onClick={() => handleCancelBooking(booking.id)}
-                              className="text-[12px] font-bold text-red-500 hover:text-red-700 uppercase tracking-wider transition-colors active:scale-95 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-md"
-                            >
-                              Cancel
-                            </button>
-                          )}
-                          <span className={`text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border shadow-sm ${booking.status === 'COMPLETED' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' :
-                            booking.status === 'CANCELLED' ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800' :
-                              booking.status === 'CHECKED_IN' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800' :
-                                'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800'
-                            }`}>
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-headline-sm text-headline-sm font-bold text-on-surface">{booking.court?.name || 'Court'}</span>
+                          <span className={`px-2 py-0.5 rounded-full font-label-sm text-label-sm font-bold ${badgeClass}`}>
                             {booking.status}
                           </span>
                         </div>
+                        <div className="flex items-center gap-2 mt-0.5 text-on-surface-variant font-body-sm text-body-sm">
+                          <span className="flex items-center gap-1 font-medium">
+                            <span className="material-symbols-outlined text-[13px]">schedule</span> {booking.start_time.slice(0, 5)}
+                          </span>
+                          <span>•</span>
+                          <span className="font-medium">{booking.booking_date}</span>
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </section>
-            </main>
-
-            {/* BottomNavBar */}
-            {user.role !== 'ADMIN' && (
-              <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 z-50 rounded-t-xl bg-white/90 dark:bg-[#140900]/95 backdrop-blur-md shadow-[0px_-8px_24px_rgba(0,0,0,0.05)] border-t border-gray-100 dark:border-[#ff6b00]/20 transition-colors duration-300">
-                <button className="flex flex-col items-center justify-center text-primary font-bold hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-                  <span className="material-symbols-outlined drop-shadow-sm" style={{ fontVariationSettings: "'FILL' 1" }}>sports_tennis</span>
-                  <span className="font-label-md text-[12px] font-semibold tracking-wide">Home</span>
-                </button>
-                <button onClick={() => router.push('/booking')} className="flex flex-col items-center justify-center text-gray-500 dark:text-orange-300/60 hover:text-primary dark:hover:text-primary transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>event_note</span>
-                  <span className="font-label-md text-[12px] font-semibold tracking-wide">Bookings</span>
-                </button>
-                <button onClick={() => router.push('/scan')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>qr_code_scanner</span>
-                  <span className="font-label-md text-[12px] font-semibold">Scan</span>
-                </button>
-                <button onClick={() => router.push('/news')} className="flex flex-col items-center justify-center text-gray-500 dark:text-orange-300/60 hover:text-primary dark:hover:text-primary transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>article</span>
-                  <span className="font-label-md text-[12px] font-semibold">News</span>
-                </button>
-              </nav>
-            )}
-
-        {/* Sidebar Overlay */}
-        {isSidebarOpen && (
-          <div className="fixed inset-0 z-[100] flex justify-end">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
-            <div className="relative w-[280px] bg-white dark:bg-[#140900] h-full shadow-2xl flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
-              <div className="flex justify-between items-center mb-8">
-                <span className="font-display-sm text-[20px] font-bold dark:text-orange-50 text-gray-900">KMITL PCC Menu</span>
-                <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white">
-                  <span className="material-symbols-outlined text-[28px]">close</span>
-                </button>
-              </div>
-              <nav className="flex flex-col gap-6">
-                <div className="flex flex-col gap-4">
-                  <button onClick={() => { setIsSidebarOpen(false); router.push('/dashboard'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Home</button>
-                  <button onClick={() => { setIsSidebarOpen(false); router.push('/booking'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Book Courts</button>
-                  <button onClick={() => { setIsSidebarOpen(false); router.push('/scan'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Scan QR</button>
-                  <button onClick={() => { setIsSidebarOpen(false); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">News <span className="w-2 h-2 rounded-full bg-green-500 inline-block ml-1"></span></button>
-                </div>
-                
-                <div>
-                  <h3 className="font-bold text-[18px] text-gray-900 dark:text-orange-50 mb-3">Settings</h3>
-                  <div className="flex flex-col gap-3 pl-4 border-l-2 border-gray-200 dark:border-gray-800">
-                    <div className="flex items-center justify-between text-[15px] text-gray-600 dark:text-gray-400 hover:text-primary">
-                      <span>Dark Mode</span>
-                      <ThemeToggle />
+                    <div className="shrink-0 pl-2">
+                      {isPending ? (
+                        <button 
+                          onClick={() => handleCancelBooking(booking.id)}
+                          className="px-3 py-1.5 rounded-lg bg-error-container text-on-error-container font-label-sm text-label-sm font-bold hover:bg-opacity-90 active:scale-95 transition-all"
+                        >
+                          CANCEL
+                        </button>
+                      ) : isCancelled ? (
+                        <span className="material-symbols-outlined text-on-surface-variant text-[18px]">cancel</span>
+                      ) : (
+                        <span className="material-symbols-outlined text-secondary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                      )}
                     </div>
                   </div>
-                </div>
-
-                <div className="mt-auto pt-6">
-                   <button onClick={handleLogout} className="w-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-colors">
-                     <span className="material-symbols-outlined">logout</span>
-                     Logout
-                   </button>
-                </div>
-              </nav>
+                );
+              })}
             </div>
-          </div>
-        )}
-        </div>
-        );
-}
+          </section>
 
+          {/* Helpful Rules / Policy Callout Card */}
+          <section className="rounded-xl bg-surface-container-low p-3.5 flex items-start gap-3">
+            <span className="material-symbols-outlined text-primary text-[22px] mt-0.5 shrink-0">info</span>
+            <div className="flex flex-col">
+              <span className="font-label-md text-label-md text-on-surface font-bold">กฎการเข้าใช้คอร์ทและเช็คอิน</span>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                กรุณาสแกน QR หน้าสนามก่อนเวลาเริ่ม 15 นาที หากเลยเวลาเกิน 15 นาที ระบบจะยกเลิกการจองโดยอัตโนมัติเพื่อให้สิทธิ์ผู้รอคิวถัดไป
+              </p>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </MainLayout>
+  );
+}

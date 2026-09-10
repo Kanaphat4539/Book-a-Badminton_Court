@@ -44,7 +44,9 @@ export class UsersService implements OnModuleInit {
         first_name: 'Test',
         last_name: 'Student',
         password: hashedPassword,
-        tel: '0812345678'
+        tel: '0812345678',
+        major: 'IT',
+        year: 3
       });
       await this.studentRepository.save(newStudent);
     }

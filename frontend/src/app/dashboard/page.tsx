@@ -25,7 +25,7 @@ export default function Dashboard() {
       const now = new Date();
       // Calculate 1 hour from start_time based on booking date
       // format is like booking_date "2026-07-17", start_time "23:00:00"
-      const startTimeStr = `${selectedBooking.booking_date}T${selectedBooking.start_time}`;
+      const startTimeStr = `${selectedBooking.booking_date}T${selectedBooking.time_in}`;
       const startTime = new Date(startTimeStr);
       const endTime = new Date(startTime.getTime() + 60 * 60000); // 1 hour
 
@@ -181,16 +181,16 @@ export default function Dashboard() {
               {allBookings.length === 0 && <p className="text-gray-500 dark:text-orange-200/70 font-medium text-[15px] bg-white/50 dark:bg-[#2a1300]/40 p-6 rounded-2xl text-center transition-colors duration-300">No bookings found.</p>}
               {allBookings.map(booking => (
                 <div 
-                  key={booking.id} 
+                  key={booking.booking_id} 
                   className="bg-white/70 dark:bg-[#2a1300]/60 backdrop-blur-xl p-5 rounded-2xl flex justify-between items-center border border-white/60 dark:border-[#ff6b00]/20 shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all duration-300 cursor-pointer"
                   onClick={() => setSelectedBooking(booking)}
                 >
                   <div>
-                    <p className="font-headline-md text-[18px] font-bold text-gray-900 dark:text-orange-50 transition-colors duration-300">{booking.user?.name} <span className="text-gray-500 dark:text-orange-300/60 font-semibold text-[14px]">(@{booking.user?.username})</span></p>
-                    <p className="text-[15px] text-gray-600 dark:text-orange-200/70 mt-1 font-medium transition-colors duration-300">{booking.court?.name} • {booking.booking_date}</p>
+                    <p className="font-headline-md text-[18px] font-bold text-gray-900 dark:text-orange-50 transition-colors duration-300">{booking.student?.first_name} {booking.student?.last_name} <span className="text-gray-500 dark:text-orange-300/60 font-semibold text-[14px]">(@{booking.student?.username})</span></p>
+                    <p className="text-[15px] text-gray-600 dark:text-orange-200/70 mt-1 font-medium transition-colors duration-300">Court {booking.court} • {booking.booking_date}</p>
                   </div>
                   <div className="text-right flex flex-col items-end gap-2">
-                    <p className="text-[16px] font-extrabold text-primary">{booking.start_time.slice(0, 5)} - {booking.end_time.slice(0, 5)}</p>
+                    <p className="text-[16px] font-extrabold text-primary">{(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)}</p>
                     <span className={`text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${booking.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
                       booking.status === 'CANCELLED' ? 'bg-red-100 text-red-700 border border-red-200' :
                         booking.status === 'CHECKED_IN' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
@@ -219,13 +219,13 @@ export default function Dashboard() {
               
               <div className="text-center mb-6">
                 <h3 className="font-display-sm text-[24px] font-bold text-gray-900 dark:text-orange-50 mb-1">Booking Details</h3>
-                <p className="text-gray-500 dark:text-orange-200/70">{selectedBooking.user?.name} (@{selectedBooking.user?.username})</p>
-                <p className="text-primary font-bold mt-1">{selectedBooking.court?.name} • {selectedBooking.start_time.slice(0,5)} - {selectedBooking.end_time.slice(0,5)}</p>
+                <p className="text-gray-500 dark:text-orange-200/70">{selectedBooking.student?.first_name} {selectedBooking.student?.last_name} (@{selectedBooking.student?.username})</p>
+                <p className="text-primary font-bold mt-1">Court {selectedBooking.court} • {(selectedBooking.time_in || '').slice(0,5)} - {(selectedBooking.time_out || '').slice(0,5)}</p>
               </div>
 
               {selectedBooking.status === 'PENDING' && (() => {
                 const now = new Date();
-                const bookingDateTime = new Date(`${selectedBooking.booking_date}T${selectedBooking.start_time}`);
+                const bookingDateTime = new Date(`${selectedBooking.booking_date}T${selectedBooking.time_in}`);
                 const isEarly = now < bookingDateTime;
 
                 return (
@@ -242,7 +242,7 @@ export default function Dashboard() {
                       <>
                         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                           <QRCode 
-                            value={selectedBooking.court?.id?.toString() || 'court'} 
+                            value={selectedBooking.court?.toString() || 'court'} 
                             size={200}
                             level="H"
                           />

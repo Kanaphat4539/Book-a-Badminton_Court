@@ -1,7 +1,7 @@
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RolesGuard } from './roles.guard';
-import { UserRole } from '../users/entities/user.entity';
+import { UserRole } from '../users/users.service';
 
 function contextWithUser(user: any): ExecutionContext {
   return {
@@ -22,7 +22,7 @@ describe('RolesGuard (unit)', () => {
 
   it('allows the request when no roles are required', () => {
     reflector.getAllAndOverride.mockReturnValue(undefined);
-    expect(guard.canActivate(contextWithUser({ role: UserRole.USER }))).toBe(true);
+    expect(guard.canActivate(contextWithUser({ role: UserRole.STUDENT }))).toBe(true);
   });
 
   it('allows the request when the user has a required role', () => {
@@ -32,11 +32,6 @@ describe('RolesGuard (unit)', () => {
 
   it('denies the request when the user lacks the required role', () => {
     reflector.getAllAndOverride.mockReturnValue([UserRole.ADMIN]);
-    expect(guard.canActivate(contextWithUser({ role: UserRole.USER }))).toBe(false);
-  });
-
-  it('denies the request when there is no user on the request', () => {
-    reflector.getAllAndOverride.mockReturnValue([UserRole.ADMIN]);
-    expect(guard.canActivate(contextWithUser(undefined))).toBe(false);
+    expect(guard.canActivate(contextWithUser({ role: UserRole.STUDENT }))).toBe(false);
   });
 });

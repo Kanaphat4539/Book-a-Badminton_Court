@@ -4,7 +4,7 @@ import { CourtsService } from './courts.service';
 
 describe('CourtsController (unit)', () => {
   let controller: CourtsController;
-  let service: { getAvailability: jest.Mock };
+  let service: jest.Mocked<Pick<CourtsService, 'getAvailability'>>;
 
   beforeEach(async () => {
     service = { getAvailability: jest.fn().mockResolvedValue([]) };
@@ -17,18 +17,14 @@ describe('CourtsController (unit)', () => {
     controller = module.get<CourtsController>(CourtsController);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
-  it('passes the requested date through to the service', async () => {
+  it('forwards the provided date', async () => {
     await controller.getAvailability('2026-09-10');
     expect(service.getAvailability).toHaveBeenCalledWith('2026-09-10');
   });
 
-  it('defaults to today when no date is supplied', async () => {
-    await controller.getAvailability(undefined as unknown as string);
+  it("defaults to today's date when none is provided", async () => {
     const today = new Date().toISOString().split('T')[0];
+    await controller.getAvailability(undefined as unknown as string);
     expect(service.getAvailability).toHaveBeenCalledWith(today);
   });
 });

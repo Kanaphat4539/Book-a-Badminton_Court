@@ -9,7 +9,9 @@ This project is tested across the four standard levels: **Unit → Integration �
 | **3. System** | `supertest` over a fully booted Nest app + in-memory DB | Playwright: real browser → Next.js → backend |
 | **4. Acceptance** | — | Playwright, one spec per user story |
 
-Total: **70 backend tests** (50 unit + 9 integration + 10 e2e/system... plus 1 `it.failing` marker) and **17 frontend tests** (11 unit + 2 integration + 3 acceptance + 3 system UI).
+Total: **72 backend tests** (53 unit + 10 integration + 9 e2e/system, all green) and **17 frontend tests** (11 unit + 2 integration + 3 acceptance + 3 system UI).
+
+> The backend on this branch is the **nongpooh** version: users are split into separate `Admin` (`admin_id`) and `Student` (`stu_id`, `@kmitl.ac.th` email, name/major/year) entities, and `UserRole` is `STUDENT` | `ADMIN`. The tests target that structure.
 
 ---
 
@@ -49,7 +51,7 @@ frontend (port 3000) automatically. First run only: `npx playwright install chro
 - **Frontend** (`frontend/src/app/login/page.test.tsx`): `LoginPage` rendered with the API layer mocked — asserts the right request body, token/user stored in `localStorage`, and success/error toasts.
 
 ### Level 3 — System
-- **Backend** (`backend/test/app.e2e-spec.ts`): real HTTP through the whole stack — register → login → availability → book → check-in, plus 401 (unauthenticated) and 403 (non-admin hitting an admin route).
+- **Backend** (`backend/test/app.e2e-spec.ts`): real HTTP through the whole stack — register → login → availability → book → my-bookings, plus 401 (unauthenticated), 403 (student hitting an admin-only route), and the seeded admin viewing all bookings.
 - **Frontend** (`frontend/e2e/system.spec.ts`): real browser — logged-out `/booking` redirects to `/login`, invalid login shows an error and stays put, valid login stores a JWT and reaches `/dashboard`.
 
 ### Level 4 — Acceptance
@@ -60,18 +62,16 @@ frontend (port 3000) automatically. First run only: `npx playwright install chro
 
 ---
 
-## Known bugs documented by tests
+## Bugs fixed and covered by tests
 
-Two unit tests are written with Jest's `it.failing()` — they encode the **correct** behavior for bugs that still exist in the code, so the suite stays green while the bug is present. When someone fixes the bug, `it.failing` will start failing, signalling that the `.failing` marker should be removed.
+Two of the bugs found during review are **fixed** on this branch and locked down by tests:
 
-| # | Bug | Test |
-|---|---|---|
-| **#01** | Registration trusts a client-supplied `role`, allowing self-promotion to ADMIN | `backend/src/auth/auth.service.spec.ts` |
-| **#06** | The 23:00 slot produces an invalid `24:00:00` end time (unbounded hour + 1) | `backend/src/bookings/bookings.service.spec.ts` |
+| # | Bug | Fix | Test |
+|---|---|---|---|
+| **#01** | Register trusted a client-supplied `role`, allowing self-promotion to ADMIN | `AuthService.register` always creates a `Student` | `backend/src/auth/auth.service.spec.ts` |
+| **#06** | The 23:00 slot produced an invalid `24:00:00` end time (unbounded hour + 1) | `createBooking` rejects a start hour ≥ 23 and malformed times before building the slot | `backend/src/bookings/bookings.service.spec.ts` |
 
-Other issues found during review (booking race condition, UTC-vs-local date handling, CORS wide open, hardcoded JWT secret, password hash exposed in responses) are catalogued in `issue-checklist.html` at the repo root.
-
-> Note: this is the **Guistee** branch, whose backend is an earlier version than `main` — it has no `finishBooking` endpoint, no check-in time guard, and a minimal `UsersController`. The tests target the code as it exists on this branch.
+Other issues that still apply (booking race condition, UTC-vs-local date handling, midnight cron edge case, CORS wide open, hardcoded JWT secret) are catalogued in `issue-checklist.html` at the repo root.
 
 ---
 

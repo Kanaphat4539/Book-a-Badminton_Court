@@ -27,12 +27,12 @@ export class CronService {
     const oneHourAgo = new Date(now.getTime() - 60 * 60000);
     const oneHourAgoStr = oneHourAgo.toTimeString().split(' ')[0];
 
-    // 1. Cancel PENDING bookings where start_time was more than 15 mins ago
+    // 1. Cancel PENDING bookings where time_in was more than 15 mins ago
     const pendingBookings = await this.bookingsRepository.find({
       where: {
         status: BookingStatus.PENDING,
         booking_date: currentDate,
-        start_time: LessThan(fifteenMinsAgoStr),
+        time_in: LessThan(fifteenMinsAgoStr),
       }
     });
 
@@ -44,12 +44,12 @@ export class CronService {
       this.logger.debug(`Cancelled ${pendingBookings.length} bookings.`);
     }
 
-    // 2. Complete CHECKED_IN bookings where start_time was more than 1 hour ago
+    // 2. Complete CHECKED_IN bookings where time_in was more than 1 hour ago
     const checkedInBookings = await this.bookingsRepository.find({
       where: {
         status: BookingStatus.CHECKED_IN,
         booking_date: currentDate,
-        start_time: LessThan(oneHourAgoStr),
+        time_in: LessThan(oneHourAgoStr),
       }
     });
 

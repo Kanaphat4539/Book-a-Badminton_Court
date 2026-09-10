@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
-import { Court } from '../../courts/entities/court.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Student } from '../../users/entities/student.entity';
+import { Admin } from '../../users/entities/admin.entity';
 
 export enum BookingStatus {
   PENDING = 'PENDING',
@@ -9,31 +9,37 @@ export enum BookingStatus {
   COMPLETED = 'COMPLETED',
 }
 
-@Entity('bookings')
+@Entity('Booking')
 export class Booking {
   @PrimaryGeneratedColumn()
-  id: number;
+  booking_id: number;
 
-  @ManyToOne(() => User, (user) => user.bookings)
-  @JoinColumn({ name: 'user_id' })
-  user: User;
+  @Column({ type: 'varchar', length: 8 })
+  stu_id: string;
 
-  @ManyToOne(() => Court, (court) => court.bookings)
-  @JoinColumn({ name: 'court_id' })
-  court: Court;
+  @Column({ type: 'int' })
+  court: number;
 
   @Column({ type: 'date' })
   booking_date: string;
 
   @Column({ type: 'time' })
-  start_time: string;
+  time_in: string;
 
   @Column({ type: 'time' })
-  end_time: string;
+  time_out: string;
 
-  @Column({ type: 'simple-enum', enum: BookingStatus, default: BookingStatus.PENDING })
-  status: BookingStatus;
+  @Column({ type: 'varchar', length: 50 })
+  status: string;
 
-  @CreateDateColumn()
-  created_at: Date;
+  @Column({ type: 'varchar', length: 20 })
+  admin_id: string;
+
+  @ManyToOne(() => Student, (student) => student.bookings, { onUpdate: 'CASCADE', onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'stu_id' })
+  student: Student;
+
+  @ManyToOne(() => Admin, (admin) => admin.bookings, { onUpdate: 'CASCADE', onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'admin_id' })
+  admin: Admin;
 }

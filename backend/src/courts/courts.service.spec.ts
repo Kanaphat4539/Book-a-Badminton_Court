@@ -1,22 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CourtsService } from './courts.service';
-import { Court } from './entities/court.entity';
 import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
 
 describe('CourtsService (unit)', () => {
   let service: CourtsService;
-  let courts: { find: jest.Mock; count: jest.Mock; save: jest.Mock };
   let bookings: { find: jest.Mock };
 
   beforeEach(async () => {
-    courts = { find: jest.fn(), count: jest.fn(), save: jest.fn() };
     bookings = { find: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CourtsService,
-        { provide: getRepositoryToken(Court), useValue: courts },
         { provide: getRepositoryToken(Booking), useValue: bookings },
       ],
     }).compile();
@@ -24,41 +20,34 @@ describe('CourtsService (unit)', () => {
     service = module.get<CourtsService>(CourtsService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  it('findAll returns the four seeded courts', async () => {
+    const courts = await service.findAll();
+    expect(courts).toHaveLength(4);
+    expect(courts.map((c) => c.id)).toEqual([1, 2, 3, 4]);
   });
 
   describe('getAvailability', () => {
-    it('groups bookings under their court and excludes CANCELLED ones', async () => {
-      courts.find.mockResolvedValue([
-        { id: 1, name: 'Court 1' },
-        { id: 2, name: 'Court 2' },
-      ]);
+    it('groups bookings under their court and maps time_in to start_time', async () => {
       bookings.find.mockResolvedValue([
-        { id: 10, start_time: '10:00:00', end_time: '11:00:00', status: BookingStatus.PENDING, court: { id: 1 } },
-        { id: 11, start_time: '12:00:00', end_time: '13:00:00', status: BookingStatus.CANCELLED, court: { id: 1 } },
-        { id: 12, start_time: '09:00:00', end_time: '10:00:00', status: BookingStatus.CHECKED_IN, court: { id: 2 } },
+        { booking_id: 1, court: 1, time_in: '10:00', time_out: '11:00', status: BookingStatus.PENDING },
       ]);
 
       const result = await service.getAvailability('2026-09-10');
 
-      const court1 = result.find((c: any) => c.id === 1);
-      const court2 = result.find((c: any) => c.id === 2);
-
-      expect(court1.bookings).toHaveLength(1); // CANCELLED excluded
-      expect(court1.bookings[0].id).toBe(10);
-      expect(court2.bookings).toHaveLength(1);
-      expect(court2.bookings[0].status).toBe(BookingStatus.CHECKED_IN);
+      const court1 = result.find((c) => c.id === 1);
+      expect(court1.bookings).toEqual([
+        { id: 1, start_time: '10:00', end_time: '11:00', status: BookingStatus.PENDING },
+      ]);
+      expect(result.find((c) => c.id === 2).bookings).toEqual([]);
     });
 
-    it('returns every court even when it has no bookings', async () => {
-      courts.find.mockResolvedValue([{ id: 1, name: 'Court 1' }]);
-      bookings.find.mockResolvedValue([]);
+    it('excludes CANCELLED bookings from availability', async () => {
+      bookings.find.mockResolvedValue([
+        { booking_id: 2, court: 3, time_in: '09:00', time_out: '10:00', status: BookingStatus.CANCELLED },
+      ]);
 
       const result = await service.getAvailability('2026-09-10');
-
-      expect(result).toHaveLength(1);
-      expect(result[0].bookings).toEqual([]);
+      expect(result.find((c) => c.id === 3).bookings).toEqual([]);
     });
   });
 });

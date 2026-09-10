@@ -3,17 +3,21 @@ import { BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
-import { UserRole } from '../users/entities/user.entity';
+import { UsersService, UserRole } from '../users/users.service';
 
 describe('AuthService (unit)', () => {
   let service: AuthService;
-  let usersService: { findOne: jest.Mock; create: jest.Mock };
-  let jwtService: { sign: jest.Mock };
+  let usersService: jest.Mocked<Pick<UsersService, 'findByUsername' | 'createStudent'>>;
+  let jwtService: jest.Mocked<Pick<JwtService, 'sign'>>;
 
   beforeEach(async () => {
-    usersService = { findOne: jest.fn(), create: jest.fn() };
-    jwtService = { sign: jest.fn().mockReturnValue('signed.jwt.token') };
+    usersService = {
+      findByUsername: jest.fn(),
+      createStudent: jest.fn(),
+    };
+    jwtService = {
+      sign: jest.fn().mockReturnValue('signed.jwt.token'),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -26,118 +30,76 @@ describe('AuthService (unit)', () => {
     service = module.get<AuthService>(AuthService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
   describe('validateUser', () => {
-    it('returns the user without the password when credentials are correct', async () => {
-      const hashed = await bcrypt.hash('secret', 10);
-      usersService.findOne.mockResolvedValue({
-        id: 1,
-        username: 'alice',
-        password: hashed,
-        name: 'Alice',
-        role: UserRole.USER,
+    it('returns the admin (without password) + role when the password matches', async () => {
+      const password = await bcrypt.hash('secret', 10);
+      usersService.findByUsername.mockResolvedValue({
+        user: { admin_id: 'A001', username: 'admin', name: 'Admin', password },
+        role: UserRole.ADMIN,
       });
 
-      const result = await service.validateUser('alice', 'secret');
+      const result = await service.validateUser('admin', 'secret');
 
-      expect(result).toBeTruthy();
+      expect(result).toMatchObject({ admin_id: 'A001', username: 'admin', role: UserRole.ADMIN });
       expect(result.password).toBeUndefined();
-      expect(result.username).toBe('alice');
     });
 
     it('returns null when the password is wrong', async () => {
-      const hashed = await bcrypt.hash('secret', 10);
-      usersService.findOne.mockResolvedValue({
-        id: 1,
-        username: 'alice',
-        password: hashed,
+      const password = await bcrypt.hash('secret', 10);
+      usersService.findByUsername.mockResolvedValue({
+        user: { stu_id: '64010001', username: 'stu', password },
+        role: UserRole.STUDENT,
       });
 
-      const result = await service.validateUser('alice', 'wrong-password');
-
-      expect(result).toBeNull();
+      expect(await service.validateUser('stu', 'WRONG')).toBeNull();
     });
 
     it('returns null when the user does not exist', async () => {
-      usersService.findOne.mockResolvedValue(null);
-
-      const result = await service.validateUser('ghost', 'whatever');
-
-      expect(result).toBeNull();
+      usersService.findByUsername.mockResolvedValue(null);
+      expect(await service.validateUser('ghost', 'x')).toBeNull();
     });
   });
 
   describe('login', () => {
-    it('signs a JWT payload and returns a sanitized user object', async () => {
-      const result = await service.login({
-        id: 7,
-        username: 'bob',
-        name: 'Bob',
-        role: UserRole.ADMIN,
-      });
+    it('signs an admin token keyed by admin_id', async () => {
+      const res = await service.login({ admin_id: 'A001', username: 'admin', name: 'Admin', role: UserRole.ADMIN });
+      expect(jwtService.sign).toHaveBeenCalledWith({ username: 'admin', sub: 'A001', role: UserRole.ADMIN });
+      expect(res.user).toEqual({ id: 'A001', username: 'admin', name: 'Admin', role: UserRole.ADMIN });
+      expect(res.access_token).toBe('signed.jwt.token');
+    });
 
-      expect(jwtService.sign).toHaveBeenCalledWith({
-        username: 'bob',
-        sub: 7,
-        role: UserRole.ADMIN,
+    it('signs a student token keyed by stu_id and joins the full name', async () => {
+      const res = await service.login({
+        stu_id: '64010001', username: 'stu', first_name: 'Some', last_name: 'One', role: UserRole.STUDENT,
       });
-      expect(result.access_token).toBe('signed.jwt.token');
-      expect(result.user).toEqual({
-        id: 7,
-        username: 'bob',
-        name: 'Bob',
-        role: UserRole.ADMIN,
-      });
-      expect((result.user as any).password).toBeUndefined();
+      expect(jwtService.sign).toHaveBeenCalledWith({ username: 'stu', sub: '64010001', role: UserRole.STUDENT });
+      expect(res.user).toEqual({ id: '64010001', username: 'stu', name: 'Some One', role: UserRole.STUDENT });
     });
   });
 
   describe('register', () => {
-    it('throws BadRequestException when the username already exists', async () => {
-      usersService.findOne.mockResolvedValue({ id: 1, username: 'taken' });
-
-      await expect(service.register({ username: 'taken', password: 'x' })).rejects.toBeInstanceOf(
-        BadRequestException,
-      );
-      expect(usersService.create).not.toHaveBeenCalled();
+    it('rejects a duplicate username', async () => {
+      usersService.findByUsername.mockResolvedValue({ user: {}, role: UserRole.STUDENT });
+      await expect(service.register({ username: 'taken', email: 'a@kmitl.ac.th' }))
+        .rejects.toBeInstanceOf(BadRequestException);
     });
 
-    it('creates the user and logs them in when the username is free', async () => {
-      usersService.findOne.mockResolvedValue(null);
-      usersService.create.mockResolvedValue({
-        id: 2,
-        username: 'newbie',
-        name: 'New',
-        role: UserRole.USER,
-      });
-
-      const result = await service.register({ username: 'newbie', password: 'pw', name: 'New' });
-
-      expect(usersService.create).toHaveBeenCalled();
-      expect(result.access_token).toBe('signed.jwt.token');
-      expect(result.user.username).toBe('newbie');
+    it('rejects an email that is not @kmitl.ac.th', async () => {
+      usersService.findByUsername.mockResolvedValue(null);
+      await expect(service.register({ username: 'new', email: 'someone@gmail.com' }))
+        .rejects.toBeInstanceOf(BadRequestException);
     });
 
-    // KNOWN BUG (role escalation, see TESTING.md #01): register currently trusts a
-    // client-supplied `role`. `it.failing` documents the CORRECT behavior and stays green
-    // while the bug exists; once register/create force UserRole.USER this will start
-    // failing, prompting removal of `.failing`.
-    it.failing('does not let a registrant choose their own role [bug #01]', async () => {
-      usersService.findOne.mockResolvedValue(null);
-      usersService.create.mockImplementation(async (dto: any) => ({
-        id: 3,
-        username: dto.username,
-        name: dto.name,
-        role: dto.role ?? UserRole.USER,
-      }));
+    it('creates a student and returns a login payload for a valid @kmitl.ac.th email', async () => {
+      usersService.findByUsername.mockResolvedValue(null);
+      usersService.createStudent.mockResolvedValue({
+        stu_id: '64010001', username: 'new', first_name: 'New', last_name: 'Student',
+      } as any);
 
-      await service.register({ username: 'evil', password: 'pw', role: UserRole.ADMIN });
+      const res = await service.register({ username: 'new', email: 'new@kmitl.ac.th', name: 'New Student' });
 
-      const createdWith = usersService.create.mock.calls[0][0];
-      expect(createdWith.role).not.toBe(UserRole.ADMIN);
+      expect(usersService.createStudent).toHaveBeenCalled();
+      expect(res.user).toMatchObject({ id: '64010001', role: UserRole.STUDENT });
     });
   });
 });

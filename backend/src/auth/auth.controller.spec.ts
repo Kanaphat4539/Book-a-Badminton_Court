@@ -5,43 +5,46 @@ import { AuthService } from './auth.service';
 
 describe('AuthController (unit)', () => {
   let controller: AuthController;
-  let service: { validateUser: jest.Mock; login: jest.Mock; register: jest.Mock };
+  let authService: jest.Mocked<Pick<AuthService, 'validateUser' | 'login' | 'register'>>;
 
   beforeEach(async () => {
-    service = { validateUser: jest.fn(), login: jest.fn(), register: jest.fn() };
+    authService = {
+      validateUser: jest.fn(),
+      login: jest.fn(),
+      register: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [{ provide: AuthService, useValue: service }],
+      providers: [{ provide: AuthService, useValue: authService }],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  describe('login', () => {
+    it('throws Unauthorized when credentials are invalid', async () => {
+      authService.validateUser.mockResolvedValue(null);
+      await expect(controller.login({ username: 'x', password: 'y' }))
+        .rejects.toBeInstanceOf(UnauthorizedException);
+    });
+
+    it('returns a token when credentials are valid', async () => {
+      const user = { stu_id: '64010001', role: 'STUDENT' };
+      authService.validateUser.mockResolvedValue(user);
+      authService.login.mockResolvedValue({ access_token: 't', user: {} as any });
+
+      const res = await controller.login({ username: 'stu', password: 'pw' });
+
+      expect(authService.login).toHaveBeenCalledWith(user);
+      expect(res.access_token).toBe('t');
+    });
   });
 
-  it('logs in a valid user', async () => {
-    service.validateUser.mockResolvedValue({ id: 1, username: 'alice' });
-    service.login.mockResolvedValue({ access_token: 'tok' });
-
-    const result = await controller.login({ username: 'alice', password: 'pw' });
-
-    expect(service.validateUser).toHaveBeenCalledWith('alice', 'pw');
-    expect(result.access_token).toBe('tok');
-  });
-
-  it('throws UnauthorizedException on invalid credentials', async () => {
-    service.validateUser.mockResolvedValue(null);
-    await expect(controller.login({ username: 'x', password: 'y' })).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
-  });
-
-  it('delegates registration to the service', async () => {
-    service.register.mockResolvedValue({ access_token: 'tok' });
-    await controller.register({ username: 'newbie', password: 'pw' });
-    expect(service.register).toHaveBeenCalledWith({ username: 'newbie', password: 'pw' });
+  it('delegates register to the service', async () => {
+    const body = { username: 'new', email: 'new@kmitl.ac.th' };
+    authService.register.mockResolvedValue({ access_token: 't', user: {} as any });
+    await controller.register(body);
+    expect(authService.register).toHaveBeenCalledWith(body);
   });
 });

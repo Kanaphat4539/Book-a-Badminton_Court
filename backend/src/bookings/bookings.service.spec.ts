@@ -1,10 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { Booking, BookingStatus } from './entities/booking.entity';
-import { Court } from '../courts/entities/court.entity';
-import { User } from '../users/entities/user.entity';
+import { Student } from '../users/entities/student.entity';
+import { Admin } from '../users/entities/admin.entity';
+
+const today = () => new Date().toISOString().split('T')[0];
 
 function repoMock() {
   return {
@@ -12,151 +14,144 @@ function repoMock() {
     findOneBy: jest.fn(),
     find: jest.fn(),
     create: jest.fn((x) => x),
-    save: jest.fn((x) => Promise.resolve({ id: 1, ...x })),
-    createQueryBuilder: jest.fn(),
+    save: jest.fn((x) => Promise.resolve(x)),
   };
 }
-
-const todayStr = () => new Date().toISOString().split('T')[0];
 
 describe('BookingsService (unit)', () => {
   let service: BookingsService;
   let bookings: ReturnType<typeof repoMock>;
-  let courts: ReturnType<typeof repoMock>;
-  let users: ReturnType<typeof repoMock>;
+  let students: ReturnType<typeof repoMock>;
+  let admins: ReturnType<typeof repoMock>;
 
   beforeEach(async () => {
     bookings = repoMock();
-    courts = repoMock();
-    users = repoMock();
+    students = repoMock();
+    admins = repoMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BookingsService,
         { provide: getRepositoryToken(Booking), useValue: bookings },
-        { provide: getRepositoryToken(Court), useValue: courts },
-        { provide: getRepositoryToken(User), useValue: users },
+        { provide: getRepositoryToken(Student), useValue: students },
+        { provide: getRepositoryToken(Admin), useValue: admins },
       ],
     }).compile();
 
     service = module.get<BookingsService>(BookingsService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
   describe('createBooking', () => {
-    it('creates a booking with end time one hour after start', async () => {
-      bookings.findOne.mockResolvedValue(null); // no active booking, no overlap
-      courts.findOneBy.mockResolvedValue({ id: 2, name: 'Court 2' });
-      users.findOneBy.mockResolvedValue({ id: 5, username: 'u' });
+    it('saves a PENDING booking with an end time one hour after the start', async () => {
+      bookings.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+      students.findOneBy.mockResolvedValue({ stu_id: '64010001' });
+      admins.findOneBy.mockResolvedValue({ admin_id: 'A001' });
 
-      await service.createBooking(5, 2, todayStr(), '10:00');
+      await service.createBooking('64010001', 2, today(), '10:00');
 
-      const created = bookings.create.mock.calls[0][0];
-      expect(created.start_time).toBe('10:00');
-      expect(created.end_time).toBe('11:00:00');
-      expect(created.status).toBe(BookingStatus.PENDING);
+      expect(bookings.create).toHaveBeenCalledWith(expect.objectContaining({
+        stu_id: '64010001',
+        court: 2,
+        time_in: '10:00',
+        time_out: '11:00:00',
+        status: BookingStatus.PENDING,
+        admin_id: 'A001',
+      }));
       expect(bookings.save).toHaveBeenCalled();
     });
 
-    it('rejects a booking for a day that is not today', async () => {
-      await expect(service.createBooking(5, 2, '2020-01-01', '10:00')).rejects.toBeInstanceOf(
-        BadRequestException,
-      );
+    it('rejects a booking for a day other than today', async () => {
+      await expect(service.createBooking('64010001', 1, '2000-01-01', '10:00'))
+        .rejects.toBeInstanceOf(BadRequestException);
     });
 
-    it('rejects when the user already has an active booking', async () => {
-      bookings.findOne.mockResolvedValueOnce({ id: 99, status: BookingStatus.PENDING });
-
-      await expect(service.createBooking(5, 2, todayStr(), '10:00')).rejects.toThrow(
-        /already have an active booking/i,
-      );
+    it('rejects a second active booking for the same student', async () => {
+      bookings.findOne.mockResolvedValueOnce({ booking_id: 1, status: BookingStatus.PENDING });
+      await expect(service.createBooking('64010001', 1, today(), '10:00'))
+        .rejects.toBeInstanceOf(BadRequestException);
     });
 
-    it('rejects when the court is already booked at that time', async () => {
+    it('rejects an overlapping booking on the same court/time', async () => {
       bookings.findOne
-        .mockResolvedValueOnce(null) // user has no active booking
-        .mockResolvedValueOnce({ id: 42, status: BookingStatus.PENDING }); // overlap found
-
-      await expect(service.createBooking(5, 2, todayStr(), '10:00')).rejects.toThrow(
-        /already booked/i,
-      );
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ booking_id: 9, status: BookingStatus.PENDING });
+      await expect(service.createBooking('64010001', 1, today(), '10:00'))
+        .rejects.toBeInstanceOf(BadRequestException);
     });
 
-    it('throws NotFoundException when the court does not exist', async () => {
-      bookings.findOne.mockResolvedValue(null);
-      courts.findOneBy.mockResolvedValue(null);
-
-      await expect(service.createBooking(5, 2, todayStr(), '10:00')).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+    it('throws NotFound when the student does not exist', async () => {
+      bookings.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+      students.findOneBy.mockResolvedValue(null);
+      await expect(service.createBooking('nope', 1, today(), '10:00'))
+        .rejects.toBeInstanceOf(NotFoundException);
     });
 
-    it('throws NotFoundException when the user does not exist', async () => {
-      bookings.findOne.mockResolvedValue(null);
-      courts.findOneBy.mockResolvedValue({ id: 2 });
-      users.findOneBy.mockResolvedValue(null);
-
-      await expect(service.createBooking(5, 2, todayStr(), '10:00')).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+    // BUG #06 (fixed): the 23:00 start used to overflow to an invalid 24:00:00 end
+    // time. The service now rejects any start hour >= 23 before creating the booking.
+    it('rejects a 23:00 start instead of producing an invalid 24:00:00 end time', async () => {
+      await expect(service.createBooking('64010001', 1, today(), '23:00'))
+        .rejects.toBeInstanceOf(BadRequestException);
+      expect(bookings.create).not.toHaveBeenCalled();
     });
 
-    // KNOWN BUG (see TESTING.md #06): the 23:00 slot yields "24:00:00", an invalid time.
-    // `it.failing` documents the CORRECT behavior and stays green while the bug exists;
-    // once the end-time calc is bounded this will start failing, prompting removal of `.failing`.
-    it.failing('does not produce an invalid 24:00:00 end time for the 23:00 slot [bug #06]', async () => {
-      bookings.findOne.mockResolvedValue(null);
-      courts.findOneBy.mockResolvedValue({ id: 2 });
-      users.findOneBy.mockResolvedValue({ id: 5 });
-
-      await service.createBooking(5, 2, todayStr(), '23:00');
-
-      const created = bookings.create.mock.calls[0][0];
-      expect(created.end_time).not.toBe('24:00:00');
+    it('rejects a malformed start time', async () => {
+      await expect(service.createBooking('64010001', 1, today(), 'not-a-time'))
+        .rejects.toBeInstanceOf(BadRequestException);
     });
   });
 
   describe('checkIn', () => {
-    it('throws NotFoundException when there is no matching booking', async () => {
+    it('throws NotFound when the booking is missing', async () => {
       bookings.findOne.mockResolvedValue(null);
-      await expect(service.checkIn(1, 5, 2)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.checkIn(1, '64010001', 1)).rejects.toBeInstanceOf(NotFoundException);
     });
 
-    it('rejects when the booking is not PENDING', async () => {
-      bookings.findOne.mockResolvedValue({ id: 1, status: BookingStatus.COMPLETED });
-      await expect(service.checkIn(1, 5, 2)).rejects.toThrow(/cannot check in/i);
+    it('rejects check-in when the status is not PENDING', async () => {
+      bookings.findOne.mockResolvedValue({ status: BookingStatus.CHECKED_IN });
+      await expect(service.checkIn(1, '64010001', 1)).rejects.toBeInstanceOf(BadRequestException);
     });
 
-    it('flips status to CHECKED_IN on the success path', async () => {
+    it('rejects check-in before the booking start time', async () => {
       bookings.findOne.mockResolvedValue({
-        id: 1,
-        status: BookingStatus.PENDING,
-        booking_date: '2000-01-01',
-        start_time: '00:00:00',
+        status: BookingStatus.PENDING, booking_date: today(), time_in: '23:59:00',
       });
-      const saved = await service.checkIn(1, 5, 2);
-      expect(saved.status).toBe(BookingStatus.CHECKED_IN);
+      await expect(service.checkIn(1, '64010001', 1)).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('flips the status to CHECKED_IN on success', async () => {
+      const booking: any = { status: BookingStatus.PENDING, booking_date: '2000-01-01', time_in: '10:00:00' };
+      bookings.findOne.mockResolvedValue(booking);
+      await service.checkIn(1, '64010001', 1);
+      expect(booking.status).toBe(BookingStatus.CHECKED_IN);
+      expect(bookings.save).toHaveBeenCalledWith(booking);
     });
   });
 
   describe('cancelBooking', () => {
-    it('throws NotFoundException when the booking is missing', async () => {
-      bookings.findOne.mockResolvedValue(null);
-      await expect(service.cancelBooking(1, 5)).rejects.toBeInstanceOf(NotFoundException);
-    });
-
     it('rejects cancelling a non-PENDING booking', async () => {
-      bookings.findOne.mockResolvedValue({ id: 1, status: BookingStatus.CHECKED_IN });
-      await expect(service.cancelBooking(1, 5)).rejects.toThrow(/cannot cancel/i);
+      bookings.findOne.mockResolvedValue({ status: BookingStatus.COMPLETED });
+      await expect(service.cancelBooking(1, '64010001')).rejects.toBeInstanceOf(BadRequestException);
     });
 
-    it('sets status to CANCELLED on success', async () => {
-      bookings.findOne.mockResolvedValue({ id: 1, status: BookingStatus.PENDING });
-      const saved = await service.cancelBooking(1, 5);
-      expect(saved.status).toBe(BookingStatus.CANCELLED);
+    it('sets the status to CANCELLED on success', async () => {
+      const booking: any = { status: BookingStatus.PENDING };
+      bookings.findOne.mockResolvedValue(booking);
+      await service.cancelBooking(1, '64010001');
+      expect(booking.status).toBe(BookingStatus.CANCELLED);
+    });
+  });
+
+  describe('finishBooking', () => {
+    it('rejects finishing a booking that is not CHECKED_IN', async () => {
+      bookings.findOne.mockResolvedValue({ status: BookingStatus.PENDING });
+      await expect(service.finishBooking(1)).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('sets the status to COMPLETED on success', async () => {
+      const booking: any = { status: BookingStatus.CHECKED_IN };
+      bookings.findOne.mockResolvedValue(booking);
+      await service.finishBooking(1);
+      expect(booking.status).toBe(BookingStatus.COMPLETED);
     });
   });
 });

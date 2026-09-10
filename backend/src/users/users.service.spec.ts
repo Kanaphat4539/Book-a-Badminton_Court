@@ -1,65 +1,110 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { UsersService } from './users.service';
-import { User, UserRole } from './entities/user.entity';
+import { UsersService, UserRole } from './users.service';
+import { Admin } from './entities/admin.entity';
+import { Student } from './entities/student.entity';
+
+function repoMock() {
+  return {
+    findOneBy: jest.fn(),
+    find: jest.fn(),
+    create: jest.fn((x) => x),
+    save: jest.fn((x) => Promise.resolve(x)),
+    remove: jest.fn(),
+  };
+}
 
 describe('UsersService (unit)', () => {
   let service: UsersService;
-  let repo: {
-    findOneBy: jest.Mock;
-    find: jest.Mock;
-    create: jest.Mock;
-    save: jest.Mock;
-    remove: jest.Mock;
-  };
+  let admins: ReturnType<typeof repoMock>;
+  let students: ReturnType<typeof repoMock>;
 
   beforeEach(async () => {
-    repo = {
-      findOneBy: jest.fn(),
-      find: jest.fn(),
-      create: jest.fn((x) => x),
-      save: jest.fn((x) => Promise.resolve({ id: 1, ...x })),
-      remove: jest.fn(),
-    };
+    admins = repoMock();
+    students = repoMock();
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [UsersService, { provide: getRepositoryToken(User), useValue: repo }],
+      providers: [
+        UsersService,
+        { provide: getRepositoryToken(Admin), useValue: admins },
+        { provide: getRepositoryToken(Student), useValue: students },
+      ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
+  describe('findByUsername', () => {
+    it('returns an admin with the ADMIN role', async () => {
+      admins.findOneBy.mockResolvedValue({ admin_id: 'A001', username: 'admin' });
+      expect(await service.findByUsername('admin')).toEqual({
+        user: { admin_id: 'A001', username: 'admin' },
+        role: UserRole.ADMIN,
+      });
+    });
 
-  describe('create', () => {
-    it('hashes the password and never persists the plaintext', async () => {
-      await service.create({ username: 'alice', name: 'Alice', password: 'plaintext', role: UserRole.USER });
+    it('falls back to a student with the STUDENT role', async () => {
+      admins.findOneBy.mockResolvedValue(null);
+      students.findOneBy.mockResolvedValue({ stu_id: '64010001', username: 'stu' });
+      expect(await service.findByUsername('stu')).toEqual({
+        user: { stu_id: '64010001', username: 'stu' },
+        role: UserRole.STUDENT,
+      });
+    });
 
-      const persisted = repo.create.mock.calls[0][0];
-      expect(persisted.password).not.toBe('plaintext');
-      const matches = await bcrypt.compare('plaintext', persisted.password);
-      expect(matches).toBe(true);
+    it('returns null when neither exists', async () => {
+      admins.findOneBy.mockResolvedValue(null);
+      students.findOneBy.mockResolvedValue(null);
+      expect(await service.findByUsername('ghost')).toBeNull();
     });
   });
 
-  describe('findOne', () => {
-    it('looks a user up by username', async () => {
-      repo.findOneBy.mockResolvedValue({ id: 1, username: 'alice' });
-      const user = await service.findOne('alice');
-      expect(repo.findOneBy).toHaveBeenCalledWith({ username: 'alice' });
-      expect(user?.username).toBe('alice');
+  describe('createStudent', () => {
+    it('hashes the password, splits the name, and coerces the year', async () => {
+      await service.createStudent({
+        studentId: '64010001',
+        email: 'new@kmitl.ac.th',
+        name: 'Some One',
+        phone: '0812345678',
+        major: 'CS',
+        year: '3',
+        username: 'newstu',
+        password: 'raw-password',
+      });
+
+      const created = students.create.mock.calls[0][0];
+      expect(created.stu_id).toBe('64010001');
+      expect(created.first_name).toBe('Some');
+      expect(created.last_name).toBe('One');
+      expect(created.tel).toBe('0812345678');
+      expect(created.year).toBe(3);
+      expect(created.password).not.toBe('raw-password');
+      expect(await bcrypt.compare('raw-password', created.password)).toBe(true);
     });
   });
 
-  describe('findById', () => {
-    it('looks a user up by id', async () => {
-      repo.findOneBy.mockResolvedValue({ id: 5, username: 'bob' });
-      const user = await service.findById(5);
-      expect(repo.findOneBy).toHaveBeenCalledWith({ id: 5 });
-      expect(user?.id).toBe(5);
+  describe('createAdmin', () => {
+    it('hashes the admin password', async () => {
+      await service.createAdmin({ admin_id: 'A002', username: 'admin2', name: 'Admin Two', password: 'pw' });
+      const created = admins.create.mock.calls[0][0];
+      expect(created.password).not.toBe('pw');
+      expect(await bcrypt.compare('pw', created.password)).toBe(true);
+    });
+  });
+
+  describe('removeStudent', () => {
+    it('removes an existing student', async () => {
+      const student = { stu_id: '64010001' };
+      students.findOneBy.mockResolvedValue(student);
+      await service.removeStudent('64010001');
+      expect(students.remove).toHaveBeenCalledWith(student);
+    });
+
+    it('does nothing when the student is missing', async () => {
+      students.findOneBy.mockResolvedValue(null);
+      await service.removeStudent('nope');
+      expect(students.remove).not.toHaveBeenCalled();
     });
   });
 });

@@ -112,8 +112,9 @@ export default function LoginPage() {
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="athlete@example.com or admin"
+                  placeholder="athlete@example.com"
                   required
+                  autoComplete="off"
                   type="text"
                 />
               </div>
@@ -131,6 +132,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
+                  autoComplete="new-password"
                   type="password"
                 />
               </div>

@@ -150,23 +150,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Quick Login for Demo */}
-          <div className="mt-5 flex justify-center gap-6 text-sm">
-            <button
-              onClick={() => { setUsername('admin'); setPassword('password'); }}
-              className="text-gray-500 font-medium hover:text-primary transition-colors flex items-center gap-1"
-            >
-              <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
-              Admin
-            </button>
-            <button
-              onClick={() => { setUsername('user'); setPassword('password'); }}
-              className="text-gray-500 font-medium hover:text-primary transition-colors flex items-center gap-1"
-            >
-              <span className="material-symbols-outlined text-[16px]">person</span>
-              User
-            </button>
-          </div>
+
 
           {/* Sign Up Link */}
           <div className="mt-8 pt-6 border-t border-gray-200/60 text-center">

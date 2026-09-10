@@ -41,7 +41,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <div className="bg-surface text-on-surface min-h-screen flex flex-col font-sans">
       {/* Header */}
       <header className="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-        <div className="h-16 px-4 md:px-margin-screen flex items-center justify-between max-w-2xl mx-auto">
+        <div className="h-16 px-4 md:px-margin-screen flex items-center justify-between max-w-2xl md:max-w-7xl mx-auto">
           <div className="flex items-center gap-3 cursor-pointer min-w-0" onClick={() => router.push('/dashboard')}>
             <div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center shadow-[0_4px_12px_rgba(255,94,30,0.25)] shrink-0">
               <img
@@ -59,6 +59,22 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {/* Desktop Navigation */}
+            {userRole !== 'ADMIN' && (
+              <nav className="hidden md:flex items-center gap-6 mr-4">
+                <button onClick={() => router.push('/dashboard')} className={`font-label-md transition-colors ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}>หน้าหลัก</button>
+                <button onClick={() => router.push('/booking')} className={`font-label-md transition-colors ${isActive('/booking') ? 'text-primary font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}>จองคอร์ท</button>
+                <button onClick={() => router.push('/scan')} className={`font-label-md transition-colors ${isActive('/scan') ? 'text-primary font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}>สแกนเข้าสนาม</button>
+                <button onClick={() => router.push('/news')} className={`font-label-md transition-colors ${isActive('/news') ? 'text-primary font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}>ข่าวสาร</button>
+              </nav>
+            )}
+            {userRole === 'ADMIN' && (
+              <nav className="hidden md:flex items-center gap-6 mr-4">
+                <button onClick={() => router.push('/dashboard')} className={`font-label-md transition-colors ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}>หน้าหลัก (Admin)</button>
+                <button onClick={() => router.push('/admin/users')} className={`font-label-md transition-colors ${isActive('/admin/users') ? 'text-primary font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}>จัดการผู้ใช้</button>
+              </nav>
+            )}
+            
             <button aria-label="Notifications" className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface active:bg-surface-container-high transition-colors relative">
               <span className="material-symbols-outlined text-[22px]">notifications</span>
               <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-primary-container ring-2 ring-surface"></span>
@@ -71,13 +87,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 w-full pt-16 pb-24 max-w-2xl mx-auto">
+      <div className="flex-1 w-full pt-16 pb-24 md:pb-8 max-w-2xl md:max-w-7xl mx-auto">
         {children}
       </div>
 
       {/* Bottom Nav */}
       {userRole !== 'ADMIN' && (
-        <nav className="fixed bottom-0 w-full z-40 pb-safe bg-surface/85 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.05)]">
+        <nav className="fixed bottom-0 w-full z-40 pb-safe bg-surface/85 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.05)] md:hidden">
           <div className="h-20 px-gutter-sm flex items-center justify-around max-w-2xl mx-auto">
             <button onClick={() => router.push('/dashboard')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/dashboard') ? { fontVariationSettings: "'FILL' 1" } : {}}>home</span>

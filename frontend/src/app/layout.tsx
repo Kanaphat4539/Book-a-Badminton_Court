@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from 'sonner';
+import { AuthSplashProvider } from '@/components/auth-splash-provider';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,7 +28,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-full font-sans bg-background text-on-surface">
-        {children}
+        <AuthSplashProvider>{children}</AuthSplashProvider>
         <Toaster position="top-center" theme="dark" />
       </body>
     </html>

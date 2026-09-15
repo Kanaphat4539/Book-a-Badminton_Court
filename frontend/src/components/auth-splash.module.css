@@ -1,0 +1,48 @@
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--color-background);
+  color: var(--color-on-surface);
+  animation: splash-exit 180ms ease-in 820ms both;
+}
+
+.splash::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 65%);
+  pointer-events: none;
+}
+
+.content { position: relative; text-align: center; }
+.emblem { position: relative; width: 184px; height: 184px; margin: 0 auto 30px; display: grid; place-items: center; }
+.ring { position: absolute; inset: 0; border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent); border-radius: 50%; }
+.ring::after { content: ''; position: absolute; inset: 13px; border: 1px dashed color-mix(in srgb, var(--color-primary) 18%, transparent); border-radius: 50%; }
+.logo { width: 112px; height: 112px; overflow: hidden; border-radius: 50%; background: white; box-shadow: 0 12px 40px color-mix(in srgb, var(--color-primary) 20%, transparent); animation: logo-enter 420ms cubic-bezier(.2,.8,.2,1) both; }
+.logo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.3); }
+.shuttle { position: absolute; width: 54px; height: 54px; right: -8px; top: 0; color: var(--color-primary); filter: drop-shadow(0 4px 8px color-mix(in srgb, var(--color-primary) 20%, transparent)); animation: shuttle-flight 820ms cubic-bezier(.22,.7,.3,1) both; }
+.eyebrow { color: var(--color-primary); font-size: 10px; font-weight: 700; letter-spacing: .24em; margin: 0 0 10px; }
+.title { font-size: clamp(20px, 5vw, 30px); font-weight: 800; letter-spacing: -.04em; margin: 0; }
+.title span { color: var(--color-primary); }
+.caption { margin: 10px 0 26px; color: var(--color-on-surface-variant); font-size: 14px; }
+.track { width: 120px; height: 3px; overflow: hidden; margin: auto; border-radius: 10px; background: color-mix(in srgb, var(--color-primary) 12%, transparent); }
+.track div { height: 100%; border-radius: inherit; background: var(--color-primary); transform-origin: left; animation: track-fill 820ms ease-out both; }
+
+@keyframes logo-enter { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+@keyframes shuttle-flight {
+  0% { opacity: 0; transform: translate(-130px, 110px) rotate(-60deg) scale(.7); }
+  35% { opacity: 1; }
+  70% { transform: translate(4px, -10px) rotate(24deg) scale(1); }
+  100% { opacity: 1; transform: translate(0, 0) rotate(15deg) scale(1); }
+}
+@keyframes track-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes splash-exit { from { opacity: 1; } to { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .splash, .logo, .shuttle, .track div { animation: none; }
+  .shuttle { transform: rotate(15deg); }
+}

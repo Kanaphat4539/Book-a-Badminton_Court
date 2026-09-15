@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { useAuthSplash } from '@/components/auth-splash-provider';
 
 export default function LoginPage() {
   const router = useRouter();
+  const showSplash = useAuthSplash();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,8 @@ export default function LoginPage() {
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       toast.success('Login successful!');
-      window.location.href = '/';
+      showSplash();
+      router.replace('/');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Login failed');
     } finally {
@@ -97,22 +100,6 @@ export default function LoginPage() {
               {!loading && <span className="material-symbols-outlined ml-2 text-[18px]" style={{fontVariationSettings: "'FILL' 1"}}>arrow_forward</span>}
             </button>
           </form>
-
-          {/* Quick Login for Demo */}
-          <div className="mt-4 flex justify-center gap-4 text-xs">
-            <button 
-              onClick={() => { setUsername('admin'); setPassword('password'); }}
-              className="text-on-surface-variant hover:text-primary transition-colors"
-            >
-              [Fill Admin]
-            </button>
-            <button 
-              onClick={() => { setUsername('user'); setPassword('password'); }}
-              className="text-on-surface-variant hover:text-primary transition-colors"
-            >
-              [Fill User]
-            </button>
-          </div>
 
           {/* Sign Up Link */}
           <div className="mt-6 pt-4 border-t border-[#2A2A2A] text-center">

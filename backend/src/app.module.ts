@@ -9,9 +9,10 @@ import { UsersModule } from './users/users.module';
 import { CourtsModule } from './courts/courts.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { CronModule } from './cron/cron.module';
-import { User } from './users/entities/user.entity';
-import { Court } from './courts/entities/court.entity';
+import { Admin } from './users/entities/admin.entity';
+import { Student } from './users/entities/student.entity';
 import { Booking } from './bookings/entities/booking.entity';
+import { Court } from './courts/entities/court.entity';
 
 @Module({
   imports: [
@@ -22,8 +23,9 @@ import { Booking } from './bookings/entities/booking.entity';
       username: process.env.DB_USER || 'badminton_user',
       password: process.env.DB_PASSWORD || 'password',
       database: process.env.DB_NAME || 'database.sqlite',
-      entities: [User, Court, Booking],
+      entities: [Admin, Student, Booking, Court],
       synchronize: true, // Use only in dev, not in production
+      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
     }),
     ScheduleModule.forRoot(),
     DatabaseModule,

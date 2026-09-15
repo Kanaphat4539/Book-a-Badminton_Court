@@ -4,38 +4,47 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import MainLayout from '@/components/MainLayout';
 
 export default function BookingPage() {
   const router = useRouter();
-  
+
   // States
-  const [dates, setDates] = useState<{date: string, day: string, num: string}[]>([]);
+  const [showRulesModal, setShowRulesModal] = useState(true);
+  const [dates, setDates] = useState<{ date: string, day: string, num: string, fullMonth: string }[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
-  const [courts, setCourts] = useState<any[]>([]);
+  const [courts, setCourts] = useState<{ id: number, name: string, description: string, status: string, availability?: any[], bookings?: any[] }[]>([]);
   const [loading, setLoading] = useState(false);
-  const [bookingLoading, setBookingLoading] = useState(false);
+
+  const handleCloseRules = () => {
+    setShowRulesModal(false);
+  };
 
   // Generate next 7 days for horizontal calendar
   useEffect(() => {
     const today = new Date();
     const generatedDates = [];
+    const thaiDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์'];
+    
+    // Generate only today for day-by-day booking policy, or next 7 days if you want
     for (let i = 0; i < 7; i++) {
       const nextDate = new Date(today);
       nextDate.setDate(today.getDate() + i);
       generatedDates.push({
         date: nextDate.toISOString().split('T')[0],
-        day: nextDate.toLocaleDateString('en-US', { weekday: 'short' }),
-        num: nextDate.getDate().toString()
+        day: thaiDays[nextDate.getDay()],
+        num: nextDate.getDate().toString(),
+        fullMonth: nextDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })
       });
     }
     setDates(generatedDates);
     setSelectedDate(generatedDates[0].date);
   }, []);
 
-  // Time slots from 09:00 to 21:00
-  const timeSlots = Array.from({ length: 13 }, (_, i) => {
-    return `${(i + 9).toString().padStart(2, '0')}:00`;
+  // Time slots from 08:00 to 23:00 (15 slots, each 1 hour)
+  const timeSlots = Array.from({ length: 15 }, (_, i) => {
+    return `${(i + 8).toString().padStart(2, '0')}:00`;
   });
 
   // Fetch availability when date changes
@@ -50,13 +59,17 @@ export default function BookingPage() {
     }
   }, [selectedDate]);
 
-  const fetchAvailability = async (dateStr: string) => {
+  const fetchAvailability = async (date: string) => {
     setLoading(true);
     try {
-      const response = await api.get(`/courts/availability?date=${dateStr}`);
-      setCourts(response.data);
+      const response = await api.get(`/courts/availability?date=${date}`);
+      // Sort courts by name logically (e.g. Court 1, Court 2)
+      const sortedCourts = response.data.sort((a: { name: string }, b: { name: string }) => 
+        a.name.localeCompare(b.name, undefined, { numeric: true })
+      );
+      setCourts(sortedCourts);
       setSelectedTime(''); // Reset time when date changes
-    } catch (err) {
+    } catch (error) {
       toast.error('Failed to load courts');
     } finally {
       setLoading(false);
@@ -66,230 +79,276 @@ export default function BookingPage() {
   const isTimeFullyBooked = (time: string) => {
     if (!courts.length) return false;
     const formattedTime = time + ':00';
-    // If all courts have this time booked, it's fully booked
-    return courts.every(c => c.bookings?.some((b: any) => b.start_time === formattedTime));
+    // If all courts have this time booked with an active status, it's fully booked
+    return courts.every(c => c.bookings?.some((b: any) =>
+      b.start_time === formattedTime && (b.status === 'PENDING' || b.status === 'CHECKED_IN')
+    ));
   };
 
-  const isCourtBookedForSelectedTime = (court: any) => {
-    if (!selectedTime) return false;
-    const formattedTime = selectedTime + ':00';
-    return court.bookings?.some((b: any) => b.start_time === formattedTime);
+  const isTimeInPast = (timeStr: string) => {
+    if (!selectedDate) return false;
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    if (selectedDate !== todayStr) return false;
+
+    const slotHour = parseInt(timeStr.split(':')[0], 10);
+    const currentHour = now.getHours();
+    return currentHour > slotHour;
   };
 
-  const handleBook = async (courtId: number) => {
+  const handleNext = () => {
     if (!selectedTime) {
-      toast.error('Please select a time slot first');
+      toast.error('กรุณาเลือกรอบเวลาก่อนทำรายการ');
       return;
     }
-    setBookingLoading(true);
-    try {
-      await api.post('/bookings', {
-        courtId,
-        date: selectedDate,
-        startTime: selectedTime + ':00'
-      });
-      toast.success('Court booked successfully!');
-      router.push('/');
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to book court');
-    } finally {
-      setBookingLoading(false);
-      fetchAvailability(selectedDate);
-    }
+    router.push(`/booking/select-court?date=${selectedDate}&time=${selectedTime}`);
   };
 
+  // Find the selected date object for the display
+  const activeDateObj = dates.find(d => d.date === selectedDate);
+  const displayMonth = activeDateObj ? activeDateObj.fullMonth : '';
+  const displayDateStr = activeDateObj && selectedTime 
+    ? `${activeDateObj.day} ${activeDateObj.num} ${displayMonth.split(' ')[0]} • ${selectedTime} - ${String(parseInt(selectedTime.split(':')[0]) + 1).padStart(2, '0')}:00 น.` 
+    : '';
+  
+  // Calculate available courts for selected time
+  const availableCourtsCount = selectedTime ? courts.filter(c => {
+    const formattedTime = selectedTime + ':00';
+    const isBooked = c.bookings?.some((b: any) =>
+      b.start_time === formattedTime && (b.status === 'PENDING' || b.status === 'CHECKED_IN')
+    );
+    return !isBooked;
+  }).length : 0;
+
   return (
-    <div className="bg-background text-on-background antialiased min-h-screen flex flex-col pt-16 pb-24 selection:bg-primary selection:text-white font-sans">
-      
-      {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 bg-background flex justify-between items-center px-container-padding h-16">
-        <div className="flex items-center gap-sm cursor-pointer" onClick={() => router.push('/')}>
-          <img alt="Apex Badminton Logo" className="h-8 w-8 rounded-full object-cover" src="/logo.jpg" onError={(e) => (e.target as HTMLImageElement).src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9ufthUuxh5dWIL4bluPC_-EgGRKNDVZo_9zS-_3AX985RaArbVg6VZMOcfSjMTJt6s7yiLK0t07ZHyOwYmpcVpbt0I1G8nM3aNkXMsv_pm8SWQq-inB4F3ICF5Gg3nI-5k6_gdZiccWTAalrDuP2h-yBwN83Yxqs8PdB8nCH49-gR6e_g5NaDZfS2DavqyNfskg6Id8enrw3M608HilHt2Tm0RKYSy0FC9alKOa0Crgdlx0YpTsUlrQ"} />
-          <span className="font-display-sm text-[24px] font-bold text-primary tracking-tight">APEX BADMINTON</span>
+    <MainLayout>
+      {/* Rules Modal */}
+      {showRulesModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="bg-surface relative w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-300">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/30 bg-surface-container-lowest">
+              <h2 className="font-headline-sm text-on-surface text-lg md:text-xl font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-[24px]">gavel</span>
+                กฎและกติกาการใช้สนาม
+              </h2>
+              <button 
+                onClick={handleCloseRules}
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-surface-container hover:bg-surface-container-highest text-on-surface-variant transition-colors"
+                title="ปิดหน้าต่างเพื่อดำเนินการจอง"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 overflow-y-auto flex-1 font-body-md text-on-surface-variant text-sm md:text-base space-y-4">
+              <div className="space-y-2">
+                <h3 className="font-bold text-on-surface">1. การแต่งกาย</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>ต้องสวมรองเท้าแบดมินตันพื้นยางดิบ (Non-marking) เท่านั้น</li>
+                  <li>สวมใส่ชุดกีฬาที่เหมาะสมสำหรับการออกกำลังกาย</li>
+                </ul>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-bold text-on-surface">2. การจองและการใช้งาน</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>นักศึกษาได้โควตา 1 ชั่วโมง/วัน/บัญชี</li>
+                  <li>กรุณามาถึงสนามก่อนเวลาจอง 10-15 นาที เพื่อทำการสแกน QR Code เช็คอิน</li>
+                  <li>หากไม่ทำการเช็คอินภายใน 15 นาที ระบบจะยกเลิกการจองอัตโนมัติ</li>
+                </ul>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-bold text-on-surface">3. บทลงโทษ (Blacklist)</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>หากจองแล้วไม่มาใช้งาน (No-show) เกิน 2 ครั้ง จะถูกระงับสิทธิ์การจอง 7 วัน</li>
+                </ul>
+              </div>
+              <p className="text-primary text-xs mt-4 p-3 bg-primary-container/30 rounded-xl">
+                * กรุณากดเครื่องหมายกากบาท (X) ด้านบนขวาเพื่อยอมรับเงื่อนไขและดำเนินการจอง
+              </p>
+            </div>
+          </div>
         </div>
-        <button className="hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-200" onClick={() => router.push('/')}>
-          <span className="material-symbols-outlined text-primary font-headline-md text-[24px]" style={{fontVariationSettings: "'FILL' 0"}}>home</span>
-        </button>
-      </header>
+      )}
 
-      <main className="flex-grow w-full max-w-3xl mx-auto px-container-padding flex flex-col gap-6">
-        
-        {/* Header Section */}
-        <section className="mt-4">
-          <h1 className="font-display-lg text-[32px] font-bold text-white mb-2">Reserve a Court</h1>
-          <p className="font-body-lg text-[16px] text-on-surface-variant">Select your preferred date, time, and court to start playing.</p>
-        </section>
+      <main className="flex flex-col relative w-full pb-6 bg-surface min-h-screen">
+        <div className="flex flex-col w-full pb-8">
+          {/* Campus Sports Arena Context Card */}
+          <section className="px-4 md:px-margin-screen pt-4 pb-2">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#F26522] to-yellow-500 p-5 md:p-card-padding shadow-[0_8px_24px_rgba(242,101,34,0.3)]">
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 z-0"></div>
+              <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/20 rounded-full blur-3xl pointer-events-none z-0"></div>
+              <div className="flex items-start justify-between relative z-10 gap-2">
+                <div className="flex flex-col min-w-0">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white w-fit mb-3 backdrop-blur-md border border-white/30 shadow-inner">
+                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shrink-0 shadow-[0_0_8px_#4ade80]"></span>
+                    <span className="font-label-sm text-[10px] md:text-label-sm uppercase tracking-widest font-black">เปิดให้บริการปกติ</span>
+                  </div>
+                  <h1 className="font-headline-sm text-xl md:text-[28px] text-white font-extrabold truncate drop-shadow-md">จองคอร์ทแบดมินตัน</h1>
+                  <p className="font-body-sm text-[12px] md:text-[14px] text-white/90 flex items-center gap-1.5 mt-1 truncate">
+                    <span className="material-symbols-outlined text-[16px] text-white shrink-0 drop-shadow-sm">stadium</span>
+                    <span className="truncate font-medium">อาคารยิมเนเซียม 1 (Gymnasium 1) • วิทยาเขตลาดกระบัง</span>
+                  </p>
+                </div>
+                <div className="flex flex-col items-end shrink-0">
+                  <div className="px-3 py-1.5 md:px-3 rounded-xl bg-white shadow-lg flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[16px] text-[#F26522]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                    <span className="font-label-sm text-[10px] md:text-label-sm text-[#F26522] font-black uppercase tracking-wider">โควตา นศ.</span>
+                  </div>
+                  <span className="font-label-sm text-[10px] md:text-label-sm text-white font-bold mt-2 bg-black/20 px-2 py-0.5 rounded backdrop-blur-sm">คงเหลือ 1 ชม./วัน</span>
+                </div>
+              </div>
+            </div>
+          </section>
 
-        {/* Date Selector (Horizontal Calendar) */}
-        <section>
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="font-headline-md text-[20px] font-semibold text-white">Date</h2>
-            <span className="font-label-md text-[12px] font-semibold text-primary uppercase">
-              {new Date(selectedDate || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-            </span>
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-2 snap-x scrollbar-hide" style={{scrollbarWidth: 'none'}}>
-            {dates.map((d, index) => {
-              const isActive = selectedDate === d.date;
-              return (
-                <button 
-                  key={d.date}
-                  onClick={() => setSelectedDate(d.date)}
-                  className={`flex flex-col items-center justify-center min-w-[64px] h-20 rounded-lg snap-center shrink-0 transition-colors border ${
-                    isActive 
-                      ? 'bg-primary-container text-white shadow-[0_0_15px_rgba(255,107,0,0.3)] border-transparent' 
-                      : 'bg-surface-container hover:bg-surface-container-high border-outline-variant/30 text-on-surface-variant'
-                  }`}
-                >
-                  <span className={`font-label-md text-[12px] uppercase mb-1 ${isActive ? 'text-white/90' : ''}`}>{d.day}</span>
-                  <span className={`font-headline-md text-[20px] font-bold ${isActive ? 'text-white' : 'text-white'}`}>{d.num}</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Time Slots */}
-        <section>
-          <h2 className="font-headline-md text-[20px] font-semibold text-white mb-4">Time Slots</h2>
-          {loading ? (
-             <p className="text-on-surface-variant text-sm">Loading times...</p>
-          ) : (
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-              {timeSlots.map(time => {
-                const isFullyBooked = isTimeFullyBooked(time);
-                const isSelected = selectedTime === time;
-
-                if (isFullyBooked) {
-                  return (
-                    <button key={time} disabled className="py-2 px-1 rounded-md bg-surface-container opacity-30 cursor-not-allowed flex items-center justify-center gap-1 relative overflow-hidden">
-                      <span className="font-body-md text-[14px] text-white line-through">{time}</span>
-                    </button>
-                  );
-                }
-
+          {/* Interactive Date Horizon */}
+          <section className="mt-4 px-4 md:px-margin-screen">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
+                <h2 className="font-headline-sm text-base md:text-headline-sm text-on-surface">เลือกวันที่ (Date)</h2>
+              </div>
+              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-surface-container-high text-on-surface font-label-md text-[11px] md:text-label-md">
+                <span>{displayMonth}</span>
+                <span className="material-symbols-outlined text-[16px]">expand_more</span>
+              </div>
+            </div>
+            {/* Date Pills Scrollable Container */}
+            <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide py-1 -mx-4 px-4 md:-mx-margin-screen md:px-margin-screen">
+              {dates.map((d) => {
+                const isActive = selectedDate === d.date;
                 return (
-                  <button 
-                    key={time}
-                    onClick={() => setSelectedTime(time)}
-                    className={`py-2 px-1 rounded-md flex items-center justify-center transition-colors ${
-                      isSelected 
-                        ? 'bg-primary-container text-white shadow-[0_0_10px_rgba(255,107,0,0.4)]'
-                        : 'bg-surface-container border border-outline-variant/30 hover:border-primary text-white'
+                  <button
+                    key={d.date}
+                    onClick={() => setSelectedDate(d.date)}
+                    className={`date-chip flex flex-col items-center justify-center min-w-[56px] md:min-w-[62px] h-[72px] md:h-[78px] rounded-2xl shadow-sm transform active:scale-95 transition-all shrink-0 ${
+                      isActive 
+                        ? 'bg-gradient-to-b from-primary-container to-primary text-on-primary shadow-[0_8px_20px_-4px_rgba(255,94,30,0.4)]' 
+                        : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container-high'
                     }`}
+                    type="button"
                   >
-                    <span className={`font-body-md text-[14px] ${isSelected ? 'font-bold' : ''}`}>{time}</span>
+                    <span className={isActive ? 'font-label-sm text-[9px] md:text-label-sm tracking-wider uppercase opacity-90' : 'font-label-sm text-[9px] md:text-label-sm text-on-surface-variant uppercase'}>
+                      {d.day}
+                    </span>
+                    <span className="font-headline-md text-[18px] md:text-headline-md font-bold mt-0.5">{d.num}</span>
+                    <div className={`w-1 h-1 md:w-1.5 md:h-1.5 rounded-full mt-1 ${isActive ? 'bg-on-primary' : 'bg-secondary'}`}></div>
                   </button>
                 );
               })}
             </div>
-          )}
-        </section>
+          </section>
 
-        {/* Court Selection */}
-        <section>
-          <h2 className="font-headline-md text-[20px] font-semibold text-white mb-4">Available Courts</h2>
-          
-          {!selectedTime && (
-            <div className="p-4 bg-surface-container border border-outline-variant/30 rounded-xl text-center text-on-surface-variant">
-              Please select a time slot first to view available courts.
+          {/* Time Slots Matrix */}
+          <section className="mt-6 px-4 md:px-margin-screen">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-primary text-[20px]">schedule</span>
+                <h2 className="font-headline-sm text-base md:text-headline-sm text-on-surface">ช่วงเวลา (Time Slots)</h2>
+              </div>
+              <span className="font-label-sm text-[10px] md:text-label-sm text-on-surface-variant">รอบละ 60 นาที</span>
             </div>
-          )}
+            
+            {/* Status Legend */}
+            <div className="flex items-center justify-start gap-3 md:gap-4 mb-3.5 py-1.5 px-3 rounded-xl bg-surface-container-low overflow-x-auto scrollbar-hide">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-sm md:rounded-md bg-surface-container-lowest shadow-sm"></div>
+                <span className="font-label-sm text-[10px] md:text-label-sm text-on-surface-variant">ว่าง</span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-sm md:rounded-md bg-primary-container shadow-sm"></div>
+                <span className="font-label-sm text-[10px] md:text-label-sm text-on-surface-variant">เลือกอยู่</span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-sm md:rounded-md bg-surface-container-high opacity-60"></div>
+                <span className="font-label-sm text-[10px] md:text-label-sm text-on-surface-variant">จองแล้ว</span>
+              </div>
+            </div>
 
-          {selectedTime && (
-            <div className="flex flex-col gap-4">
-              {courts.map((court, index) => {
-                const isBooked = isCourtBookedForSelectedTime(court);
-                const isProTier = index === 0; // Just making Court 1 the PRO TIER based on template
+            {/* Responsive Grid */}
+            {loading ? (
+              <p className="text-on-surface-variant text-sm py-4">Loading times...</p>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 md:gap-slot-grid-gap">
+                {timeSlots.map(time => {
+                  const isFullyBooked = isTimeFullyBooked(time);
+                  const isPast = isTimeInPast(time);
+                  const isSelected = selectedTime === time;
 
-                if (isProTier) {
+                  if (isFullyBooked || isPast) {
+                    return (
+                      <div key={time} className="flex items-center justify-center py-2 md:py-2.5 rounded-xl bg-surface-container-high/60 text-on-surface-variant/40 line-through cursor-not-allowed select-none">
+                        <span className="font-label-md text-[11px] md:text-label-md">{time}</span>
+                      </div>
+                    );
+                  }
+
                   return (
-                    <div key={court.id} className={`group relative rounded-xl overflow-hidden bg-surface-container border ${isBooked ? 'border-surface-container-high opacity-50' : 'border-surface-container-high hover:border-primary/50'} transition-all duration-300`}>
-                      <div className="h-48 w-full relative">
-                        <img className="object-cover w-full h-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlv85Ujefo4LbDgoUY4F4dsbrTyG2TghyekyI9vwKhgxG38nziYzECIjwK0fBMXAQpZBNOYY3SlOtWlI-JK2QAcs40vdjkShWG7_5tjvsZrMxmgwkEx-AVsJvFCaFTsBXLEukXNeGR1Yrp-Z8PWg7SgyyxB296wmCSsDgiieR-SYbNoZSWQZICGtyyehykB5Lb_eLQoQF4DT4mKmz4wE1yAUpqz3rQZfhlgKT44LlDuKpI-d4E0TbbpQ" alt="Premium Court" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent"></div>
-                        <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded text-primary font-label-md text-[12px] font-bold border border-primary/20">
-                            PRO TIER
-                        </div>
-                      </div>
-                      <div className="p-4 relative flex justify-between items-end">
-                        <div>
-                          <h3 className="font-headline-md text-[20px] font-bold text-white mb-1">{court.name}</h3>
-                          <div className="flex items-center gap-2 text-on-surface-variant font-body-md text-[14px]">
-                            <span className="material-symbols-outlined text-[16px]">sports_gymnastics</span>
-                            <span>Wooden Sprung Floor</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-display-sm text-[24px] font-bold text-white mb-1">$45<span className="text-body-md text-[14px] font-normal text-on-surface-variant">/hr</span></div>
-                          <button 
-                            disabled={isBooked || bookingLoading || court.status === 'MAINTENANCE'}
-                            onClick={() => handleBook(court.id)}
-                            className={`px-4 py-2 rounded-md font-button text-[16px] font-semibold transition-colors active:scale-95 ${
-                              isBooked 
-                                ? 'bg-surface-container-highest text-on-surface-variant cursor-not-allowed'
-                                : 'bg-primary-container text-white hover:bg-primary-container/90 shadow-[0_4px_14px_0_rgba(255,107,0,0.39)]'
-                            }`}
-                          >
-                              {isBooked ? 'Unavailable' : 'Book Now'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <button
+                      key={time}
+                      onClick={() => setSelectedTime(time)}
+                      className={`flex items-center justify-center py-2 md:py-2.5 rounded-xl shadow-sm transition-colors ${
+                        isSelected
+                          ? 'bg-primary-container text-on-primary shadow-[0_4px_16px_rgba(255,94,30,0.35)] scale-[1.02] ring-2 ring-primary'
+                          : 'bg-surface-container-lowest text-primary hover:bg-primary-fixed'
+                      }`}
+                      type="button"
+                    >
+                      <span className={`font-label-md text-[11px] md:text-label-md ${isSelected ? 'font-extrabold' : 'font-bold'}`}>{time}</span>
+                    </button>
                   );
-                }
+                })}
+              </div>
+            )}
+          </section>
 
-                return (
-                  <div key={court.id} className={`group relative rounded-xl overflow-hidden bg-surface-container border ${isBooked ? 'border-surface-container-high opacity-50' : 'border-surface-container-high hover:border-primary/50'} transition-all duration-300 flex`}>
-                    <div className="w-1/3 relative">
-                      <img className="object-cover w-full h-full" src={index % 2 === 0 ? "https://lh3.googleusercontent.com/aida-public/AB6AXuDZxYRA_Mll_KqyTaSJjBkB7TOcBRT9FkZjqOs8kxnj9dy5YOCEzgfc1e1eQ8pxNWfR2OA_dcljj9z68srM3Z12pWAZzDxc0IJAsDwyrE0VlK-MTqlDQ3-KldTJ9qpLJ11HgHNNavMQ67mINC3SL12rIsf0oDAOru5Hxa32xfyp1-8B0cbdiZph--nGQqZaguxMbSuT40NwPL_ygf1Ox1p7zcBIlL7geO6skgsQh0DwKpaiPw4E5LDO0w" : "https://lh3.googleusercontent.com/aida-public/AB6AXuClklh1l82ImMLEWFHMinGs1JgKfVQ5h7G4MXQ1UceGCrh7o20G0wW869g41CZ62XgSWTgNOCbzD0TD6TyvcNGsgu-qhXsxtJYj1eJDX_9Qvxkd9Ko_ora5MEw7cNz6oGGhE7ieiUkZI_k9MyTa0mZjAZqmOtvTAq0vaprYIHEA9r5BQWKk3wzlU8yzgRZ1CEaDtCL-UrJsBfYFey7l7W73YmgRvTIUCD5xQV4UnyMV0A_1cdWaGfEqgQ"} alt="Standard Court" />
-                    </div>
-                    <div className="w-2/3 p-4 flex justify-between items-center bg-surface-container">
-                      <div>
-                        <h3 className="font-headline-md text-[20px] font-bold text-white mb-1">{court.name}</h3>
-                        <div className="flex items-center gap-2 text-on-surface-variant font-body-md text-[14px]">
-                          <span className="material-symbols-outlined text-[16px]">layers</span>
-                          <span>Synthetic Mat</span>
-                        </div>
-                      </div>
-                      <div className="text-right flex flex-col items-end gap-2">
-                        <div className="font-headline-md text-[20px] font-bold text-white">$30<span className="text-body-md text-[14px] font-normal text-on-surface-variant">/hr</span></div>
-                        <button 
-                          disabled={isBooked || bookingLoading || court.status === 'MAINTENANCE'}
-                          onClick={() => handleBook(court.id)}
-                          className={`px-4 py-2 rounded-md font-button text-[16px] font-semibold transition-colors active:scale-95 ${
-                            isBooked
-                              ? 'bg-surface-container-highest text-on-surface-variant cursor-not-allowed'
-                              : 'bg-surface-container-highest border border-outline-variant text-white hover:border-primary hover:text-primary'
-                          }`}
-                        >
-                            {isBooked ? 'Unavailable' : 'Select'}
-                        </button>
-                      </div>
+          {/* Available Courts Cards Section */}
+          {selectedTime && (
+            <div className="px-margin-screen mt-6 mb-2">
+              <div className="rounded-3xl bg-surface-container-lowest p-card-padding shadow-md flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="font-label-sm text-label-sm text-on-surface-variant">รอบและเวลาที่เลือก</span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="material-symbols-outlined text-[18px] text-primary">event_available</span>
+                      <span className="font-headline-sm text-headline-sm text-on-surface font-bold">{displayDateStr}</span>
                     </div>
                   </div>
-                );
-              })}
+                  <div className="px-2.5 py-1 rounded-full bg-secondary/10 text-secondary flex items-center gap-1 shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+                    <span className="font-label-sm text-label-sm font-bold">{availableCourtsCount} คอร์ทว่าง</span>
+                  </div>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={handleNext}
+                  className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-primary-container to-primary text-on-primary font-label-lg text-label-lg shadow-[0_6px_20px_rgba(255,94,30,0.35)] active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  <span>ดำเนินการเลือกสนาม (ถัดไป)</span>
+                  <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+                </button>
+              </div>
             </div>
           )}
-        </section>
+
+          {/* Delightful Information Banner & Reminder */}
+          <div className="px-margin-screen mt-2 mb-2">
+            <div className="rounded-2xl bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-low p-3.5 flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <span className="material-symbols-outlined text-[22px]">info</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-label-md text-label-md text-on-surface font-semibold">กติกาการใช้บริการ</span>
+                  <span className="font-body-sm text-body-sm text-on-surface-variant">สวมรองเท้าแบดมินตันพื้นยางดิบ (Non-marking) เท่านั้น</span>
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
+            </div>
+          </div>
+        </div>
       </main>
-      
-      {/* BottomNavBar */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 z-50 rounded-t-xl bg-surface-container/90 backdrop-blur-md shadow-[0px_-8px_24px_rgba(0,0,0,0.5)] border-t border-[#2A2A2A]">
-        <button onClick={() => router.push('/')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-          <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>sports_tennis</span>
-          <span className="font-label-md text-[12px] font-semibold">Home</span>
-        </button>
-        <button className="flex flex-col items-center justify-center text-primary font-bold hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-          <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>event_note</span>
-          <span className="font-label-md text-[12px] font-semibold">Bookings</span>
-        </button>
-        <button onClick={() => router.push('/scan')} className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary/80 transition-colors active:scale-90 transition-transform duration-150 gap-1 w-16">
-          <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>qr_code_scanner</span>
-          <span className="font-label-md text-[12px] font-semibold">Scan</span>
-        </button>
-      </nav>
-    </div>
+    </MainLayout>
   );
 }

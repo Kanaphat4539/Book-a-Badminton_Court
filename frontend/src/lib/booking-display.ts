@@ -1,0 +1,52 @@
+export type BookingDate = {
+  date: string;
+  day: string;
+  num: string;
+  month: string;
+};
+
+type BookingConfirmationInput = {
+  date: string;
+  time: string;
+  courtName: string;
+  bookerName: string;
+};
+
+export function createTodayBookingDate(_now: Date): BookingDate {
+  const year = _now.getFullYear();
+  const month = String(_now.getMonth() + 1).padStart(2, '0');
+  const dayOfMonth = String(_now.getDate()).padStart(2, '0');
+  const thaiDays = [
+    'อาทิตย์',
+    'จันทร์',
+    'อังคาร',
+    'พุธ',
+    'พฤหัสบดี',
+    'ศุกร์',
+    'เสาร์',
+  ];
+
+  return {
+    date: `${year}-${month}-${dayOfMonth}`,
+    day: thaiDays[_now.getDay()],
+    num: String(_now.getDate()),
+    month: _now.toLocaleDateString('th-TH', { month: 'long' }),
+  };
+}
+
+export function createBookingConfirmationDetails(
+  _input: BookingConfirmationInput,
+) {
+  const [year, month, day] = _input.date.split('-').map(Number);
+  const bookingDate = new Date(year, month - 1, day);
+  const [hour, minute] = _input.time.split(':').map(Number);
+  const endHour = String(hour + 1).padStart(2, '0');
+
+  return {
+    date: String(day),
+    month: bookingDate.toLocaleDateString('th-TH', { month: 'long' }),
+    court: _input.courtName,
+    time: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')} - ${endHour}:${String(minute).padStart(2, '0')} น.`,
+    booker: _input.bookerName,
+  };
+}

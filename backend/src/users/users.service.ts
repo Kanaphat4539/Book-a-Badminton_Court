@@ -91,6 +91,10 @@ export class UsersService implements OnModuleInit {
     return this.studentRepository.findOneBy({ stu_id });
   }
 
+  async saveStudent(student: Student): Promise<Student> {
+    return this.studentRepository.save(student);
+  }
+
   async findAllStudents(): Promise<Student[]> {
     return this.studentRepository.find();
   }

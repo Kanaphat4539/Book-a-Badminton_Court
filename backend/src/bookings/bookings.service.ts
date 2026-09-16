@@ -26,47 +26,64 @@ export class BookingsService {
       throw new BadRequestException('Day-by-day policy: You can only book courts for today.');
     }
 
-    const existingUserBooking = await this.bookingsRepository.findOne({
-      where: [
-        { stu_id, status: BookingStatus.PENDING },
-        { stu_id, status: BookingStatus.CHECKED_IN }
-      ]
-    });
-
-    if (existingUserBooking) {
-      throw new BadRequestException('You already have an active booking. Please complete or cancel it first.');
-    }
-
-    const overlappingBooking = await this.bookingsRepository.findOne({
-      where: [
-        { court: courtId, booking_date: date, time_in: startTime, status: BookingStatus.PENDING },
-        { court: courtId, booking_date: date, time_in: startTime, status: BookingStatus.CHECKED_IN }
-      ]
-    });
-
-    if (overlappingBooking) {
-      throw new BadRequestException('This court is already booked at this time.');
-    }
-
     const student = await this.studentRepository.findOneBy({ stu_id });
     if (!student) throw new NotFoundException('Student not found');
+    
+    // Auto-unban and check ban status
+    const now = new Date();
+    if (student.banned_until) {
+      if (now < new Date(student.banned_until)) {
+        throw new BadRequestException('Your account is currently banned from booking courts.');
+      } else {
+        // Reset ban
+        student.banned_until = null;
+        student.strikes = 0;
+        await this.studentRepository.save(student);
+      }
+    }
     
     // Fallback admin logic if admin_id is required
     let admin_id = 'A001';
     const defaultAdmin = await this.adminRepository.findOneBy({ admin_id });
     if (defaultAdmin) admin_id = defaultAdmin.admin_id;
 
-    const newBooking = this.bookingsRepository.create({
-      stu_id,
-      court: courtId,
-      booking_date: date,
-      time_in: startTime,
-      time_out: endTime,
-      status: BookingStatus.PENDING,
-      admin_id,
-    });
+    return this.bookingsRepository.manager.transaction(async (transactionalEntityManager) => {
+      const existingUserBooking = await transactionalEntityManager.findOne(Booking, {
+        where: [
+          { stu_id, status: BookingStatus.PENDING },
+          { stu_id, status: BookingStatus.CHECKED_IN }
+        ],
+        lock: { mode: 'pessimistic_write' }
+      });
 
-    return this.bookingsRepository.save(newBooking);
+      if (existingUserBooking) {
+        throw new BadRequestException('You already have an active booking. Please complete or cancel it first.');
+      }
+
+      const overlappingBooking = await transactionalEntityManager.findOne(Booking, {
+        where: [
+          { court: courtId, booking_date: date, time_in: startTime, status: BookingStatus.PENDING },
+          { court: courtId, booking_date: date, time_in: startTime, status: BookingStatus.CHECKED_IN }
+        ],
+        lock: { mode: 'pessimistic_write' }
+      });
+
+      if (overlappingBooking) {
+        throw new BadRequestException('This court is already booked at this time.');
+      }
+
+      const newBooking = transactionalEntityManager.create(Booking, {
+        stu_id,
+        court: courtId,
+        booking_date: date,
+        time_in: startTime,
+        time_out: endTime,
+        status: BookingStatus.PENDING,
+        admin_id,
+      });
+
+      return transactionalEntityManager.save(newBooking);
+    });
   }
 
   async getMyBookings(stu_id: string) {
@@ -112,8 +129,10 @@ export class BookingsService {
 
     const now = new Date();
     const bookingDateTime = new Date(`${booking.booking_date}T${booking.time_in}`);
-    if (now < bookingDateTime) {
-      throw new BadRequestException('You cannot check in before the booking time starts.');
+    const allowedCheckInTime = new Date(bookingDateTime.getTime() - 15 * 60 * 1000); // 15 mins before
+
+    if (now < allowedCheckInTime) {
+      throw new BadRequestException('You cannot check in more than 15 minutes before the booking time starts.');
     }
 
     booking.status = BookingStatus.CHECKED_IN;
@@ -131,6 +150,23 @@ export class BookingsService {
 
     if (booking.status !== BookingStatus.PENDING) {
       throw new BadRequestException(`Cannot cancel. Status is currently ${booking.status}`);
+    }
+
+    const now = new Date();
+    const bookingDateTime = new Date(`${booking.booking_date}T${booking.time_in}`);
+    const deadline = new Date(bookingDateTime.getTime() + 15 * 60 * 1000); // 15 mins after start
+
+    if (now >= deadline) {
+      // Late cancellation - add a strike
+      const student = await this.studentRepository.findOneBy({ stu_id });
+      if (student) {
+        student.strikes += 1;
+        if (student.strikes >= 2) {
+          student.banned_until = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Ban for 24 hours
+        }
+        await this.studentRepository.save(student);
+        Logger.log(`[Strike Added] Late cancel for Booking ID: ${bookingId}. Strikes: ${student.strikes}`, 'BookingsService');
+      }
     }
 
     booking.status = BookingStatus.CANCELLED;

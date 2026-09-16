@@ -27,25 +27,13 @@ export function BanPopup() {
       return;
     }
 
-    // MOCK: Fetch ban status from backend
-    // Since backend might not have this endpoint yet, we use a mock.
-    // To test the UI, you can temporarily change isBanned to true in the mock data.
     const fetchBanStatus = async () => {
       try {
-        // Expected API call:
-        // const res = await api.get('/users/me/ban-status');
-        // setBanStatus(res.data);
-        // if (res.data.isBanned) setOpen(true);
+        const res = await api.get('/users/me/ban-status');
+        const data = res.data;
         
-        // --- MOCK DATA ---
-        const mockResponse: BanStatus = {
-          isBanned: false, // Set to true to test the popup
-          bannedUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          strikes: 0,
-        };
-        
-        setBanStatus(mockResponse);
-        if (mockResponse.isBanned) {
+        setBanStatus(data);
+        if (data.isBanned) {
           setOpen(true);
         }
       } catch (err) {

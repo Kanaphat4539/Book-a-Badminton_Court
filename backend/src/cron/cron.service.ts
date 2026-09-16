@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
 import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
+import { Student } from '../users/entities/student.entity';
 
 @Injectable()
 export class CronService {
@@ -11,6 +12,8 @@ export class CronService {
   constructor(
     @InjectRepository(Booking)
     private bookingsRepository: Repository<Booking>,
+    @InjectRepository(Student)
+    private studentRepository: Repository<Student>,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -33,12 +36,21 @@ export class CronService {
         status: BookingStatus.PENDING,
         booking_date: currentDate,
         time_in: LessThan(fifteenMinsAgoStr),
-      }
+      },
+      relations: { student: true },
     });
 
     if (pendingBookings.length > 0) {
       for (const booking of pendingBookings) {
         booking.status = BookingStatus.CANCELLED;
+        if (booking.student) {
+          booking.student.strikes += 1;
+          if (booking.student.strikes >= 2) {
+             booking.student.banned_until = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Ban for 24 hours
+          }
+          await this.studentRepository.save(booking.student);
+          this.logger.debug(`[Strike Added] Auto-cancel for Booking ID: ${booking.booking_id}. Strikes: ${booking.student.strikes}`);
+        }
       }
       await this.bookingsRepository.save(pendingBookings);
       this.logger.debug(`Cancelled ${pendingBookings.length} bookings.`);

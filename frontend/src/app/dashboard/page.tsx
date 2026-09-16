@@ -6,6 +6,8 @@ import api from '@/lib/api';
 import { toast } from 'sonner';
 import QRCode from 'react-qr-code';
 import MainLayout from '@/components/MainLayout';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -16,6 +18,7 @@ export default function Dashboard() {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [bookingTimeRemaining, setBookingTimeRemaining] = useState<string>('--:--');
   const [mounted, setMounted] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState<number | null>(null);
 
   // Countdown timer for admin selected booking
   useEffect(() => {
@@ -99,11 +102,12 @@ export default function Dashboard() {
     }
   };
 
-  const handleCancelBooking = async (bookingId: number) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) return;
+  const handleCancelBooking = async () => {
+    if (!bookingToCancel) return;
     try {
-      await api.post(`/bookings/${bookingId}/cancel`);
-      toast.success('Booking cancelled successfully');
+      await api.post(`/bookings/${bookingToCancel}/cancel`);
+      toast.success('ยกเลิกการจองสำเร็จ (Booking cancelled successfully)');
+      setBookingToCancel(null);
       fetchBookings();
       if (user?.role === 'ADMIN') {
         fetchAllBookings();
@@ -388,7 +392,7 @@ export default function Dashboard() {
                     <span>Check-in (เช็คอิน)</span>
                   </button>
                   <button 
-                    onClick={() => handleCancelBooking(pendingBooking.booking_id)}
+                    onClick={() => setBookingToCancel(pendingBooking.booking_id)}
                     className="col-span-2 h-12 rounded-xl bg-error-container text-on-error-container font-label-lg text-label-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition-transform hover:bg-opacity-90 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[18px]">close</span>
@@ -543,12 +547,7 @@ export default function Dashboard() {
                     </div>
                     <div className="shrink-0 pl-2">
                       {isPending ? (
-                        <button 
-                          onClick={() => handleCancelBooking(booking.booking_id)}
-                          className="px-3 py-1.5 rounded-lg bg-error-container text-on-error-container font-label-sm text-label-sm font-bold hover:bg-opacity-90 active:scale-95 transition-all"
-                        >
-                          CANCEL
-                        </button>
+                        <span className="material-symbols-outlined text-orange-500 text-[20px]">pending</span>
                       ) : isCancelled ? (
                         <span className="material-symbols-outlined text-on-surface-variant text-[18px]">cancel</span>
                       ) : (
@@ -574,6 +573,29 @@ export default function Dashboard() {
 
         </div>
       </div>
+
+      <Dialog open={bookingToCancel !== null} onOpenChange={(open) => !open && setBookingToCancel(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>ยืนยันการยกเลิกจองคอร์ท (Cancel Booking)</DialogTitle>
+            <DialogDescription className="text-on-surface-variant pt-2 space-y-2">
+              <p>คุณต้องการยกเลิกการจองคอร์ทนี้ใช่หรือไม่?</p>
+              <ul className="list-disc pl-5 text-error font-medium">
+                <li>ต้องยกเลิกก่อนครบ 15 นาทีหลังเวลาเริ่มจอง</li>
+                <li>หากยกเลิกทันเวลา คุณสามารถจองคอร์ทใหม่ในวันนี้ได้ 1 ครั้ง</li>
+              </ul>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setBookingToCancel(null)}>
+              ปิด (Close)
+            </Button>
+            <Button variant="destructive" onClick={handleCancelBooking} className="bg-error hover:bg-error/90 text-on-error">
+              ยืนยันยกเลิก (Confirm Cancel)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }

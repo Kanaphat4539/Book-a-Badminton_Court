@@ -13,6 +13,7 @@
 
 @theme inline {
   --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-user: var(--font-inter), 'Noto Sans Thai', 'Leelawadee UI', Tahoma, sans-serif;
   --font-body-md: 'Plus Jakarta Sans', sans-serif;
   --font-body-sm: 'Plus Jakarta Sans', sans-serif;
   --font-headline-md: 'Plus Jakarta Sans', sans-serif;

@@ -135,17 +135,17 @@ export default function ScanPage() {
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="bg-white/70 dark:bg-[#1a0a00]/70 backdrop-blur-md p-2 rounded-2xl w-full max-w-sm overflow-hidden shadow-[0_0_30px_rgba(255,107,0,0.2)] border border-primary/30 dark:border-[#ff6b00]/30 transition-colors duration-300">
+          <div className="bg-surface/70 backdrop-blur-md p-2 rounded-2xl w-full max-w-sm overflow-hidden shadow-lg border border-outline-variant transition-colors duration-300">
             <div id="qr-reader" className="w-full"></div>
           </div>
           
-          <div className="mt-8 text-center text-gray-600 dark:text-orange-200/70 font-body-md text-[14px] transition-colors duration-300">
+          <div className="mt-8 text-center text-on-surface-variant font-body-md text-[14px] transition-colors duration-300">
             {loading ? (
               <p className="animate-pulse text-primary font-bold">Processing Check-in...</p>
             ) : (
               <div className="flex flex-col gap-2">
                 <p>Point your camera at the QR code on the court to check in.</p>
-                <div className="bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 p-3 rounded-xl border border-orange-200 dark:border-orange-800/30 text-[13px] font-semibold mt-2">
+                <div className="bg-surface-container-high text-on-surface p-3 rounded-xl border border-outline-variant text-[13px] font-semibold mt-2">
                   <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">info</span>
                   Note: You can only scan the QR code when it is exactly time for your booking.
                 </div>

@@ -169,7 +169,7 @@ export default function Dashboard() {
 
   if (user.role === 'ADMIN') {
     return (
-      <MainLayout>
+      <MainLayout width="wide">
         <div className="flex flex-col w-full pb-10">
           
           {/* Admin Header - Matches User CI */}
@@ -359,7 +359,7 @@ export default function Dashboard() {
               <h2 className="font-headline-md text-headline-md text-on-surface font-extrabold">All Bookings</h2>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
               {allBookings.length === 0 && (
                 <div className="col-span-full bg-surface-container-lowest border border-outline-variant/30 shadow-sm rounded-2xl p-8 text-center text-on-surface-variant">
                   <span className="material-symbols-outlined text-[48px] opacity-20 mb-2">event_busy</span>
@@ -394,34 +394,37 @@ export default function Dashboard() {
                 return (
                   <div 
                     key={booking.booking_id} 
-                    className="relative bg-surface-container-lowest rounded-2xl p-4 shadow-sm border border-outline-variant/20 hover:border-primary/30 transition-all cursor-pointer flex items-center justify-between overflow-hidden"
+                    className="relative bg-surface-container-lowest rounded-2xl p-4 shadow-sm border border-outline-variant/20 hover:border-primary/30 transition-all cursor-pointer flex overflow-hidden"
                     onClick={() => setSelectedBooking(booking)}
                   >
                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${accentColor}`}></div>
                     
-                    <div className="flex flex-col min-w-0 pl-2">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-headline-sm font-bold text-on-surface truncate">
-                          {booking.student?.first_name} {booking.student?.last_name}
-                        </span>
-                        <span className="font-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-md truncate max-w-[100px]">
-                          @{booking.student?.username}
+                    <div className="flex flex-col w-full min-w-0 pl-2">
+                      {/* Top Row: Name and Status */}
+                      <div className="flex items-start justify-between gap-2 mb-3 w-full">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-headline-sm font-bold text-on-surface truncate">
+                            {booking.student?.first_name} {booking.student?.last_name}
+                          </span>
+                          <span className="font-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-md truncate max-w-[80px] shrink-0">
+                            @{booking.student?.username}
+                          </span>
+                        </div>
+                        <span className={`shrink-0 px-2.5 py-0.5 rounded-full font-label-sm font-bold uppercase tracking-wide ${badgeClass}`}>
+                          {booking.status}
                         </span>
                       </div>
-                      <p className="font-body-sm text-on-surface-variant flex items-center gap-1.5 mt-0.5">
-                        <span className="material-symbols-outlined text-[14px]">stadium</span> Court {booking.court}
-                        <span className="mx-1">•</span>
-                        <span className="material-symbols-outlined text-[14px]">calendar_today</span> {booking.booking_date}
-                      </p>
-                    </div>
 
-                    <div className="flex flex-col items-end gap-1.5 shrink-0 pl-2">
-                      <span className="font-headline-sm font-extrabold text-on-surface">
-                        {(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)}
-                      </span>
-                      <span className={`px-2.5 py-0.5 rounded-full font-label-sm font-bold uppercase tracking-wide ${badgeClass}`}>
-                        {booking.status}
-                      </span>
+                      {/* Bottom Row: Details and Time */}
+                      <div className="flex flex-wrap items-end justify-between gap-2 mt-auto w-full">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-body-sm text-on-surface-variant">
+                          <span className="flex items-center gap-1 whitespace-nowrap"><span className="material-symbols-outlined text-[14px]">stadium</span> Court {booking.court}</span>
+                          <span className="flex items-center gap-1 whitespace-nowrap"><span className="material-symbols-outlined text-[14px]">calendar_today</span> {booking.booking_date}</span>
+                        </div>
+                        <span className="font-headline-sm font-extrabold text-on-surface shrink-0">
+                          {(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -518,7 +521,7 @@ export default function Dashboard() {
   }
 
   return (
-    <MainLayout>
+    <MainLayout width="wide">
       <div className="flex flex-col w-full pb-10">
         
         {/* Sporty Dynamic Ambient Backdrop (Scroll-driven Parallax S06) */}

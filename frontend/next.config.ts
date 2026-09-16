@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/:path*` : 'http://backend:4000/:path*',
+        destination: 'http://localhost:4000/:path*', // Hardcoded for local testing without docker
       },
     ];
   },

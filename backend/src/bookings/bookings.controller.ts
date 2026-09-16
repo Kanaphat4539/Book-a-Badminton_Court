@@ -21,6 +21,12 @@ export class BookingsController {
     return this.bookingsService.getAllBookings(date);
   }
 
+  @Get('notifications')
+  @Roles(UserRole.ADMIN)
+  async getNotifications() {
+    return this.bookingsService.getNotifications();
+  }
+
   @Get('me')
   async getMyBookings(@Request() req: any) {
     return this.bookingsService.getMyBookings(req.user.userId);

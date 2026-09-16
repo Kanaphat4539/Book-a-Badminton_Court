@@ -17,6 +17,18 @@ export default function BookingPage() {
   const [courts, setCourts] = useState<{ id: number, name: string, description: string, status: string, availability?: any[], bookings?: any[] }[]>([]);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const parsedUser = JSON.parse(userStr);
+        if (parsedUser.role === 'ADMIN') {
+          router.push('/dashboard');
+        }
+      } catch (e) {}
+    }
+  }, [router]);
+
   const handleCloseRules = () => {
     setShowRulesModal(false);
   };

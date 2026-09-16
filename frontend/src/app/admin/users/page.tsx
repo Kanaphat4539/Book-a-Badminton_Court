@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/theme-toggle';
+import MainLayout from '@/components/MainLayout';
 
 export default function ManageUsers() {
   const router = useRouter();
@@ -88,78 +89,57 @@ export default function ManageUsers() {
   if (!mounted) return null;
 
   return (
-    <div className="bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-[#2a1300] dark:via-[#140900] dark:to-[#2a1300] text-on-surface dark:text-orange-50 antialiased min-h-screen flex flex-col pt-24 pb-24 selection:bg-primary selection:text-white font-sans relative overflow-hidden transition-colors duration-300">
-      {/* Decorative blobs */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[0%] left-[-10%] w-[500px] h-[500px] bg-primary/10 dark:bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 transition-colors duration-300"></div>
-        <div className="absolute top-[30%] right-[-10%] w-[400px] h-[400px] bg-yellow-200/50 dark:bg-yellow-600/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 transition-colors duration-300"></div>
-      </div>
-
-      {/* TopAppBar */}
-      <div className="fixed top-0 w-full z-50 shadow-sm">
-        <header className="bg-[#F26522] dark:bg-[#C24500] flex justify-between items-center px-container-padding h-16 text-white shadow-sm transition-colors duration-300">
-          <div className="flex items-center gap-4 cursor-pointer" onClick={() => router.push('/dashboard')}>
-
-            <span className="font-display-sm text-[22px] md:text-[24px] font-bold tracking-tight text-white">KMITL BADMINTON</span>
+    <MainLayout>
+      <div className="max-w-5xl mx-auto space-y-6 w-full px-4 md:px-margin-screen mt-4 relative z-10">
+        <div className="flex justify-between items-center bg-surface-container-low p-6 rounded-3xl shadow-sm transition-colors duration-300">
+          <div>
+            <h1 className="font-headline-lg text-[28px] font-bold text-on-surface transition-colors duration-300">Manage Users</h1>
+            <p className="font-body-md text-[15px] text-on-surface-variant font-medium transition-colors duration-300">View and manage all registered users</p>
           </div>
-          <div className="flex items-center gap-1">
-            <button className="lg:hidden w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/10 transition-all active:scale-95 text-white" onClick={() => setIsSidebarOpen(true)}>
-              <span className="material-symbols-outlined text-[28px]">menu</span>
-            </button>
-          </div>
-        </header>
-        <div className="bg-[#545454] dark:bg-[#1a0a00] h-8 flex items-center px-container-padding text-white font-body-md text-[12px] md:text-[14px] transition-colors duration-300">
-          สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง
-        </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto space-y-6 w-full px-container-padding mt-4 relative z-10">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="font-display-sm text-[28px] font-extrabold text-gray-900 dark:text-orange-50 drop-shadow-sm transition-colors duration-300">Manage Users</h1>
           <div className="flex gap-2">
             <button
-              className="bg-primary text-white hover:bg-[#E55B13] px-4 py-2 rounded-xl font-button text-[14px] font-bold transition-all shadow-sm flex items-center gap-2"
+              className="bg-primary hover:opacity-90 text-on-primary px-5 py-2.5 rounded-xl font-button text-[15px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
               onClick={() => setShowAddAdmin(true)}
             >
               <span className="material-symbols-outlined text-[18px]">person_add</span>
               Add Admin
             </button>
             <button
-              className="bg-white/80 dark:bg-[#2a1300]/60 text-gray-900 dark:text-orange-50 border border-gray-200 dark:border-[#ff6b00]/20 hover:bg-gray-100 dark:hover:bg-[#3a1b00] px-4 py-2 rounded-xl font-button text-[14px] font-bold transition-all shadow-sm flex items-center gap-2"
+              className="bg-surface-container-high hover:bg-surface-container-highest text-on-surface px-5 py-2.5 rounded-xl font-button text-[15px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
               onClick={() => router.push('/dashboard')}
             >
               <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-              Dashboard
+              Back
             </button>
           </div>
         </div>
 
-        <section className="bg-white/70 dark:bg-[#2a1300]/60 backdrop-blur-xl border border-white dark:border-[#ff6b00]/20 shadow-sm rounded-3xl p-6 md:p-8 transition-colors duration-300">
+        <section className="bg-surface-container-lowest border border-outline-variant/20 shadow-sm rounded-3xl p-6 md:p-8 transition-colors duration-300">
           {loading ? (
             <div className="flex justify-center items-center h-32">
               <span className="material-symbols-outlined animate-spin text-[32px] text-primary">autorenew</span>
             </div>
           ) : users.length === 0 ? (
-            <p className="text-gray-500 dark:text-orange-200/70 text-center font-medium my-8">No regular users found.</p>
+            <p className="text-on-surface-variant text-center font-medium my-8">No regular users found.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {users.map(u => (
-                <div key={u.id || u.stu_id} className="bg-white/80 dark:bg-[#1a0a00]/70 border border-gray-100 dark:border-[#ff6b00]/30 p-5 rounded-2xl flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow">
+                <div key={u.id || u.stu_id} className="bg-surface-container-low border border-surface-container-high p-5 rounded-2xl flex flex-col gap-3 shadow-sm hover:border-primary/30 transition-colors">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-headline-md text-[18px] font-bold text-gray-900 dark:text-orange-50">{u.name || `${u.first_name} ${u.last_name}`}</p>
-                      <p className="text-gray-500 dark:text-orange-300/60 font-semibold text-[14px]">@{u.username}</p>
+                      <p className="font-headline-md text-[18px] font-bold text-on-surface">{u.name || `${u.first_name} ${u.last_name}`}</p>
+                      <p className="text-on-surface-variant font-semibold text-[14px]">@{u.username}</p>
                     </div>
-                    <span className="bg-gray-100 dark:bg-[#3a1b00] text-gray-600 dark:text-orange-200/80 px-2.5 py-1 rounded-full text-[12px] font-bold">
+                    <span className="bg-surface-container-high text-on-surface px-2.5 py-1 rounded-full text-[12px] font-bold">
                       {u.role || 'STUDENT'}
                     </span>
                   </div>
                   <button
-                    className="mt-2 flex items-center justify-center gap-1.5 w-full bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 py-2 rounded-xl font-bold transition-colors text-[14px]"
+                    className="mt-2 flex items-center justify-center gap-1.5 w-full bg-error-container text-on-error-container hover:bg-error hover:text-on-error py-2 rounded-xl font-bold transition-colors text-[14px]"
                     onClick={() => handleDeleteUser(u.id || u.stu_id, u.username)}
                   >
                     <span className="material-symbols-outlined text-[18px]">delete</span>
-                    Delete User
+                    Delete
                   </button>
                 </div>
               ))}
@@ -170,52 +150,52 @@ export default function ManageUsers() {
 
       {/* Add Admin Modal */}
       {showAddAdmin && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddAdmin(false)}></div>
-          <div className="relative bg-white dark:bg-[#1a0a00] p-8 rounded-3xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-orange-50 mb-6">Add New Admin</h2>
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-scrim/60 backdrop-blur-sm" onClick={() => setShowAddAdmin(false)}></div>
+          <div className="relative bg-surface p-8 rounded-3xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 border border-surface-container-high">
+            <h2 className="text-2xl font-bold text-on-surface mb-6">Add New Admin</h2>
             <form onSubmit={handleAddAdmin} className="flex flex-col gap-4">
               <div>
-                <label className="text-sm font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider">Username</label>
+                <label className="text-sm font-bold text-on-surface-variant uppercase tracking-wider">Username</label>
                 <input
                   type="text"
                   required
                   value={adminUsername}
                   onChange={(e) => setAdminUsername(e.target.value)}
-                  className="mt-1 w-full h-12 rounded-xl px-4 font-body-md text-[15px] bg-gray-50 dark:bg-[#2a1300] border border-gray-200 dark:border-[#ff6b00]/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="mt-1 w-full h-12 rounded-xl px-4 font-body-md text-[15px] bg-surface-container-lowest text-on-surface border border-outline-variant/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div>
-                <label className="text-sm font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider">Full Name</label>
+                <label className="text-sm font-bold text-on-surface-variant uppercase tracking-wider">Full Name</label>
                 <input
                   type="text"
                   required
                   value={adminName}
                   onChange={(e) => setAdminName(e.target.value)}
-                  className="mt-1 w-full h-12 rounded-xl px-4 font-body-md text-[15px] bg-gray-50 dark:bg-[#2a1300] border border-gray-200 dark:border-[#ff6b00]/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="mt-1 w-full h-12 rounded-xl px-4 font-body-md text-[15px] bg-surface-container-lowest text-on-surface border border-outline-variant/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div>
-                <label className="text-sm font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider">Password</label>
+                <label className="text-sm font-bold text-on-surface-variant uppercase tracking-wider">Password</label>
                 <input
                   type="password"
                   required
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
-                  className="mt-1 w-full h-12 rounded-xl px-4 font-body-md text-[15px] bg-gray-50 dark:bg-[#2a1300] border border-gray-200 dark:border-[#ff6b00]/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="mt-1 w-full h-12 rounded-xl px-4 font-body-md text-[15px] bg-surface-container-lowest text-on-surface border border-outline-variant/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div className="flex gap-3 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowAddAdmin(false)}
-                  className="flex-1 h-12 rounded-xl font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  className="flex-1 h-12 rounded-xl font-bold bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 h-12 rounded-xl font-bold bg-primary text-white hover:bg-[#E55B13]"
+                  className="flex-1 h-12 rounded-xl font-bold bg-primary text-on-primary hover:opacity-90 transition-colors"
                 >
                   Create Admin
                 </button>
@@ -224,46 +204,6 @@ export default function ManageUsers() {
           </div>
         </div>
       )}
-
-      {/* Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
-          <div className="relative w-[280px] bg-white dark:bg-[#140900] h-full shadow-2xl flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
-            <div className="flex justify-between items-center mb-8">
-              <span className="font-display-sm text-[20px] font-bold dark:text-orange-50 text-gray-900">Admin Menu</span>
-              <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white">
-                <span className="material-symbols-outlined text-[28px]">close</span>
-              </button>
-            </div>
-            <nav className="flex flex-col gap-6">
-              <div className="flex flex-col gap-4">
-                <button onClick={() => { setIsSidebarOpen(false); router.push('/dashboard'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Home</button>
-                <button onClick={() => { setIsSidebarOpen(false); router.push('/admin/users'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Manage Users <span className="w-2 h-2 rounded-full bg-green-500 inline-block ml-1"></span></button>
-                <button onClick={() => { setIsSidebarOpen(false); router.push('/scan'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">Scan QR</button>
-                <button onClick={() => { setIsSidebarOpen(false); router.push('/news'); }} className="text-left font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-primary transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">News</button>
-              </div>
-              
-              <div>
-                <h3 className="font-bold text-[18px] text-gray-900 dark:text-orange-50 mb-3">Settings</h3>
-                <div className="flex flex-col gap-3 pl-4 border-l-2 border-gray-200 dark:border-gray-800">
-                  <div className="flex items-center justify-between text-[15px] text-gray-600 dark:text-gray-400 hover:text-primary">
-                    <span>Dark Mode</span>
-                    <ThemeToggle />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-auto pt-6">
-                 <button onClick={handleLogout} className="w-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-colors">
-                   <span className="material-symbols-outlined">logout</span>
-                   Logout
-                 </button>
-              </div>
-            </nav>
-          </div>
-        </div>
-      )}
-    </div>
+    </MainLayout>
   );
 }

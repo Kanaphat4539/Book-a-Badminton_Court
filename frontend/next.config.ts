@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/:path*` : 'http://backend:4000/:path*',
+        // Docker supplies BACKEND_URL; local development runs Nest on port 4000.
+        destination: `${process.env.BACKEND_URL || 'http://localhost:4000'}/:path*`,
       },
     ];
   },

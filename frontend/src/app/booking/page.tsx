@@ -5,82 +5,77 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import MainLayout from '@/components/MainLayout';
+import { createTodayBookingDate, type BookingDate } from '@/lib/booking-display';
+
+type CourtBooking = {
+  start_time: string;
+  status: string;
+};
+
+type Court = {
+  id: number;
+  name: string;
+  description: string;
+  status: string;
+  availability?: unknown[];
+  bookings?: CourtBooking[];
+};
 
 export default function BookingPage() {
   const router = useRouter();
 
   // States
   const [showRulesModal, setShowRulesModal] = useState(true);
-  const [dates, setDates] = useState<{ date: string, day: string, num: string, fullMonth: string }[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [bookingDate] = useState<BookingDate>(() => createTodayBookingDate(new Date()));
   const [selectedTime, setSelectedTime] = useState<string>('');
-  const [courts, setCourts] = useState<{ id: number, name: string, description: string, status: string, availability?: any[], bookings?: any[] }[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [courts, setCourts] = useState<Court[]>([]);
+  const [loading, setLoading] = useState(true);
+  const selectedDate = bookingDate.date;
 
   const handleCloseRules = () => {
     setShowRulesModal(false);
   };
-
-  // Generate next 7 days for horizontal calendar
-  useEffect(() => {
-    const today = new Date();
-    const generatedDates = [];
-    const thaiDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์'];
-    
-    // Generate only today for day-by-day booking policy, or next 7 days if you want
-    for (let i = 0; i < 7; i++) {
-      const nextDate = new Date(today);
-      nextDate.setDate(today.getDate() + i);
-      generatedDates.push({
-        date: nextDate.toISOString().split('T')[0],
-        day: thaiDays[nextDate.getDay()],
-        num: nextDate.getDate().toString(),
-        fullMonth: nextDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })
-      });
-    }
-    setDates(generatedDates);
-    setSelectedDate(generatedDates[0].date);
-  }, []);
 
   // Time slots from 08:00 to 23:00 (15 slots, each 1 hour)
   const timeSlots = Array.from({ length: 15 }, (_, i) => {
     return `${(i + 8).toString().padStart(2, '0')}:00`;
   });
 
-  // Fetch availability when date changes
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/login');
       return;
     }
-    if (selectedDate) {
-      fetchAvailability(selectedDate);
-    }
-  }, [selectedDate]);
 
-  const fetchAvailability = async (date: string) => {
-    setLoading(true);
-    try {
-      const response = await api.get(`/courts/availability?date=${date}`);
-      // Sort courts by name logically (e.g. Court 1, Court 2)
-      const sortedCourts = response.data.sort((a: { name: string }, b: { name: string }) => 
-        a.name.localeCompare(b.name, undefined, { numeric: true })
-      );
-      setCourts(sortedCourts);
-      setSelectedTime(''); // Reset time when date changes
-    } catch (error) {
-      toast.error('Failed to load courts');
-    } finally {
-      setLoading(false);
-    }
-  };
+    let ignoreResponse = false;
+
+    void api.get<Court[]>(`/courts/availability?date=${selectedDate}`)
+      .then((response) => {
+        if (ignoreResponse) return;
+
+        const sortedCourts = response.data.toSorted((a, b) =>
+          a.name.localeCompare(b.name, undefined, { numeric: true })
+        );
+        setCourts(sortedCourts);
+      })
+      .catch(() => {
+        if (!ignoreResponse) toast.error('Failed to load courts');
+      })
+      .finally(() => {
+        if (!ignoreResponse) setLoading(false);
+      });
+
+    return () => {
+      ignoreResponse = true;
+    };
+  }, [router, selectedDate]);
 
   const isTimeFullyBooked = (time: string) => {
     if (!courts.length) return false;
     const formattedTime = time + ':00';
     // If all courts have this time booked with an active status, it's fully booked
-    return courts.every(c => c.bookings?.some((b: any) =>
+    return courts.every(c => c.bookings?.some((b) =>
       b.start_time === formattedTime && (b.status === 'PENDING' || b.status === 'CHECKED_IN')
     ));
   };
@@ -88,7 +83,7 @@ export default function BookingPage() {
   const isTimeInPast = (timeStr: string) => {
     if (!selectedDate) return false;
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    const todayStr = createTodayBookingDate(now).date;
     if (selectedDate !== todayStr) return false;
 
     const slotHour = parseInt(timeStr.split(':')[0], 10);
@@ -104,24 +99,21 @@ export default function BookingPage() {
     router.push(`/booking/select-court?date=${selectedDate}&time=${selectedTime}`);
   };
 
-  // Find the selected date object for the display
-  const activeDateObj = dates.find(d => d.date === selectedDate);
-  const displayMonth = activeDateObj ? activeDateObj.fullMonth : '';
-  const displayDateStr = activeDateObj && selectedTime 
-    ? `${activeDateObj.day} ${activeDateObj.num} ${displayMonth.split(' ')[0]} • ${selectedTime} - ${String(parseInt(selectedTime.split(':')[0]) + 1).padStart(2, '0')}:00 น.` 
+  const displayDateStr = bookingDate && selectedTime
+    ? `${bookingDate.day} ${bookingDate.num} ${bookingDate.month} • ${selectedTime} - ${String(parseInt(selectedTime.split(':')[0]) + 1).padStart(2, '0')}:00 น.`
     : '';
   
   // Calculate available courts for selected time
   const availableCourtsCount = selectedTime ? courts.filter(c => {
     const formattedTime = selectedTime + ':00';
-    const isBooked = c.bookings?.some((b: any) =>
+    const isBooked = c.bookings?.some((b) =>
       b.start_time === formattedTime && (b.status === 'PENDING' || b.status === 'CHECKED_IN')
     );
     return !isBooked;
   }).length : 0;
 
   return (
-    <MainLayout>
+    <MainLayout width="wide">
       {/* Rules Modal */}
       {showRulesModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
@@ -175,7 +167,7 @@ export default function BookingPage() {
       <main className="flex flex-col relative w-full pb-6 bg-surface min-h-screen">
         <div className="flex flex-col w-full pb-8">
           {/* Campus Sports Arena Context Card */}
-          <section className="px-4 md:px-margin-screen pt-4 pb-2">
+          <section className="px-4 md:px-margin-screen lg:px-8 pt-4 pb-2">
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#F26522] to-yellow-500 p-5 md:p-card-padding shadow-[0_8px_24px_rgba(242,101,34,0.3)]">
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 z-0"></div>
               <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/20 rounded-full blur-3xl pointer-events-none z-0"></div>
@@ -202,46 +194,33 @@ export default function BookingPage() {
             </div>
           </section>
 
-          {/* Interactive Date Horizon */}
-          <section className="mt-4 px-4 md:px-margin-screen">
+          {/* Current booking date */}
+          <section className="mt-4 px-4 md:px-margin-screen lg:px-8">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
-                <h2 className="font-headline-sm text-base md:text-headline-sm text-on-surface">เลือกวันที่ (Date)</h2>
+                <h2 className="font-headline-sm text-base md:text-headline-sm text-on-surface">วันที่ (Date)</h2>
               </div>
-              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-surface-container-high text-on-surface font-label-md text-[11px] md:text-label-md">
-                <span>{displayMonth}</span>
-                <span className="material-symbols-outlined text-[16px]">expand_more</span>
+              <span className="rounded-full bg-surface-container-high px-3 py-1 font-label-md text-[11px] text-on-surface md:text-label-md">
+                {bookingDate?.month || '—'}
+              </span>
+            </div>
+            {bookingDate && (
+              <div className="flex min-h-24 items-center justify-between rounded-2xl bg-surface-container-lowest px-5 py-4 shadow-sm ring-1 ring-outline-variant/30 md:max-w-sm">
+                <div className="flex flex-col">
+                  <span className="font-label-md text-on-surface-variant">วันนี้</span>
+                  <span className="font-headline-md font-bold text-on-surface">วัน{bookingDate.day}</span>
+                </div>
+                <div className="flex size-16 flex-col items-center justify-center rounded-2xl bg-primary-container text-on-primary shadow-[0_8px_20px_-4px_rgba(255,94,30,0.4)]">
+                  <span className="font-label-sm uppercase tracking-wider">วันที่</span>
+                  <span className="font-headline-md text-2xl font-bold">{bookingDate.num}</span>
+                </div>
               </div>
-            </div>
-            {/* Date Pills Scrollable Container */}
-            <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide py-1 -mx-4 px-4 md:-mx-margin-screen md:px-margin-screen">
-              {dates.map((d) => {
-                const isActive = selectedDate === d.date;
-                return (
-                  <button
-                    key={d.date}
-                    onClick={() => setSelectedDate(d.date)}
-                    className={`date-chip flex flex-col items-center justify-center min-w-[56px] md:min-w-[62px] h-[72px] md:h-[78px] rounded-2xl shadow-sm transform active:scale-95 transition-all shrink-0 ${
-                      isActive 
-                        ? 'bg-gradient-to-b from-primary-container to-primary text-on-primary shadow-[0_8px_20px_-4px_rgba(255,94,30,0.4)]' 
-                        : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container-high'
-                    }`}
-                    type="button"
-                  >
-                    <span className={isActive ? 'font-label-sm text-[9px] md:text-label-sm tracking-wider uppercase opacity-90' : 'font-label-sm text-[9px] md:text-label-sm text-on-surface-variant uppercase'}>
-                      {d.day}
-                    </span>
-                    <span className="font-headline-md text-[18px] md:text-headline-md font-bold mt-0.5">{d.num}</span>
-                    <div className={`w-1 h-1 md:w-1.5 md:h-1.5 rounded-full mt-1 ${isActive ? 'bg-on-primary' : 'bg-secondary'}`}></div>
-                  </button>
-                );
-              })}
-            </div>
+            )}
           </section>
 
           {/* Time Slots Matrix */}
-          <section className="mt-6 px-4 md:px-margin-screen">
+          <section className="mt-6 px-4 md:px-margin-screen lg:px-8">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-primary text-[20px]">schedule</span>
@@ -270,7 +249,7 @@ export default function BookingPage() {
             {loading ? (
               <p className="text-on-surface-variant text-sm py-4">Loading times...</p>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 md:gap-slot-grid-gap">
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:gap-slot-grid-gap lg:grid-cols-5 xl:grid-cols-6">
                 {timeSlots.map(time => {
                   const isFullyBooked = isTimeFullyBooked(time);
                   const isPast = isTimeInPast(time);
@@ -305,7 +284,7 @@ export default function BookingPage() {
 
           {/* Available Courts Cards Section */}
           {selectedTime && (
-            <div className="px-margin-screen mt-6 mb-2">
+            <div className="px-4 md:px-margin-screen lg:px-8 mt-6 mb-2">
               <div className="rounded-3xl bg-surface-container-lowest p-card-padding shadow-md flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
@@ -333,7 +312,7 @@ export default function BookingPage() {
           )}
 
           {/* Delightful Information Banner & Reminder */}
-          <div className="px-margin-screen mt-2 mb-2">
+          <div className="px-4 md:px-margin-screen lg:px-8 mt-2 mb-2">
             <div className="rounded-2xl bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-low p-3.5 flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">

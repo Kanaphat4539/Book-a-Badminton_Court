@@ -3,8 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { cn } from '@/lib/utils';
+import { BanPopup } from '@/components/BanPopup';
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+type MainLayoutProps = {
+  children: React.ReactNode;
+  width?: 'compact' | 'wide';
+};
+
+export default function MainLayout({ children, width = 'compact' }: MainLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -35,13 +42,16 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return false;
   };
 
+  const containerWidth = width === 'wide' ? 'max-w-6xl' : 'max-w-2xl';
+
   if (!mounted) return <div className="min-h-screen bg-surface"></div>;
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen flex flex-col font-sans">
+    <div className={cn('bg-surface text-on-surface min-h-screen flex flex-col', width === 'wide' ? 'font-user' : 'font-sans')}>
+      <BanPopup />
       {/* Header */}
       <header className="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-        <div className="h-16 px-4 md:px-margin-screen flex items-center justify-between max-w-2xl mx-auto">
+        <div className={cn('h-16 px-4 md:px-margin-screen flex items-center justify-between mx-auto', containerWidth)}>
           <div className="flex items-center gap-3 cursor-pointer min-w-0" onClick={() => router.push('/dashboard')}>
             <div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center shadow-[0_4px_12px_rgba(255,94,30,0.25)] shrink-0">
               <img
@@ -71,14 +81,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 w-full pt-16 pb-24 max-w-2xl mx-auto">
+      <div className={cn('flex-1 w-full pt-16 pb-24 mx-auto', containerWidth)}>
         {children}
       </div>
 
       {/* Bottom Nav */}
       {userRole !== 'ADMIN' && (
         <nav className="fixed bottom-0 w-full z-40 pb-safe bg-surface/85 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.05)]">
-          <div className="h-20 px-gutter-sm flex items-center justify-around max-w-2xl mx-auto">
+          <div className={cn('h-20 px-gutter-sm flex items-center justify-around mx-auto', containerWidth)}>
             <button onClick={() => router.push('/dashboard')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/dashboard') ? { fontVariationSettings: "'FILL' 1" } : {}}>home</span>
               <span className="font-label-sm text-[10px] md:text-label-sm">หน้าหลัก</span>

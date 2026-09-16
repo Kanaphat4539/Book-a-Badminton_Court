@@ -1,10 +1,40 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { isAxiosError } from 'axios';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import MainLayout from '@/components/MainLayout';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  createBookingConfirmationDetails,
+  createTodayBookingDate,
+} from '@/lib/booking-display';
+
+type Court = {
+  id: number;
+  name: string;
+  description?: string;
+  status: string;
+  bookings?: Array<{
+    start_time: string;
+    status: string;
+  }>;
+};
+
+type SelectedBooking = {
+  court: Court;
+  bookerName: string;
+};
 
 function SelectCourtContent() {
   const router = useRouter();
@@ -13,10 +43,27 @@ function SelectCourtContent() {
   const dateParam = searchParams.get('date');
   const timeParam = searchParams.get('time');
   
-  const [courts, setCourts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [courts, setCourts] = useState<Court[]>([]);
+  const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [displayDateStr, setDisplayDateStr] = useState<string>('');
+  const [selectedBooking, setSelectedBooking] = useState<SelectedBooking | null>(null);
+
+  const displayDateStr = useMemo(() => {
+    if (!dateParam || !timeParam) return '';
+
+    const [year, month, day] = dateParam.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    const thaiDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+    const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    const endHour = String(parseInt(timeParam.split(':')[0], 10) + 1).padStart(2, '0');
+
+    return `${thaiDays[dateObj.getDay()]} ${dateObj.getDate()} ${thaiMonths[dateObj.getMonth()]} • ${timeParam} - ${endHour}:00 น.`;
+  }, [dateParam, timeParam]);
+
+  const loadAvailability = useCallback(async (dateStr: string) => {
+    const response = await api.get<Court[]>(`/courts/availability?date=${dateStr}`);
+    return response.data;
+  }, []);
 
   useEffect(() => {
     if (!dateParam || !timeParam) {
@@ -29,84 +76,115 @@ function SelectCourtContent() {
       router.push('/login');
       return;
     }
-    
-    // Format the date string for display
-    const dateObj = new Date(dateParam);
-    const thaiDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
-    const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-    const formattedStr = `${thaiDays[dateObj.getDay()]} ${dateObj.getDate()} ${thaiMonths[dateObj.getMonth()]} • ${timeParam} - ${String(parseInt(timeParam.split(':')[0]) + 1).padStart(2, '0')}:00 น.`;
-    setDisplayDateStr(formattedStr);
 
-    fetchAvailability(dateParam);
-  }, [dateParam, timeParam, router]);
-
-  const fetchAvailability = async (dateStr: string) => {
-    setLoading(true);
-    try {
-      const response = await api.get(`/courts/availability?date=${dateStr}`);
-      setCourts(response.data);
-    } catch (err) {
-      toast.error('Failed to load courts');
-    } finally {
-      setLoading(false);
+    if (dateParam !== createTodayBookingDate(new Date()).date) {
+      toast.error('ระบบเปิดให้จองเฉพาะวันนี้เท่านั้น');
+      router.replace('/booking');
+      return;
     }
-  };
 
-  const isCourtBookedForSelectedTime = (court: any) => {
+    let ignoreResponse = false;
+
+    void loadAvailability(dateParam)
+      .then((availableCourts) => {
+        if (!ignoreResponse) setCourts(availableCourts);
+      })
+      .catch(() => {
+        if (!ignoreResponse) toast.error('Failed to load courts');
+      })
+      .finally(() => {
+        if (!ignoreResponse) setLoading(false);
+      });
+
+    return () => {
+      ignoreResponse = true;
+    };
+  }, [dateParam, loadAvailability, router, timeParam]);
+
+  const isCourtBookedForSelectedTime = (court: Court) => {
     if (!timeParam) return false;
     const formattedTime = timeParam + ':00';
-    return court.bookings?.some((b: any) =>
-      b.start_time === formattedTime && (b.status === 'PENDING' || b.status === 'CHECKED_IN')
+    return court.bookings?.some((booking) =>
+      booking.start_time === formattedTime && (booking.status === 'PENDING' || booking.status === 'CHECKED_IN')
     );
   };
 
-  const handleBook = async (courtId: number, e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!timeParam || !dateParam) {
+  const openBookingConfirmation = (court: Court) => {
+    let bookerName = 'ผู้ใช้งาน';
+    const userJson = localStorage.getItem('user');
+
+    if (userJson) {
+      try {
+        const user = JSON.parse(userJson) as { name?: string; username?: string };
+        bookerName = user.name || user.username || bookerName;
+      } catch {
+        // Keep the safe fallback when locally cached user data is invalid.
+      }
+    }
+
+    setSelectedBooking({ court, bookerName });
+  };
+
+  const handleBook = async () => {
+    if (!timeParam || !dateParam || !selectedBooking) {
       toast.error('Missing date or time parameters');
       return;
     }
 
-    const btn = e.currentTarget;
-    const originalContent = btn.innerHTML;
-
     setBookingLoading(true);
-    // UI Tactile Feedback
-    btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span><span>กำลังบันทึก...</span>';
-    
+
     try {
       await api.post('/bookings', {
-        courtId,
+        courtId: selectedBooking.court.id,
         date: dateParam,
         startTime: timeParam + ':00'
       });
-      
-      // Success feedback on button
-      btn.classList.remove('bg-surface-container-high', 'text-on-surface', 'bg-primary-container', 'text-on-primary');
-      btn.classList.add('bg-secondary', 'text-on-secondary');
-      btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span><span>จองสำเร็จแล้ว</span>';
-      
-      toast.success('Court booked successfully!');
-      
+
+      setSelectedBooking(null);
+      toast.success('จองคอร์ทสำเร็จ');
+
       // Delay redirect slightly so user sees the success state
       setTimeout(() => {
         router.push('/dashboard');
       }, 1000);
+    } catch (error: unknown) {
+      let message = isAxiosError<{ message?: string }>(error)
+        ? error.response?.data?.message
+        : undefined;
+
+      if (message?.includes('Day-by-day policy')) {
+        message = 'จองไม่ได้: สามารถจองคอร์ทได้เฉพาะของวันนี้เท่านั้น';
+      } else if (message?.includes('already have an active booking')) {
+        message = 'ใช้โควตาประจำวันแล้ว: คุณมีรายการจองที่ยังไม่เสร็จสิ้น (จองได้ 1 ครั้ง/วัน)';
+      } else if (message?.includes('already booked')) {
+        message = 'คอร์ท/เวลาชน: คอร์ทนี้มีผู้จองไปแล้วในเวลาที่คุณเลือก';
+      }
+
+      toast.error(message || 'Failed to book court');
       
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to book court');
-      btn.innerHTML = originalContent;
+      void loadAvailability(dateParam)
+        .then(setCourts)
+        .catch(() => toast.error('Failed to refresh courts'));
+    } finally {
       setBookingLoading(false);
-      fetchAvailability(dateParam); // refresh in case it got booked
     }
   };
 
   const availableCourtsCount = timeParam ? courts.filter(c => !isCourtBookedForSelectedTime(c)).length : 0;
   const totalCourts = courts.length;
+  const confirmationDetails = selectedBooking && dateParam && timeParam
+    ? createBookingConfirmationDetails({
+        date: dateParam,
+        time: timeParam,
+        courtName: selectedBooking.court.name,
+        bookerName: selectedBooking.bookerName,
+      })
+    : null;
 
   return (
-    <MainLayout>
+    <MainLayout width="wide">
       <main className="flex flex-col relative w-full pb-6 bg-surface min-h-screen">
-        <div className="flex flex-col w-full px-4 md:px-margin-screen gap-4 md:gap-gutter-lg pb-6 mt-4">
+        <div className="flex flex-col w-full px-4 md:px-margin-screen lg:px-8 gap-4 md:gap-gutter-lg pb-6 mt-4">
           
           {/* Booking Session Context Bar */}
           <div className="flex items-center justify-between bg-surface-container-low rounded-xl px-3 md:px-card-padding py-2 md:py-gutter-sm shadow-sm gap-2">
@@ -147,7 +225,7 @@ function SelectCourtContent() {
           </div>
 
           {/* Courts List */}
-          <div className="flex flex-col gap-4 md:gap-gutter-md">
+          <div className="grid grid-cols-1 gap-4 md:gap-gutter-md lg:grid-cols-2">
             {loading ? (
               <p className="text-on-surface-variant text-sm py-4 text-center">Loading courts...</p>
             ) : courts.map((court, index) => {
@@ -204,11 +282,11 @@ function SelectCourtContent() {
                     </div>
                     <button 
                       disabled={isBooked || bookingLoading || court.status === 'MAINTENANCE'}
-                      onClick={(e) => handleBook(court.id, e)}
+                      onClick={() => openBookingConfirmation(court)}
                       className={`court-select-btn w-full sm:w-auto justify-center px-4 py-2.5 rounded-lg font-label-lg text-[13px] md:text-label-lg shadow-md active:scale-95 transition-all shrink-0 flex items-center gap-1.5 ${isBooked ? 'bg-surface-container-high text-on-surface-variant cursor-not-allowed shadow-none' : (index === 0 ? 'bg-primary-container text-on-primary hover:bg-primary' : 'bg-surface-container-high text-on-surface hover:bg-primary-container hover:text-on-primary')}`} 
                       type="button"
                     >
-                      <span>{isBooked ? 'คอร์ทไม่ว่าง' : 'ยืนยันจองคอร์ทนี้'}</span>
+                      <span>{isBooked ? 'คอร์ทไม่ว่าง' : 'จองคอร์ท'}</span>
                       {!isBooked && <span className="material-symbols-outlined text-[16px] md:text-[18px]">arrow_forward</span>}
                     </button>
                   </div>
@@ -233,7 +311,50 @@ function SelectCourtContent() {
         </div>
       </main>
 
+      <Dialog
+        open={selectedBooking !== null}
+        onOpenChange={(open) => {
+          if (!open && !bookingLoading) setSelectedBooking(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>ตรวจสอบรายละเอียดการจอง</DialogTitle>
+            <DialogDescription>
+              กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยันจองคอร์ท
+            </DialogDescription>
+          </DialogHeader>
 
+          {confirmationDetails && (
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 rounded-xl bg-surface-container-low p-4 text-sm">
+              <dt className="text-on-surface-variant">วันที่</dt>
+              <dd className="font-semibold text-on-surface">{confirmationDetails.date}</dd>
+              <dt className="text-on-surface-variant">เดือน</dt>
+              <dd className="font-semibold text-on-surface">{confirmationDetails.month}</dd>
+              <dt className="text-on-surface-variant">คอร์ท</dt>
+              <dd className="font-semibold text-on-surface">{confirmationDetails.court}</dd>
+              <dt className="text-on-surface-variant">เวลา</dt>
+              <dd className="font-semibold text-on-surface">{confirmationDetails.time}</dd>
+              <dt className="text-on-surface-variant">ชื่อผู้จอง</dt>
+              <dd className="font-semibold text-on-surface">{confirmationDetails.booker}</dd>
+            </dl>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={bookingLoading}
+              onClick={() => setSelectedBooking(null)}
+            >
+              กลับไปเลือก
+            </Button>
+            <Button type="button" disabled={bookingLoading} onClick={handleBook}>
+              {bookingLoading ? 'กำลังจอง...' : 'ยืนยันจองคอร์ท'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }

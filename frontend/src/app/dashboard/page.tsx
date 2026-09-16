@@ -134,7 +134,7 @@ export default function Dashboard() {
     if (activeBooking && user?.role !== 'ADMIN') {
       interval = setInterval(() => {
         const now = new Date();
-        const endDateStr = `${activeBooking.booking_date}T${activeBooking.end_time}`;
+        const endDateStr = `${activeBooking.booking_date}T${activeBooking.time_out}`;
         const endDate = new Date(endDateStr);
         const diff = endDate.getTime() - now.getTime();
 
@@ -264,7 +264,7 @@ export default function Dashboard() {
                   </div>
                   
                   <button 
-                    onClick={() => handleFinishBooking(selectedBooking.id)}
+                    onClick={() => handleFinishBooking(selectedBooking.booking_id)}
                     className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined">stop_circle</span>
@@ -361,7 +361,7 @@ export default function Dashboard() {
                       <span className="material-symbols-outlined text-[18px] text-primary">schedule</span>
                       <div className="flex flex-col min-w-0">
                         <span className="font-label-sm text-label-sm text-on-surface-variant">Time</span>
-                        <span className="font-label-lg text-label-lg text-on-surface font-bold truncate">{pendingBooking.start_time.slice(0, 5)} - {pendingBooking.end_time.slice(0, 5)}</span>
+                        <span className="font-label-lg text-label-lg text-on-surface font-bold truncate">{pendingBooking.time_in?.slice(0, 5)} - {pendingBooking.time_out?.slice(0, 5)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 bg-surface-container-lowest py-2 px-2.5 rounded-lg shadow-sm">
@@ -388,7 +388,7 @@ export default function Dashboard() {
                     <span>Check-in (เช็คอิน)</span>
                   </button>
                   <button 
-                    onClick={() => handleCancelBooking(pendingBooking.id)}
+                    onClick={() => handleCancelBooking(pendingBooking.booking_id)}
                     className="col-span-2 h-12 rounded-xl bg-error-container text-on-error-container font-label-lg text-label-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition-transform hover:bg-opacity-90 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[18px]">close</span>
@@ -426,7 +426,7 @@ export default function Dashboard() {
                   </div>
                   
                   <div className="text-center py-4 bg-surface-container-lowest rounded-lg shadow-sm border border-secondary/20">
-                    <p className="font-label-sm text-[13px] font-bold text-on-surface-variant mb-1 tracking-widest">TIME REMAINING (ENDS AT {activeBooking.end_time.slice(0, 5)})</p>
+                    <p className="font-label-sm text-[13px] font-bold text-on-surface-variant mb-1 tracking-widest">TIME REMAINING (ENDS AT {activeBooking.time_out?.slice(0, 5)})</p>
                     <div className="font-headline-xl text-[48px] font-black text-secondary">
                       {timeLeft}
                     </div>
@@ -495,7 +495,7 @@ export default function Dashboard() {
                   <p className="font-body-md text-body-md font-medium">No bookings yet.</p>
                 </div>
               )}
-              {bookings.slice(0, 3).map(booking => {
+              {bookings?.slice(0, 3).map(booking => {
                 const isPending = booking.status === 'PENDING';
                 const isCancelled = booking.status === 'CANCELLED';
                 const isCompleted = booking.status === 'COMPLETED';
@@ -519,7 +519,7 @@ export default function Dashboard() {
                 }
 
                 return (
-                  <div key={booking.id} className="relative bg-surface-container-lowest rounded-xl p-3.5 shadow-sm flex items-center justify-between overflow-hidden">
+                  <div key={booking.booking_id} className="relative bg-surface-container-lowest rounded-xl p-3.5 shadow-sm flex items-center justify-between overflow-hidden">
                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${accentColor}`}></div>
                     <div className="flex items-center gap-3 pl-1 min-w-0">
                       <div className={`w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0 ${iconColor}`}>
@@ -534,7 +534,7 @@ export default function Dashboard() {
                         </div>
                         <div className="flex items-center gap-2 mt-0.5 text-on-surface-variant font-body-sm text-body-sm">
                           <span className="flex items-center gap-1 font-medium">
-                            <span className="material-symbols-outlined text-[13px]">schedule</span> {booking.start_time.slice(0, 5)}
+                            <span className="material-symbols-outlined text-[13px]">schedule</span> {booking.time_in?.slice(0, 5)}
                           </span>
                           <span>•</span>
                           <span className="font-medium">{booking.booking_date}</span>
@@ -544,7 +544,7 @@ export default function Dashboard() {
                     <div className="shrink-0 pl-2">
                       {isPending ? (
                         <button 
-                          onClick={() => handleCancelBooking(booking.id)}
+                          onClick={() => handleCancelBooking(booking.booking_id)}
                           className="px-3 py-1.5 rounded-lg bg-error-container text-on-error-container font-label-sm text-label-sm font-bold hover:bg-opacity-90 active:scale-95 transition-all"
                         >
                           CANCEL

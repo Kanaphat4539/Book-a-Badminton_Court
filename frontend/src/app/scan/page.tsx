@@ -16,6 +16,16 @@ export default function ScanPage() {
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const parsedUser = JSON.parse(userStr);
+        if (parsedUser.role === 'ADMIN') {
+          router.push('/dashboard');
+        }
+      } catch (e) {}
+    }
+
     const fetchBookings = async () => {
       try {
         const response = await api.get('/bookings/me');
@@ -34,7 +44,7 @@ export default function ScanPage() {
     setLoading(true);
     try {
       // Find the pending booking for this court using the ref
-      const pendingBooking = myBookingsRef.current.find(b => b.status === 'PENDING' && b.court.id === courtId);
+      const pendingBooking = myBookingsRef.current.find(b => b.status === 'PENDING' && b.court === courtId);
       
       if (!pendingBooking) {
         throw new Error('You do not have a pending booking for this court right now.');

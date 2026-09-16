@@ -32,6 +32,18 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(true);
   const selectedDate = bookingDate.date;
 
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const parsedUser = JSON.parse(userStr);
+        if (parsedUser.role === 'ADMIN') {
+          router.push('/dashboard');
+        }
+      } catch (e) {}
+    }
+  }, [router]);
+
   const handleCloseRules = () => {
     setShowRulesModal(false);
   };

@@ -85,6 +85,18 @@ export class BookingsService {
     });
   }
 
+  async getNotifications() {
+    return this.bookingsRepository.find({
+      where: [
+        { status: BookingStatus.PENDING },
+        { status: BookingStatus.CANCELLED }
+      ],
+      relations: { student: true },
+      order: { booking_id: 'DESC' },
+      take: 20,
+    });
+  }
+
   async checkIn(bookingId: number, stu_id: string, courtId: number) {
     const booking = await this.bookingsRepository.findOne({
       where: { booking_id: bookingId, stu_id, court: courtId }

@@ -14,21 +14,31 @@ export default function LandingPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentHeroImage, setCurrentHeroImage] = useState(0);
+  const [scrollY, setScrollY] = useState(0);
+
+  const nextImage = () => setCurrentHeroImage((prev) => (prev + 1) % heroImages.length);
+  const prevImage = () => setCurrentHeroImage((prev) => (prev - 1 + heroImages.length) % heroImages.length);
+  const goToImage = (index: number) => setCurrentHeroImage(index);
 
   useEffect(() => {
-    const heroInterval = setInterval(() => {
-      setCurrentHeroImage((prev) => (prev + 1) % heroImages.length);
-    }, 3000);
+    const heroInterval = setInterval(nextImage, 6000);
     return () => clearInterval(heroInterval);
   }, []);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
+      setScrollY(window.scrollY);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Calculate parallax (Zoom out effect like LINE)
+  const heroScale = Math.max(1 - scrollY * 0.0008, 0.75);
+  const heroOpacity = Math.max(1 - scrollY * 0.002, 0);
+  const heroTranslateY = scrollY * 0.5;
+  const heroBorderRadius = Math.min(scrollY * 0.1, 40);
 
   return (
     <div className="min-h-screen font-sans bg-[#f8f9fa] dark:bg-[#0a0400] text-gray-900 dark:text-gray-100 transition-colors duration-300">
@@ -119,32 +129,71 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* 1. Hero Section (Image Slider) */}
-      <header id="hero" className="relative w-full h-screen flex flex-col justify-center px-8 md:px-12 lg:px-24 overflow-hidden bg-black">
-        {/* Background Images */}
-        {heroImages.map((img, index) => (
-          <div
-            key={img}
-            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out z-0 ${index === currentHeroImage ? 'opacity-100' : 'opacity-0'}`}
-            style={{ backgroundImage: `url('${img}')` }}
-          />
-        ))}
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/40 z-0"></div>
-        <div className="relative z-10 max-w-7xl w-full mx-auto">
-          <h1 className="font-display-lg text-[42px] sm:text-[56px] md:text-[80px] font-extrabold text-white leading-[1.05] drop-shadow-xl mb-6 tracking-tight">
-            Connect with <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F26522] to-yellow-400 dark:from-primary dark:to-[#ffb693] filter drop-shadow-md">
-              KMITL&nbsp;
-            </span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-400 dark:from-blue-400 dark:to-cyan-300 filter drop-shadow-md">
-              PCC
-            </span>
-            <br className="md:hidden" /> BADMINTON
-          </h1>
-          <Link href="/login" className="font-bold text-[18px] md:text-[22px] text-[#F26522] hover:text-[#ff7e22] transition-colors inline-flex items-center gap-2 w-fit bg-white/10 hover:bg-white/20 px-6 py-3 rounded-full backdrop-blur-sm border border-white/20 shadow-lg">
-            / Start Booking <span className="material-symbols-outlined font-bold text-[20px] md:text-[24px]">arrow_forward_ios</span>
-          </Link>
+      {/* 1. Hero Section (Scroll-Driven Parallax Slider S06) */}
+      <header id="hero" className="relative w-full h-screen overflow-hidden bg-[#f8f9fa] dark:bg-[#0a0400] flex flex-col justify-center">
+        {/* Parallax Background Container */}
+        <div 
+          className="absolute inset-0 w-full h-full transform origin-top transition-all duration-75 ease-out overflow-hidden"
+          style={{ 
+            transform: `translateY(${heroTranslateY}px) scale(${heroScale})`,
+            borderRadius: `${heroBorderRadius}px` 
+          }}
+        >
+          {heroImages.map((img, index) => (
+            <div
+              key={img}
+              className={`absolute inset-0 bg-cover bg-center z-0 transition-all duration-1000 ease-in-out`}
+              style={{ 
+                backgroundImage: `url('${img}')`,
+                opacity: index === currentHeroImage ? 1 : 0,
+                transform: index === currentHeroImage ? 'scale(1.05)' : 'scale(1)',
+                transition: 'opacity 1s ease-in-out, transform 6s ease-out'
+              }}
+            />
+          ))}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-transparent z-0"></div>
+
+          {/* Overlay Content (Inside shrinking container) */}
+          <div 
+            className="relative z-10 max-w-7xl w-full mx-auto px-8 md:px-12 lg:px-24 flex flex-col justify-center h-full pt-16"
+            style={{ opacity: heroOpacity }}
+          >
+            <h1 className="font-display-lg text-[42px] sm:text-[56px] md:text-[80px] font-extrabold text-white leading-[1.05] drop-shadow-xl mb-6 tracking-tight">
+              Connect with <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F26522] to-yellow-400 filter drop-shadow-md">
+                KMITL&nbsp;
+              </span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-400 filter drop-shadow-md">
+                PCC
+              </span>
+              <br className="md:hidden" /> BADMINTON
+            </h1>
+            <Link href="/login" className="font-bold text-[18px] md:text-[22px] text-[#F26522] hover:text-[#ff7e22] transition-all inline-flex items-center gap-2 w-fit bg-white/10 hover:bg-white/20 hover:scale-[1.05] active:scale-[0.98] px-8 py-4 rounded-full backdrop-blur-md border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.3)] pointer-events-auto">
+              / Start Booking <span className="material-symbols-outlined font-bold text-[20px] md:text-[24px]">arrow_forward_ios</span>
+            </Link>
+
+            {/* Slider Dots */}
+            <div className="absolute bottom-12 left-8 md:left-12 lg:left-24 flex gap-3 z-20 pointer-events-auto">
+              {heroImages.map((_, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => goToImage(idx)}
+                  className={`transition-all duration-300 rounded-full ${idx === currentHeroImage ? 'w-10 h-2.5 bg-[#F26522]' : 'w-2.5 h-2.5 bg-white/50 hover:bg-white/80'}`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Slider Controls (Action) */}
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-4 md:px-12 z-20 pointer-events-none">
+          <button onClick={prevImage} className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/10 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white transition-all pointer-events-auto active:scale-95 border border-white/20 shadow-lg">
+            <span className="material-symbols-outlined text-[32px]">chevron_left</span>
+          </button>
+          <button onClick={nextImage} className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/10 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white transition-all pointer-events-auto active:scale-95 border border-white/20 shadow-lg">
+            <span className="material-symbols-outlined text-[32px]">chevron_right</span>
+          </button>
         </div>
       </header>
 

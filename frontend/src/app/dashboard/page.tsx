@@ -19,6 +19,14 @@ export default function Dashboard() {
   const [bookingTimeRemaining, setBookingTimeRemaining] = useState<string>('--:--');
   const [mounted, setMounted] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<number | null>(null);
+  const [statPeriod, setStatPeriod] = useState<'Day' | 'Week' | 'Month' | 'Year'>('Week');
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Countdown timer for admin selected booking
   useEffect(() => {
@@ -162,69 +170,284 @@ export default function Dashboard() {
   if (user.role === 'ADMIN') {
     return (
       <MainLayout>
-        <div className="max-w-5xl mx-auto space-y-6 w-full px-4 md:px-margin-screen mt-4 relative z-10">
-          <div className="flex justify-between items-center bg-surface-container-low p-6 rounded-3xl shadow-sm transition-colors duration-300">
-            <div>
-              <h1 className="font-headline-lg text-[28px] font-bold text-on-surface transition-colors duration-300">Admin Dashboard</h1>
-              <p className="font-body-md text-[15px] text-on-surface-variant font-medium transition-colors duration-300">Manage courts and view all bookings</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-button text-[15px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
-                onClick={() => router.push('/admin/users')}
-              >
-                <span className="material-symbols-outlined text-[18px]">group</span>
-                Manage Users
-              </button>
+        <div className="flex flex-col w-full pb-10">
+          
+          {/* Admin Header - Matches User CI */}
+          <div className="relative w-full px-4 md:px-margin-screen pt-6 pb-6 mb-4 overflow-hidden rounded-b-[2.5rem] shadow-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary/90 to-primary/80 z-0 opacity-90 dark:opacity-100"></div>
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 z-0"></div>
+            <div className="absolute -top-24 -right-10 w-64 h-64 bg-white/20 blur-3xl rounded-full z-0 pointer-events-none"></div>
+            
+            <div className="relative z-10 flex items-start justify-between gap-gutter-md">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5 mb-1 bg-black/20 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
+                  <span className="inline-block w-2 h-2 rounded-full bg-secondary-container animate-pulse shadow-[0_0_8px_#ffb4a4]"></span>
+                  <span className="font-label-sm text-[10px] text-white tracking-widest uppercase font-black">Admin Portal</span>
+                </div>
+                <h1 className="font-headline-lg text-[28px] md:text-[36px] text-white font-black tracking-tight flex items-center gap-2 drop-shadow-md">
+                  Dashboard <span className="text-3xl md:text-4xl">👑</span>
+                </h1>
+                <p className="font-body-md text-[14px] md:text-[16px] text-white/90 font-medium mt-1">
+                  Manage courts and view all bookings
+                </p>
+              </div>
+              <div className="flex flex-col items-end">
+                <button
+                  className="bg-white text-secondary hover:bg-surface-container-lowest px-4 py-2.5 rounded-xl font-label-lg font-bold shadow-lg flex items-center gap-2 active:scale-95 transition-all"
+                  onClick={() => router.push('/admin/users')}
+                >
+                  <span className="material-symbols-outlined text-[18px]">group</span>
+                  Users
+                </button>
+              </div>
             </div>
           </div>
 
-          <section>
-            <h2 className="font-headline-md text-[22px] font-extrabold mb-4 text-gray-900 dark:text-orange-50 transition-colors duration-300">All Bookings</h2>
-            <div className="space-y-4">
-              {allBookings.length === 0 && <p className="text-gray-500 dark:text-orange-200/70 font-medium text-[15px] bg-white/50 dark:bg-[#2a1300]/40 p-6 rounded-2xl text-center transition-colors duration-300">No bookings found.</p>}
-              {allBookings.map(booking => (
-                <div 
-                  key={booking.booking_id} 
-                  className="bg-white/70 dark:bg-[#2a1300]/60 backdrop-blur-xl p-5 rounded-2xl flex justify-between items-center border border-white/60 dark:border-[#ff6b00]/20 shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all duration-300 cursor-pointer"
-                  onClick={() => setSelectedBooking(booking)}
-                >
-                  <div>
-                    <p className="font-headline-md text-[18px] font-bold text-gray-900 dark:text-orange-50 transition-colors duration-300">{booking.student?.first_name} {booking.student?.last_name} <span className="text-gray-500 dark:text-orange-300/60 font-semibold text-[14px]">(@{booking.student?.username})</span></p>
-                    <p className="text-[15px] text-gray-600 dark:text-orange-200/70 mt-1 font-medium transition-colors duration-300">Court {booking.court} • {booking.booking_date}</p>
-                  </div>
-                  <div className="text-right flex flex-col items-end gap-2">
-                    <p className="text-[16px] font-extrabold text-primary">{(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)}</p>
-                    <span className={`text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${booking.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
-                      booking.status === 'CANCELLED' ? 'bg-red-100 text-red-700 border border-red-200' :
-                        booking.status === 'CHECKED_IN' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
-                          'bg-orange-100 text-orange-700 border border-orange-200'
-                      }`}>
-                      {booking.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
+          {/* Booking Statistics (A06) */}
+          <div className="px-4 md:px-margin-screen flex flex-col gap-4 mt-4 mb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[22px] text-primary">bar_chart</span>
+                <h2 className="font-headline-md text-headline-md text-on-surface font-extrabold">Booking Statistics</h2>
+              </div>
+              <div className="flex bg-surface-container-low p-1 rounded-xl">
+                {['Day', 'Week', 'Month', 'Year'].map(period => (
+                  <button 
+                    key={period}
+                    onClick={() => setStatPeriod(period as any)}
+                    className={`px-3 py-1.5 text-[12px] md:text-[13px] font-bold rounded-lg transition-colors ${statPeriod === period ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
+                  >
+                    {period}
+                  </button>
+                ))}
+              </div>
             </div>
-          </section>
+            
+            <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-5 md:p-6 shadow-sm overflow-hidden flex flex-col">
+              <p className="font-label-sm text-on-surface-variant uppercase tracking-wider mb-6">Booking trends by {statPeriod.toLowerCase()}</p>
+              
+              <div className="flex flex-col justify-end h-56 relative w-full mt-2">
+                {/* Y-axis placeholder lines */}
+                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none z-0 pb-8">
+                  <div className="border-b border-surface-container-highest/50 w-full h-0"></div>
+                  <div className="border-b border-surface-container-highest/50 w-full h-0"></div>
+                  <div className="border-b border-surface-container-highest/50 w-full h-0"></div>
+                  <div className="border-b border-surface-container-highest/50 w-full h-0"></div>
+                  <div className="border-b border-surface-container-high w-full h-0"></div>
+                </div>
+
+                {(() => {
+                  // A06: Time-series realistic data (Trend, Seasonality, Anomalies)
+                  let labels: string[] = [];
+                  let completedData: number[] = [];
+
+                  if (statPeriod === 'Day') {
+                    // Time-series: Quiet morning, lunch spike, evening peak
+                    labels = ['06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
+                    completedData = [2, 5, 15, 10, 35, 20];
+                  } else if (statPeriod === 'Week') {
+                    // Time-series: Weekdays stable, weekend massive peak
+                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    completedData = [45, 42, 38, 50, 65, 95, 90]; 
+                  } else if (statPeriod === 'Month') {
+                    // Time-series: Upward trend, anomaly in week 3
+                    labels = ['W1', 'W2', 'W3', 'W4'];
+                    completedData = [150, 165, 90, 190]; // 90 is the anomaly/shock
+                  } else if (statPeriod === 'Year') {
+                    // Time-series: Long-term growth trend over the year
+                    labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    completedData = [300, 320, 350, 340, 400, 420, 480, 500, 520, 550, 590, 650];
+                  }
+                  
+                  const maxVal = Math.max(...completedData) * 1.2 || 1; // 20% headroom above peak
+
+                  const data = labels.map((label, idx) => {
+                    const val1 = completedData[idx];
+                    const h1 = (val1 / maxVal) * 100;
+                    return { label, h1, val1 };
+                  });
+
+                  // SVG dimensions
+                  const w = 1000;
+                  const h = 160;
+                  const step = w / (data.length > 1 ? data.length - 1 : 1);
+                  
+                  // Coordinate generator (margin to prevent clipping dots)
+                  const getCoords = (percent: number, idx: number) => {
+                    const x = idx * step;
+                    const y = (100 - percent) / 100 * (h - 20) + 10;
+                    return { x, y };
+                  };
+
+                  const points1 = data.map((d, i) => getCoords(d.h1, i));
+
+                  const createSmoothPath = (points: {x: number, y: number}[]) => {
+                    if (points.length === 0) return '';
+                    return points.map((point, i, a) => {
+                      if (i === 0) return `M ${point.x},${point.y}`;
+                      const prev = a[i - 1];
+                      // Control points for a horizontal bezier curve
+                      const cp1x = prev.x + (point.x - prev.x) * 0.4;
+                      const cp1y = prev.y;
+                      const cp2x = point.x - (point.x - prev.x) * 0.4;
+                      const cp2y = point.y;
+                      return `C ${cp1x},${cp1y} ${cp2x},${cp2y} ${point.x},${point.y}`;
+                    }).join(' ');
+                  };
+
+                  const path1 = createSmoothPath(points1);
+                  const areaPath = `${path1} L ${w},${h} L 0,${h} Z`;
+
+                  return (
+                    <div className="relative z-10 w-full h-full flex flex-col">
+                      <div className="relative flex-1 w-full pb-8">
+                        <svg viewBox={`-15 0 ${w + 30} ${h}`} className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none">
+                          <defs>
+                            <linearGradient id="gradientCompleted" x1="0" x2="0" y1="0" y2="1">
+                              <stop offset="0%" stopColor="currentColor" className="text-primary" stopOpacity="0.25" />
+                              <stop offset="100%" stopColor="currentColor" className="text-primary" stopOpacity="0.0" />
+                            </linearGradient>
+                          </defs>
+
+                          {/* Completed Area */}
+                          <path d={areaPath} fill="url(#gradientCompleted)" />
+
+                          {/* Completed Line */}
+                          <path 
+                            d={path1} fill="none" stroke="currentColor" className="text-primary" 
+                            strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" 
+                            style={{ filter: 'drop-shadow(0px 6px 8px rgba(242,101,34,0.3))' }}
+                          />
+                          
+                          {/* Dots */}
+                          {data.map((d, i) => {
+                            const p1 = points1[i];
+                            return (
+                              <g key={i}>
+                                {/* Completed Dot */}
+                                <circle cx={p1.x} cy={p1.y} r="6.5" fill="#fff" className="text-primary" stroke="currentColor" strokeWidth="4">
+                                  <title>Bookings: {Math.round(d.val1)}</title>
+                                </circle>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </div>
+
+                      {/* X-axis labels */}
+                      <div className="absolute bottom-0 left-0 w-full h-6">
+                        {data.map((d, idx) => (
+                          <span 
+                            key={d.label} 
+                            className="absolute font-label-sm text-[10px] md:text-[12px] text-on-surface-variant whitespace-nowrap"
+                            style={{ left: `${(idx / (data.length - 1)) * 100}%`, transform: 'translateX(-50%)' }}
+                          >
+                            {d.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+          
+          <div className="px-4 md:px-margin-screen flex flex-col gap-4 mt-2">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="material-symbols-outlined text-[22px] text-primary">list_alt</span>
+              <h2 className="font-headline-md text-headline-md text-on-surface font-extrabold">All Bookings</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {allBookings.length === 0 && (
+                <div className="col-span-full bg-surface-container-lowest border border-outline-variant/30 shadow-sm rounded-2xl p-8 text-center text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[48px] opacity-20 mb-2">event_busy</span>
+                  <p className="font-body-md font-medium">No bookings found.</p>
+                </div>
+              )}
+              
+              {allBookings.map(booking => {
+                const isPending = booking.status === 'PENDING';
+                const isCancelled = booking.status === 'CANCELLED';
+                const isCompleted = booking.status === 'COMPLETED';
+                const isCheckedIn = booking.status === 'CHECKED_IN';
+                
+                let accentColor = 'bg-primary-container';
+                let badgeClass = 'bg-primary-fixed text-on-primary-fixed';
+                let iconColor = 'text-primary';
+                
+                if (isCancelled) {
+                  accentColor = 'bg-outline-variant';
+                  badgeClass = 'bg-error-container text-on-error-container';
+                  iconColor = 'text-error';
+                } else if (isCompleted) {
+                  accentColor = 'bg-secondary';
+                  badgeClass = 'bg-secondary-container text-on-secondary-container';
+                  iconColor = 'text-secondary';
+                } else if (isCheckedIn) {
+                  accentColor = 'bg-tertiary';
+                  badgeClass = 'bg-tertiary-container text-on-tertiary-container';
+                  iconColor = 'text-tertiary';
+                }
+
+                return (
+                  <div 
+                    key={booking.booking_id} 
+                    className="relative bg-surface-container-lowest rounded-2xl p-4 shadow-sm border border-outline-variant/20 hover:border-primary/30 transition-all cursor-pointer flex items-center justify-between overflow-hidden"
+                    onClick={() => setSelectedBooking(booking)}
+                  >
+                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${accentColor}`}></div>
+                    
+                    <div className="flex flex-col min-w-0 pl-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-headline-sm font-bold text-on-surface truncate">
+                          {booking.student?.first_name} {booking.student?.last_name}
+                        </span>
+                        <span className="font-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-md truncate max-w-[100px]">
+                          @{booking.student?.username}
+                        </span>
+                      </div>
+                      <p className="font-body-sm text-on-surface-variant flex items-center gap-1.5 mt-0.5">
+                        <span className="material-symbols-outlined text-[14px]">stadium</span> Court {booking.court}
+                        <span className="mx-1">•</span>
+                        <span className="material-symbols-outlined text-[14px]">calendar_today</span> {booking.booking_date}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-1.5 shrink-0 pl-2">
+                      <span className="font-headline-sm font-extrabold text-on-surface">
+                        {(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)}
+                      </span>
+                      <span className={`px-2.5 py-0.5 rounded-full font-label-sm font-bold uppercase tracking-wide ${badgeClass}`}>
+                        {booking.status}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {/* Admin Booking Modal */}
         {selectedBooking && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setSelectedBooking(null)}></div>
-            <div className="relative bg-white dark:bg-[#1a0a00] w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl border border-white/20 dark:border-[#ff6b00]/30 animate-in zoom-in-95 duration-200">
+            <div className="absolute inset-0 bg-scrim/60 backdrop-blur-sm" onClick={() => setSelectedBooking(null)}></div>
+            <div className="relative bg-surface w-full max-w-md rounded-3xl p-6 shadow-2xl border border-surface-container-high animate-in zoom-in-95 duration-200">
               <button 
                 onClick={() => setSelectedBooking(null)} 
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface transition-colors"
               >
-                <span className="material-symbols-outlined text-[28px]">close</span>
+                <span className="material-symbols-outlined text-[24px]">close</span>
               </button>
               
-              <div className="text-center mb-6">
-                <h3 className="font-display-sm text-[24px] font-bold text-gray-900 dark:text-orange-50 mb-1">Booking Details</h3>
-                <p className="text-gray-500 dark:text-orange-200/70">{selectedBooking.student?.first_name} {selectedBooking.student?.last_name} (@{selectedBooking.student?.username})</p>
-                <p className="text-primary font-bold mt-1">Court {selectedBooking.court} • {(selectedBooking.time_in || '').slice(0,5)} - {(selectedBooking.time_out || '').slice(0,5)}</p>
+              <div className="text-center mb-6 mt-2">
+                <h3 className="font-headline-lg font-bold text-on-surface mb-1">Booking Details</h3>
+                <p className="font-body-md text-on-surface-variant">{selectedBooking.student?.first_name} {selectedBooking.student?.last_name} (@{selectedBooking.student?.username})</p>
+                <p className="font-headline-sm text-primary font-bold mt-2 bg-primary-container/30 inline-block px-4 py-1.5 rounded-full">
+                  Court {selectedBooking.court} • {(selectedBooking.time_in || '').slice(0,5)} - {(selectedBooking.time_out || '').slice(0,5)}
+                </p>
               </div>
 
               {selectedBooking.status === 'PENDING' && (() => {
@@ -233,25 +456,25 @@ export default function Dashboard() {
                 const isEarly = now < bookingDateTime;
 
                 return (
-                  <div className="flex flex-col items-center gap-6 mt-4">
+                  <div className="flex flex-col items-center gap-5 mt-4">
                     {isEarly ? (
-                      <div className="bg-orange-50 dark:bg-[#3a1b00]/40 p-6 rounded-2xl border border-orange-100 dark:border-orange-900/50 w-full text-center">
-                        <span className="material-symbols-outlined text-[48px] text-orange-400 mb-2">schedule</span>
-                        <p className="text-sm font-bold text-orange-800 dark:text-orange-300">Too Early for Check-in</p>
-                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
+                      <div className="bg-surface-container-highest p-6 rounded-2xl border border-surface-container-high w-full text-center">
+                        <span className="material-symbols-outlined text-[48px] text-on-surface-variant mb-2">schedule</span>
+                        <p className="font-label-lg font-bold text-on-surface">Too Early for Check-in</p>
+                        <p className="font-body-sm text-on-surface-variant mt-2">
                           QR Code will be available when the booking time starts.
                         </p>
                       </div>
                     ) : (
                       <>
-                        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <div className="bg-white p-5 rounded-3xl shadow-sm border border-surface-container-high">
                           <QRCode 
                             value={selectedBooking.court?.toString() || 'court'} 
                             size={200}
                             level="H"
                           />
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-orange-200/80 text-center px-4">
+                        <p className="font-body-sm text-on-surface-variant text-center px-4">
                           Ask the user to scan this QR code with their app to check in and start their session.
                         </p>
                       </>
@@ -261,15 +484,15 @@ export default function Dashboard() {
               })()}
 
               {selectedBooking.status === 'CHECKED_IN' && (
-                <div className="flex flex-col items-center gap-6 mt-4">
-                  <div className="text-center p-6 bg-orange-50 dark:bg-[#3a1b00]/40 rounded-2xl border border-orange-100 dark:border-orange-900/50 w-full">
-                    <p className="text-sm font-bold text-orange-800 dark:text-orange-300 uppercase tracking-wider mb-2">Time Remaining</p>
-                    <p className="text-5xl font-mono font-bold text-gray-900 dark:text-white">{bookingTimeRemaining}</p>
+                <div className="flex flex-col items-center gap-5 mt-4">
+                  <div className="text-center p-6 bg-tertiary-container text-on-tertiary-container rounded-2xl w-full border border-tertiary/20">
+                    <p className="font-label-sm font-bold uppercase tracking-wider mb-2">Time Remaining</p>
+                    <p className="text-5xl font-mono font-black">{bookingTimeRemaining}</p>
                   </div>
                   
                   <button 
                     onClick={() => handleFinishBooking(selectedBooking.booking_id)}
-                    className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2"
+                    className="w-full bg-error text-on-error font-label-lg font-bold py-3.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 hover:bg-error/90 active:scale-95"
                   >
                     <span className="material-symbols-outlined">stop_circle</span>
                     Finish Early
@@ -278,11 +501,11 @@ export default function Dashboard() {
               )}
 
               {(selectedBooking.status === 'COMPLETED' || selectedBooking.status === 'CANCELLED') && (
-                <div className="flex flex-col items-center gap-4 mt-6 p-6 bg-gray-50 dark:bg-[#2a1300]/50 rounded-2xl">
-                  <span className="material-symbols-outlined text-[48px] text-gray-400 dark:text-gray-500">
+                <div className="flex flex-col items-center gap-3 mt-6 p-6 bg-surface-container-low rounded-2xl border border-surface-container-high">
+                  <span className="material-symbols-outlined text-[48px] text-on-surface-variant">
                     {selectedBooking.status === 'COMPLETED' ? 'check_circle' : 'cancel'}
                   </span>
-                  <p className="text-lg font-bold text-gray-700 dark:text-gray-300">
+                  <p className="font-label-lg font-bold text-on-surface">
                     This booking is {selectedBooking.status.toLowerCase()}.
                   </p>
                 </div>
@@ -298,14 +521,23 @@ export default function Dashboard() {
     <MainLayout>
       <div className="flex flex-col w-full pb-10">
         
-        {/* Sporty Dynamic Ambient Backdrop */}
-        <div className="relative w-full px-4 md:px-margin-screen pt-6 pb-6 mb-4 overflow-hidden rounded-b-[2.5rem] shadow-sm">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#F26522] via-[#ff7e22] to-yellow-500 z-0 opacity-90 dark:opacity-100"></div>
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 z-0"></div>
+        {/* Sporty Dynamic Ambient Backdrop (Scroll-driven Parallax S06) */}
+        <div className="relative w-full px-4 md:px-margin-screen pt-6 pb-6 mb-4 overflow-hidden rounded-b-[2.5rem] shadow-sm flex-shrink-0">
+          <div 
+            className="absolute inset-0 bg-gradient-to-br from-[#F26522] via-[#ff7e22] to-yellow-500 z-0 opacity-90 dark:opacity-100 transform origin-center transition-transform duration-75"
+            style={{ transform: `scale(${Math.min(1 + scrollY * 0.001, 1.2)})` }}
+          ></div>
+          <div 
+            className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 z-0 transform transition-transform duration-75"
+            style={{ transform: `scale(${Math.min(1 + scrollY * 0.001, 1.2)})` }}
+          ></div>
           <div className="absolute -top-24 -right-10 w-64 h-64 bg-white/20 blur-3xl rounded-full z-0 pointer-events-none"></div>
           
           {/* User Welcome Greeting & Badges */}
-          <div className="relative z-10 flex items-start justify-between gap-gutter-md">
+          <div 
+            className="relative z-10 flex items-start justify-between gap-gutter-md transition-transform duration-75"
+            style={{ transform: `translateY(${scrollY * 0.25}px)`, opacity: Math.max(1 - scrollY * 0.005, 0) }}
+          >
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5 mb-1 bg-black/20 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
                 <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_#4ade80]"></span>

@@ -194,29 +194,59 @@ export default function BookingPage() {
             </div>
           </section>
 
-          {/* Current booking date */}
+          {/* Calendar View (Monthly) */}
           <section className="mt-4 px-4 md:px-margin-screen lg:px-8">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
-                <h2 className="font-headline-sm text-base md:text-headline-sm text-on-surface">วันที่ (Date)</h2>
+                <h2 className="font-headline-sm text-base md:text-headline-sm text-on-surface">ปฏิทินการจอง (Calendar)</h2>
               </div>
               <span className="rounded-full bg-surface-container-high px-3 py-1 font-label-md text-[11px] text-on-surface md:text-label-md">
-                {bookingDate?.month || '—'}
+                {new Date().toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}
               </span>
             </div>
-            {bookingDate && (
-              <div className="flex min-h-24 items-center justify-between rounded-2xl bg-surface-container-lowest px-5 py-4 shadow-sm ring-1 ring-outline-variant/30 md:max-w-sm">
-                <div className="flex flex-col">
-                  <span className="font-label-md text-on-surface-variant">วันนี้</span>
-                  <span className="font-headline-md font-bold text-on-surface">วัน{bookingDate.day}</span>
-                </div>
-                <div className="flex size-16 flex-col items-center justify-center rounded-2xl bg-primary-container text-on-primary shadow-[0_8px_20px_-4px_rgba(255,94,30,0.4)]">
-                  <span className="font-label-sm uppercase tracking-wider">วันที่</span>
-                  <span className="font-headline-md text-2xl font-bold">{bookingDate.num}</span>
-                </div>
+            
+            <div className="bg-surface-container-lowest rounded-2xl p-4 shadow-sm ring-1 ring-outline-variant/30">
+              {/* Day Headers */}
+              <div className="grid grid-cols-7 gap-1 mb-2 text-center">
+                {['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map(day => (
+                  <div key={day} className="font-label-sm text-[10px] md:text-label-sm text-on-surface-variant font-bold">
+                    {day}
+                  </div>
+                ))}
               </div>
-            )}
+              
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() }).map((_, i) => (
+                  <div key={`empty-${i}`} className="p-2" />
+                ))}
+                
+                {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }).map((_, i) => {
+                  const date = i + 1;
+                  const today = new Date().getDate();
+                  const isToday = date === today;
+                  const isPast = date < today;
+                  const isFuture = date > today;
+                  
+                  return (
+                    <button
+                      key={date}
+                      disabled={!isToday}
+                      className={`
+                        flex flex-col items-center justify-center py-1.5 sm:py-2 rounded-xl transition-all
+                        ${isToday ? 'bg-primary text-on-primary font-bold shadow-[0_4px_12px_rgba(255,94,30,0.3)] ring-2 ring-primary scale-105 z-10' : ''}
+                        ${isPast ? 'text-on-surface-variant/30 bg-surface/50 cursor-not-allowed' : ''}
+                        ${isFuture ? 'text-on-surface-variant/50 bg-surface-container-low cursor-not-allowed' : ''}
+                      `}
+                    >
+                      <span className="text-[12px] sm:text-[14px]">{date}</span>
+                      {isToday && <span className="text-[8px] sm:text-[10px] font-medium uppercase mt-0.5 opacity-90">วันนี้</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </section>
 
           {/* Time Slots Matrix */}

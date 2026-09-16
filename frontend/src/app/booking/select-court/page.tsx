@@ -326,18 +326,31 @@ function SelectCourtContent() {
           </DialogHeader>
 
           {confirmationDetails && (
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 rounded-xl bg-surface-container-low p-4 text-sm">
-              <dt className="text-on-surface-variant">วันที่</dt>
-              <dd className="font-semibold text-on-surface">{confirmationDetails.date}</dd>
-              <dt className="text-on-surface-variant">เดือน</dt>
-              <dd className="font-semibold text-on-surface">{confirmationDetails.month}</dd>
-              <dt className="text-on-surface-variant">คอร์ท</dt>
-              <dd className="font-semibold text-on-surface">{confirmationDetails.court}</dd>
-              <dt className="text-on-surface-variant">เวลา</dt>
-              <dd className="font-semibold text-on-surface">{confirmationDetails.time}</dd>
-              <dt className="text-on-surface-variant">ชื่อผู้จอง</dt>
-              <dd className="font-semibold text-on-surface">{confirmationDetails.booker}</dd>
-            </dl>
+            <div className="flex flex-col gap-4">
+              <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 rounded-xl bg-surface-container-low p-4 text-sm">
+                <dt className="text-on-surface-variant">วันที่</dt>
+                <dd className="font-semibold text-on-surface">{confirmationDetails.date}</dd>
+                <dt className="text-on-surface-variant">เดือน</dt>
+                <dd className="font-semibold text-on-surface">{confirmationDetails.month}</dd>
+                <dt className="text-on-surface-variant">คอร์ท</dt>
+                <dd className="font-semibold text-on-surface">{confirmationDetails.court}</dd>
+                <dt className="text-on-surface-variant">เวลา</dt>
+                <dd className="font-semibold text-on-surface">{confirmationDetails.time}</dd>
+                <dt className="text-on-surface-variant">ชื่อผู้จอง</dt>
+                <dd className="font-semibold text-on-surface">{confirmationDetails.booker}</dd>
+              </dl>
+              <div className="bg-error-container/30 border border-error/20 p-3 rounded-xl text-sm">
+                <h4 className="font-bold text-error flex items-center gap-1.5 mb-1.5">
+                  <span className="material-symbols-outlined text-[16px]">gavel</span>
+                  กฎกติกาสำคัญ
+                </h4>
+                <ul className="list-disc pl-4 space-y-1 text-on-surface-variant text-[12px] md:text-sm">
+                  <li>ต้องมาเช็คอินภายใน 15 นาทีหลังจากเวลาเริ่มจอง (หากเกินระบบจะยกเลิกอัตโนมัติ)</li>
+                  <li>หากไม่มาเช็คอินและไม่ยกเลิกตามเวลาที่กำหนด จะถูกนับเป็นความผิด (2 ครั้ง แบน 24 ชั่วโมง)</li>
+                  <li>ต้องสวมรองเท้ากีฬาพื้นยางดิบ (Non-marking) ลงสนามเท่านั้น</li>
+                </ul>
+              </div>
+            </div>
           )}
 
           <DialogFooter>

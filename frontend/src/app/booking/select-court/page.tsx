@@ -148,10 +148,20 @@ function SelectCourtContent() {
         router.push('/dashboard');
       }, 1000);
     } catch (error: unknown) {
-      const message = isAxiosError<{ message?: string }>(error)
+      let message = isAxiosError<{ message?: string }>(error)
         ? error.response?.data?.message
         : undefined;
+
+      if (message?.includes('Day-by-day policy')) {
+        message = 'จองไม่ได้: สามารถจองคอร์ทได้เฉพาะของวันนี้เท่านั้น';
+      } else if (message?.includes('already have an active booking')) {
+        message = 'ใช้โควตาประจำวันแล้ว: คุณมีรายการจองที่ยังไม่เสร็จสิ้น (จองได้ 1 ครั้ง/วัน)';
+      } else if (message?.includes('already booked')) {
+        message = 'คอร์ท/เวลาชน: คอร์ทนี้มีผู้จองไปแล้วในเวลาที่คุณเลือก';
+      }
+
       toast.error(message || 'Failed to book court');
+      
       void loadAvailability(dateParam)
         .then(setCourts)
         .catch(() => toast.error('Failed to refresh courts'));

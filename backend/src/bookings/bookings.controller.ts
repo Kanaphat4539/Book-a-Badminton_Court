@@ -27,6 +27,11 @@ export class BookingsController {
     return this.bookingsService.getNotifications();
   }
 
+  @Get('user-notifications')
+  async getUserNotifications(@Request() req: any) {
+    return this.bookingsService.getUserNotifications(req.user.userId);
+  }
+
   @Get('me')
   async getMyBookings(@Request() req: any) {
     return this.bookingsService.getMyBookings(req.user.userId);

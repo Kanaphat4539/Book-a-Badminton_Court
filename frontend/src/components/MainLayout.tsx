@@ -4,17 +4,22 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { cn } from '@/lib/utils';
+import api from '@/lib/api';
 import { BanPopup } from '@/components/BanPopup';
 
 const GlobalFooter = () => (
   <footer className="hidden md:block w-full mt-auto bg-[#24150d] text-[#ffddc2] overflow-hidden relative">
-    <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full border-[30px] border-primary/10 pointer-events-none"></div>
+    <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full border-30 border-primary/10 pointer-events-none"></div>
     <div className="mx-auto max-w-7xl px-6 py-12 md:px-10">
       <div className="grid gap-12 md:grid-cols-4 lg:grid-cols-5">
         <div className="md:col-span-2 lg:col-span-2">
           <div className="flex items-center gap-3 mb-6">
-            <div className="grid w-12 h-12 place-items-center rounded-2xl bg-primary text-white shadow-lg">
-              <span className="material-symbols-outlined text-[24px]">sports_tennis</span>
+            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-white flex items-center justify-center shadow-lg shrink-0">
+              <img
+                alt="KMITL Badminton Logo"
+                className="w-full h-full object-cover scale-[1.3] origin-center"
+                src="https://dynamic.design.com/preview/logodraft/19a68c63-7360-49b5-81f0-76059ea64263/image/extra-large.en-us.png"
+              />
             </div>
             <div>
               <p className="font-black text-white text-lg">KMITL Badminton</p>
@@ -95,38 +100,72 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
   const [mounted, setMounted] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/rules-of-hooks, @typescript-eslint/no-unused-vars, no-restricted-syntax, react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
+    const fetchNotifications = async () => {
       try {
-        const parsedUser = JSON.parse(userStr);
-        setUserRole(parsedUser.role);
-        
-        // If Admin, fetch notifications
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await api.get('/bookings/notifications', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setNotifications(res.data);
+        const unreadCount = res.data.filter((n: any) => !n.is_read).length;
+        setHasUnreadNotifications(unreadCount > 0);
+      } catch (err) {
+        console.error('Failed to fetch notifications', err);
+      }
+    };
+
+    const fetchUserNotifications = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await api.get('/bookings/user-notifications', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setNotifications(res.data);
+        const unreadCount = res.data.filter((n: any) => !n.is_read).length;
+        setHasUnreadNotifications(unreadCount > 0);
+      } catch (err) {
+        console.error('Failed to fetch user notifications', err);
+      }
+    };
+
+    const checkAuth = () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsAuthenticated(false);
+        if (typeof window !== 'undefined' && 
+            !window.location.pathname.startsWith('/login') && 
+            !window.location.pathname.startsWith('/register') && 
+            window.location.pathname !== '/') {
+          router.push('/login');
+        }
+        return;
+      }
+
+      try {
+        const parsedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        setUserRole(parsedUser.role || 'USER');
+        setIsAuthenticated(true);
         if (parsedUser.role === 'ADMIN') {
-                  const fetchNotifications = async () => {
-          try {
-            const token = localStorage.getItem('token');
-            const res = await fetch('/api/bookings/notifications', {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-              const data = await res.json();
-              setNotifications(data);
-            }
-          } catch (e) {
-            console.error(e);
-          }
-        };
-        fetchNotifications();
+          fetchNotifications();
+        } else {
+          fetchUserNotifications();
         }
       } catch (e) {}
-    }
-  }, []);
+    };
 
+    checkAuth();
+    
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -174,7 +213,7 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
                 className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface active:bg-surface-container-high transition-colors relative"
               >
                 <span className="material-symbols-outlined text-[22px]">notifications</span>
-                {userRole === 'ADMIN' && notifications.length > 0 && (
+                {notifications.length > 0 && (
                   <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-error ring-2 ring-surface"></span>
                 )}
               </button>
@@ -183,35 +222,51 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
               {isNotificationsOpen && (
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-surface rounded-xl shadow-lg border border-surface-container-high overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-4 border-b border-surface-container-high flex justify-between items-center bg-surface-container-lowest">
-                    <h3 className="font-headline-sm text-on-surface">การแจ้งเตือน (Admin)</h3>
+                    <h3 className="font-headline-sm text-on-surface">การแจ้งเตือน {userRole === 'ADMIN' ? '(Admin)' : ''}</h3>
                     <button onClick={() => setIsNotificationsOpen(false)} className="text-on-surface-variant hover:text-on-surface">
                       <span className="material-symbols-outlined text-[20px]">close</span>
                     </button>
                   </div>
                   <div className="max-h-96 overflow-y-auto">
-                    {userRole === 'ADMIN' && notifications.length > 0 ? (
-                      notifications.map((notif: any) => (
-                        <div key={notif.booking_id} className={`p-4 border-b border-surface-container-low hover:bg-surface-container-lowest transition-colors ${notif.status === 'CANCELLED' ? 'border-l-4 border-l-error' : 'border-l-4 border-l-primary'}`}>
-                          <div className="flex justify-between items-start">
-                            <p className="font-label-lg text-on-surface">
-                              {notif.status === 'CANCELLED' ? '🔴 ยกเลิกการจอง' : '🟢 การจองใหม่'}
+                    {notifications.length > 0 ? (
+                      notifications.map((notif: any, index: number) => {
+                        if (notif.type === 'SYSTEM') {
+                          return (
+                            <div key={`sys-${index}`} className="p-4 border-b border-surface-container-low hover:bg-surface-container-lowest transition-colors border-l-4 border-l-secondary">
+                              <div className="flex justify-between items-start">
+                                <p className="font-label-lg text-on-surface">📢 ประกาศจากระบบ</p>
+                              </div>
+                              <p className="text-body-sm text-on-surface-variant mt-1">{notif.message}</p>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div key={notif.booking_id} className={`p-4 border-b border-surface-container-low hover:bg-surface-container-lowest transition-colors ${notif.status === 'CANCELLED' ? 'border-l-4 border-l-error' : notif.status === 'CHECKED_IN' ? 'border-l-4 border-l-secondary' : 'border-l-4 border-l-primary'}`}>
+                            <div className="flex justify-between items-start">
+                              <p className="font-label-lg text-on-surface">
+                                {userRole === 'ADMIN' 
+                                  ? (notif.status === 'CANCELLED' ? '🔴 ยกเลิกการจอง' : '🟢 การจองใหม่')
+                                  : (notif.status === 'CANCELLED' ? '🔴 ยกเลิกการจอง' : notif.status === 'CHECKED_IN' ? '🟢 เช็คอินสำเร็จ' : notif.status === 'COMPLETED' ? '🟢 การจองเสร็จสิ้น' : '🟢 จองคอร์ทสำเร็จ')}
+                              </p>
+                              <span className="text-[10px] text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full">
+                                ID: {notif.booking_id}
+                              </span>
+                            </div>
+                            <p className="text-body-sm text-on-surface-variant mt-1">
+                              คอร์ท {notif.court} | วันที่ {notif.booking_date} | {notif.time_in}-{notif.time_out}
                             </p>
-                            <span className="text-[10px] text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full">
-                              ID: {notif.booking_id}
-                            </span>
+                            {userRole === 'ADMIN' && (
+                              <p className="text-label-sm text-primary mt-1">
+                                โดย รหัสนักศึกษา: {notif.stu_id} {notif.student ? `(${notif.student.first_name} ${notif.student.last_name})` : ''}
+                              </p>
+                            )}
                           </div>
-                          <p className="text-body-sm text-on-surface-variant mt-1">
-                            คอร์ท {notif.court} | วันที่ {notif.booking_date} | {notif.time_in}-{notif.time_out}
-                          </p>
-                          <p className="text-label-sm text-primary mt-1">
-                            โดย รหัสนักศึกษา: {notif.stu_id} {notif.student ? `(${notif.student.first_name} ${notif.student.last_name})` : ''}
-                          </p>
-                        </div>
-                      ))
+                        );
+                      })
                     ) : (
                       <div className="p-8 text-center text-on-surface-variant">
                         <span className="material-symbols-outlined text-[48px] opacity-20 mb-2">notifications_off</span>
-                        <p>{userRole === 'ADMIN' ? 'ไม่มีการแจ้งเตือน' : 'ฟีเจอร์นี้สำหรับผู้ดูแลระบบ'}</p>
+                        <p>ไม่มีการแจ้งเตือน</p>
                       </div>
                     )}
                   </div>
@@ -240,19 +295,19 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
       {userRole !== 'ADMIN' && (
         <nav className="fixed bottom-0 w-full z-40 pb-safe bg-surface/85 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.05)] md:hidden">
           <div className={cn('h-20 px-gutter-sm flex items-center justify-around mx-auto', containerWidth)}>
-            <button onClick={() => router.push('/dashboard')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
+            <button onClick={() => router.push('/dashboard')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/dashboard') ? { fontVariationSettings: "'FILL' 1" } : {}}>home</span>
               <span className="font-label-sm text-[10px] md:text-label-sm">หน้าหลัก</span>
             </button>
-            <button onClick={() => router.push('/booking')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/booking') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
+            <button onClick={() => router.push('/booking')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/booking') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/booking') ? { fontVariationSettings: "'FILL' 1" } : {}}>calendar_month</span>
               <span className="font-label-sm text-[10px] md:text-label-sm">จองคอร์ท</span>
             </button>
-            <button onClick={() => router.push('/scan')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/scan') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
+            <button onClick={() => router.push('/scan')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/scan') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/scan') ? { fontVariationSettings: "'FILL' 1" } : {}}>qr_code_scanner</span>
               <span className="font-label-sm text-[10px] md:text-label-sm">สแกนเข้าสนาม</span>
             </button>
-            <button onClick={() => router.push('/news')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/news') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
+            <button onClick={() => router.push('/news')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/news') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/news') ? { fontVariationSettings: "'FILL' 1" } : {}}>newspaper</span>
               <span className="font-label-sm text-[10px] md:text-label-sm">ข่าวสาร</span>
             </button>
@@ -262,9 +317,9 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
 
       {/* Sidebar Overlay */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end">
+        <div className="fixed inset-0 z-100 flex justify-end">
           <div className="absolute inset-0 bg-on-background/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
-          <div className="relative w-[280px] bg-surface h-full shadow-2xl flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
+          <div className="relative w-70 bg-surface h-full shadow-2xl flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
             <div className="flex justify-between items-center mb-8">
               <span className="font-headline-sm text-on-surface font-bold">KMITL Menu</span>
               <button onClick={() => setIsSidebarOpen(false)} className="text-on-surface-variant hover:text-on-surface">

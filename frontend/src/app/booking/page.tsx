@@ -155,17 +155,19 @@ export default function BookingPage() {
                 </ul>
               </div>
               <div className="space-y-2">
-                <h3 className="font-bold text-on-surface">2. การจองและการใช้งาน</h3>
+                <h3 className="font-bold text-on-surface">2. การจองและเช็คอิน</h3>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li>นักศึกษาได้โควตา 1 ชั่วโมง/วัน/บัญชี</li>
-                  <li>กรุณามาถึงสนามก่อนเวลาจอง 10-15 นาที เพื่อทำการสแกน QR Code เช็คอิน</li>
-                  <li>หากไม่ทำการเช็คอินภายใน 15 นาที ระบบจะยกเลิกการจองอัตโนมัติ</li>
+                  <li>โควตา 1 ครั้ง/วัน แบบวันต่อวัน (ไม่มีจองข้ามวัน)</li>
+                  <li>สแกน QR Code หน้าสนามเพื่อเช็คอิน</li>
+                  <li>หากยกเลิกทันเวลา (ก่อน 15 นาทีของเวลาที่จอง) จะสามารถจองใหม่ในวันเดิมได้</li>
                 </ul>
               </div>
               <div className="space-y-2">
-                <h3 className="font-bold text-on-surface">3. บทลงโทษ (Blacklist)</h3>
+                <h3 className="font-bold text-on-surface">3. กฎและบทลงโทษ</h3>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li>หากจองแล้วไม่มาใช้งาน (No-show) เกิน 2 ครั้ง จะถูกระงับสิทธิ์การจอง 7 วัน</li>
+                  <li>มาสายเกิน 15 นาที ระบบจะยกเลิกอัตโนมัติและนับความผิด 1 ครั้ง</li>
+                  <li>ยกเลิกด้วยตนเองหลังเวลาผ่านไป 15 นาที จะถือว่าผิดกฎ 1 ครั้ง</li>
+                  <li>หากสะสมความผิดครบ 2 ครั้ง ระบบจะระงับการจอง (แบน) 24 ชั่วโมง</li>
                 </ul>
               </div>
               <p className="text-primary text-xs mt-4 p-3 bg-primary-container/30 rounded-xl">
@@ -362,7 +364,7 @@ export default function BookingPage() {
                 </div>
                 <div className="flex flex-col">
                   <span className="font-label-md text-label-md text-on-surface font-semibold">กติกาการใช้บริการ</span>
-                  <span className="font-body-sm text-body-sm text-on-surface-variant">สวมรองเท้าแบดมินตันพื้นยางดิบ (Non-marking) เท่านั้น</span>
+                  <span className="font-body-sm text-[12px] md:text-body-sm text-on-surface-variant">โควตา 1 สิทธิ์/วัน • เช็คอินหน้าสนามด้วย QR • ยกเลิกสาย/ขาด ครบ 2 ครั้ง แบน 24 ชม.</span>
                 </div>
               </div>
               <span className="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>

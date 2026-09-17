@@ -50,7 +50,8 @@ export default function ScanPage() {
         throw new Error('You do not have a pending booking for this court right now.');
       }
 
-      await api.post(`/bookings/${pendingBooking.id}/check-in`, { courtId });
+      const bookingId = pendingBooking.booking_id || pendingBooking.id;
+      await api.post(`/bookings/${bookingId}/check-in`, { courtId });
       toast.success('Check-in successful! Enjoy your game.');
       router.push('/dashboard');
     } catch (err: any) {

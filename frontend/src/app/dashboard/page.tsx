@@ -15,7 +15,8 @@ export default function Dashboard() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [allBookings, setAllBookings] = useState<any[]>([]);
   const [timeLeft, setTimeLeft] = useState<string>('--:--');
-  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
+  const selectedBooking = allBookings.find(b => b.booking_id === selectedBookingId) || null;
   const [bookingTimeRemaining, setBookingTimeRemaining] = useState<string>('--:--');
   const [mounted, setMounted] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<number | null>(null);
@@ -34,11 +35,9 @@ export default function Dashboard() {
 
     const updateTimer = () => {
       const now = new Date();
-      // Calculate 1 hour from start_time based on booking date
-      // format is like booking_date "2026-07-17", start_time "23:00:00"
-      const startTimeStr = `${selectedBooking.booking_date}T${selectedBooking.time_in}`;
-      const startTime = new Date(startTimeStr);
-      const endTime = new Date(startTime.getTime() + 60 * 60000); // 1 hour
+      // Calculate countdown to time_out
+      const endTimeStr = `${selectedBooking.booking_date}T${selectedBooking.time_out}`;
+      const endTime = new Date(endTimeStr);
 
       const diff = endTime.getTime() - now.getTime();
       if (diff <= 0) {
@@ -64,7 +63,7 @@ export default function Dashboard() {
     try {
       await api.post(`/bookings/${bookingId}/finish`);
       toast.success('Booking finished successfully');
-      setSelectedBooking(null);
+      setSelectedBookingId(null);
       fetchAllBookings();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to finish booking');
@@ -87,6 +86,11 @@ export default function Dashboard() {
 
     if (parsedUser.role === 'ADMIN') {
       fetchAllBookings();
+      // Poll every 5 seconds
+      const interval = setInterval(() => {
+        fetchAllBookings();
+      }, 5000);
+      return () => clearInterval(interval);
     } else {
       fetchBookings();
     }
@@ -109,6 +113,8 @@ export default function Dashboard() {
       console.error(err);
     }
   };
+
+
 
   const handleCancelBooking = async () => {
     if (!bookingToCancel) return;
@@ -414,7 +420,7 @@ export default function Dashboard() {
                   <div 
                     key={booking.booking_id} 
                     className="relative bg-surface-container-lowest rounded-2xl p-4 shadow-sm border border-outline-variant/20 hover:border-primary/30 transition-all cursor-pointer flex overflow-hidden"
-                    onClick={() => setSelectedBooking(booking)}
+                    onClick={() => setSelectedBookingId(booking.booking_id)}
                   >
                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${accentColor}`}></div>
                     
@@ -455,10 +461,10 @@ export default function Dashboard() {
         {/* Admin Booking Modal */}
         {selectedBooking && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-scrim/60 backdrop-blur-sm" onClick={() => setSelectedBooking(null)}></div>
+            <div className="absolute inset-0 bg-scrim/60 backdrop-blur-sm" onClick={() => setSelectedBookingId(null)}></div>
             <div className="relative bg-surface w-full max-w-md rounded-3xl p-6 shadow-2xl border border-surface-container-high animate-in zoom-in-95 duration-200">
               <button 
-                onClick={() => setSelectedBooking(null)} 
+                onClick={() => setSelectedBookingId(null)} 
                 className="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface transition-colors"
               >
                 <span className="material-symbols-outlined text-[24px]">close</span>

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Booking, BookingStatus } from './entities/booking.entity';
 import { Student } from '../users/entities/student.entity';
 import { Admin } from '../users/entities/admin.entity';
+import { dbMutex } from '../utils/mutex';
 
 @Injectable()
 export class BookingsService {
@@ -21,7 +22,8 @@ export class BookingsService {
     const endHours = (hours + 1).toString().padStart(2, '0');
     const endTime = `${endHours}:${minutes.toString().padStart(2, '0')}:00`;
 
-    const today = new Date().toISOString().split('T')[0];
+    // Use Asia/Bangkok for today's date
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
     if (date !== today) {
       throw new BadRequestException('Day-by-day policy: You can only book courts for today.');
     }
@@ -47,63 +49,73 @@ export class BookingsService {
     const defaultAdmin = await this.adminRepository.findOneBy({ admin_id });
     if (defaultAdmin) admin_id = defaultAdmin.admin_id;
 
-    return this.bookingsRepository.manager.transaction(async (transactionalEntityManager) => {
-      const existingUserBooking = await transactionalEntityManager.findOne(Booking, {
-        where: [
-          { stu_id, status: BookingStatus.PENDING },
-          { stu_id, status: BookingStatus.CHECKED_IN }
-        ],
-        lock: { mode: 'pessimistic_write' }
+    const release = await dbMutex.acquire();
+    try {
+      // Use SERIALIZABLE transaction instead of pessimistic_write for SQLite compatibility
+      return await this.bookingsRepository.manager.transaction('SERIALIZABLE', async (transactionalEntityManager) => {
+        const existingUserBooking = await transactionalEntityManager.findOne(Booking, {
+          where: [
+            { stu_id, booking_date: date, status: BookingStatus.PENDING },
+            { stu_id, booking_date: date, status: BookingStatus.CHECKED_IN },
+            { stu_id, booking_date: date, status: BookingStatus.COMPLETED }
+          ]
+        });
+
+        if (existingUserBooking) {
+          throw new BadRequestException('You already have an active booking. Please complete or cancel it first.');
+        }
+
+        // Check overlapping time intervals (time_in < endTime AND time_out > startTime)
+        const overlappingBooking = await transactionalEntityManager.createQueryBuilder(Booking, 'booking')
+          .where('booking.court = :courtId', { courtId })
+          .andWhere('booking.booking_date = :date', { date })
+          .andWhere('booking.status IN (:...statuses)', { 
+            statuses: [BookingStatus.PENDING, BookingStatus.CHECKED_IN, BookingStatus.COMPLETED] 
+          })
+          .andWhere('booking.time_in < :endTime AND booking.time_out > :startTime', { endTime, startTime })
+          .getOne();
+
+        if (overlappingBooking) {
+          throw new BadRequestException('This court is already booked at this time.');
+        }
+
+        const newBooking = transactionalEntityManager.create(Booking, {
+          stu_id,
+          court: courtId,
+          booking_date: date,
+          time_in: startTime,
+          time_out: endTime,
+          status: BookingStatus.PENDING,
+          admin_id,
+        });
+
+        return await transactionalEntityManager.save(newBooking);
       });
-
-      if (existingUserBooking) {
-        throw new BadRequestException('You already have an active booking. Please complete or cancel it first.');
-      }
-
-      const overlappingBooking = await transactionalEntityManager.findOne(Booking, {
-        where: [
-          { court: courtId, booking_date: date, time_in: startTime, status: BookingStatus.PENDING },
-          { court: courtId, booking_date: date, time_in: startTime, status: BookingStatus.CHECKED_IN }
-        ],
-        lock: { mode: 'pessimistic_write' }
-      });
-
-      if (overlappingBooking) {
-        throw new BadRequestException('This court is already booked at this time.');
-      }
-
-      const newBooking = transactionalEntityManager.create(Booking, {
-        stu_id,
-        court: courtId,
-        booking_date: date,
-        time_in: startTime,
-        time_out: endTime,
-        status: BookingStatus.PENDING,
-        admin_id,
-      });
-
-      return transactionalEntityManager.save(newBooking);
-    });
+    } finally {
+      release();
+    }
   }
 
   async getMyBookings(stu_id: string) {
-    return this.bookingsRepository.find({
+    const bookings = await this.bookingsRepository.find({
       where: { stu_id },
       order: { booking_date: 'DESC', time_in: 'DESC' },
     });
+    return bookings.map(b => ({ ...b, id: b.booking_id }));
   }
 
   async getAllBookings(date?: string) {
     const whereCondition = date ? { booking_date: date } : {};
-    return this.bookingsRepository.find({
+    const bookings = await this.bookingsRepository.find({
       where: whereCondition,
       relations: { student: true, admin: true },
       order: { booking_date: 'DESC', time_in: 'DESC' },
     });
+    return bookings.map(b => ({ ...b, id: b.booking_id }));
   }
 
   async getNotifications() {
-    return this.bookingsRepository.find({
+    const notifications = await this.bookingsRepository.find({
       where: [
         { status: BookingStatus.PENDING },
         { status: BookingStatus.CANCELLED }
@@ -112,6 +124,7 @@ export class BookingsService {
       order: { booking_id: 'DESC' },
       take: 20,
     });
+    return notifications.map(b => ({ ...b, id: b.booking_id }));
   }
 
   async checkIn(bookingId: number, stu_id: string, courtId: number) {
@@ -140,38 +153,52 @@ export class BookingsService {
   }
 
   async cancelBooking(bookingId: number, stu_id: string) {
-    const booking = await this.bookingsRepository.findOne({
-      where: { booking_id: bookingId, stu_id }
-    });
+    const release = await dbMutex.acquire();
+    try {
+      return await this.bookingsRepository.manager.transaction(async (manager) => {
+        const booking = await manager.findOne(Booking, {
+          where: { booking_id: bookingId, stu_id }
+        });
 
-    if (!booking) {
-      throw new NotFoundException('Booking not found');
-    }
-
-    if (booking.status !== BookingStatus.PENDING) {
-      throw new BadRequestException(`Cannot cancel. Status is currently ${booking.status}`);
-    }
-
-    const now = new Date();
-    const bookingDateTime = new Date(`${booking.booking_date}T${booking.time_in}`);
-    const deadline = new Date(bookingDateTime.getTime() + 15 * 60 * 1000); // 15 mins after start
-
-    if (now >= deadline) {
-      // Late cancellation - add a strike
-      const student = await this.studentRepository.findOneBy({ stu_id });
-      if (student) {
-        student.strikes += 1;
-        if (student.strikes >= 2) {
-          student.banned_until = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Ban for 24 hours
+        if (!booking) {
+          throw new NotFoundException('Booking not found');
         }
-        await this.studentRepository.save(student);
-        Logger.log(`[Strike Added] Late cancel for Booking ID: ${bookingId}. Strikes: ${student.strikes}`, 'BookingsService');
-      }
-    }
 
-    booking.status = BookingStatus.CANCELLED;
-    Logger.log(`[Booking Cancelled] Booking ID: ${bookingId}, Student ID: ${stu_id}`, 'BookingsService');
-    return this.bookingsRepository.save(booking);
+        if (booking.status !== BookingStatus.PENDING) {
+          throw new BadRequestException(`Cannot cancel. Status is currently ${booking.status}`);
+        }
+
+        // Timezone issue in check: need to parse using local time if booking_date/time_in are local, 
+        // but let's keep it simple and just use the same logic, or fix it to Asia/Bangkok
+        const now = new Date();
+        // Date in DB is YYYY-MM-DD and time is HH:MM:00. We can construct a Date in local timezone or use string comparison.
+        const bangkokTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+        const bookingDateTime = new Date(`${booking.booking_date}T${booking.time_in}`); // this is parsed as local time by Date constructor
+        // Actually we should compare properly:
+        
+        const deadline = new Date(bookingDateTime.getTime() + 15 * 60 * 1000); // 15 mins after start
+
+        // Compare bangkok time vs booking time (assuming booking is in Bangkok time)
+        if (bangkokTime >= deadline) {
+          // Late cancellation - add a strike
+          const student = await manager.findOneBy(Student, { stu_id });
+          if (student) {
+            student.strikes += 1;
+            if (student.strikes >= 2) {
+              student.banned_until = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Ban for 24 hours
+            }
+            await manager.save(Student, student);
+            Logger.log(`[Strike Added] Late cancel for Booking ID: ${bookingId}. Strikes: ${student.strikes}`, 'BookingsService');
+          }
+        }
+
+        booking.status = BookingStatus.CANCELLED;
+        Logger.log(`[Booking Cancelled] Booking ID: ${bookingId}, Student ID: ${stu_id}`, 'BookingsService');
+        return await manager.save(Booking, booking);
+      });
+    } finally {
+      release();
+    }
   }
 
   async finishBooking(bookingId: number) {

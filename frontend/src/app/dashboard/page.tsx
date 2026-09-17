@@ -179,9 +179,9 @@ export default function Dashboard() {
         <div className="flex flex-col w-full">
           
           {/* Admin Banner (smash-peach inspired) */}
-          <div className="relative w-full overflow-hidden bg-[#24150d] text-white flex-shrink-0">
-            <div className="absolute -right-24 -top-36 w-[28rem] h-[28rem] rounded-full border-[48px] border-primary/15"></div>
-            <div className="absolute -bottom-44 left-1/3 w-[26rem] h-[26rem] rounded-full border-[1px] border-primary-container/20"></div>
+          <div className="relative w-full overflow-hidden bg-[#24150d] text-white shrink-0">
+            <div className="absolute -right-24 -top-36 w-md h-112 rounded-full border-48 border-primary/15"></div>
+            <div className="absolute -bottom-44 left-1/3 w-104 h-104 rounded-full border border-primary-container/20"></div>
             <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#ffb469 1px, transparent 1px)', backgroundSize: '18px 18px' }}></div>
             
             <div className="relative z-10 flex flex-col mx-auto max-w-7xl px-6 md:px-10 pt-10 pb-16">
@@ -431,7 +431,7 @@ export default function Dashboard() {
                           <span className="font-headline-sm font-bold text-on-surface truncate">
                             {booking.student?.first_name} {booking.student?.last_name}
                           </span>
-                          <span className="font-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-md truncate max-w-[80px] shrink-0">
+                          <span className="font-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-md truncate max-w-20 shrink-0">
                             @{booking.student?.username}
                           </span>
                         </div>
@@ -468,7 +468,7 @@ export default function Dashboard() {
 
         {/* Admin Booking Modal */}
         {selectedBooking && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-110 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-scrim/60 backdrop-blur-sm" onClick={() => setSelectedBookingId(null)}></div>
             <div className="relative bg-surface w-full max-w-md rounded-3xl p-6 shadow-2xl border border-surface-container-high animate-in zoom-in-95 duration-200">
               <button 
@@ -559,9 +559,9 @@ export default function Dashboard() {
       <div className="flex flex-col w-full">
         
         {/* User Banner (smash-peach inspired) */}
-        <div className="relative w-full overflow-hidden bg-[#24150d] text-white flex-shrink-0">
-          <div className="absolute -right-24 -top-36 w-[28rem] h-[28rem] rounded-full border-[48px] border-primary/15"></div>
-          <div className="absolute -bottom-44 left-1/3 w-[26rem] h-[26rem] rounded-full border-[1px] border-primary-container/20"></div>
+        <div className="relative w-full overflow-hidden bg-[#24150d] text-white shrink-0">
+          <div className="absolute -right-24 -top-36 w-md h-112 rounded-full border-48 border-primary/15"></div>
+          <div className="absolute -bottom-44 left-1/3 w-104 h-104 rounded-full border border-primary-container/20"></div>
           <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#ffb469 1px, transparent 1px)', backgroundSize: '18px 18px' }}></div>
           
           <div className="relative z-10 flex flex-col mx-auto max-w-7xl px-6 md:px-10 pt-10 pb-16">
@@ -652,7 +652,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-5 gap-2.5 mt-4">
                   <button 
                     onClick={() => router.push('/scan')}
-                    className="col-span-3 h-12 rounded-xl bg-gradient-to-r from-primary-container to-primary text-on-primary font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-[0_6px_18px_rgba(255,94,30,0.32)] active:scale-95 transition-transform cursor-pointer"
+                    className="col-span-3 h-12 rounded-xl bg-linear-to-r from-primary-container to-primary text-on-primary font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-[0_6px_18px_rgba(255,94,30,0.32)] active:scale-95 transition-transform cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
                     <span>Check-in (เช็คอิน)</span>
@@ -710,7 +710,7 @@ export default function Dashboard() {
           <section className="grid grid-cols-2 gap-3">
             <div 
               onClick={() => router.push('/booking')}
-              className="cursor-pointer group relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-container to-primary text-on-primary p-4 md:p-card-padding shadow-[0_8px_20px_rgba(255,94,30,0.28)] flex flex-col justify-between min-h-[140px] active:scale-[0.98] transition-transform"
+              className="cursor-pointer group relative overflow-hidden rounded-2xl bg-linear-to-br from-primary-container to-primary text-on-primary p-4 md:p-card-padding shadow-[0_8px_20px_rgba(255,94,30,0.28)] flex flex-col justify-between min-h-35 active:scale-[0.98] transition-transform"
             >
               <div className="absolute -right-3 -bottom-3 text-on-primary/15 pointer-events-none">
                 <span className="material-symbols-outlined text-[84px] leading-none">sports_tennis</span>
@@ -726,7 +726,7 @@ export default function Dashboard() {
 
             <div 
               onClick={() => router.push('/scan')}
-              className="cursor-pointer group relative overflow-hidden rounded-2xl bg-surface-container-lowest text-on-surface p-4 md:p-card-padding shadow-md flex flex-col justify-between min-h-[140px] active:scale-[0.98] transition-transform"
+              className="cursor-pointer group relative overflow-hidden rounded-2xl bg-surface-container-lowest text-on-surface p-4 md:p-card-padding shadow-md flex flex-col justify-between min-h-35 active:scale-[0.98] transition-transform"
             >
               <div className="absolute -right-3 -bottom-3 text-surface-container-high/40 pointer-events-none">
                 <span className="material-symbols-outlined text-[84px] leading-none">qr_code_2</span>

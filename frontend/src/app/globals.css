@@ -5,9 +5,22 @@
 /* Enable class-based dark mode for Tailwind v4 */
 @custom-variant dark (&:is(.dark *));
 
-@layer base {
-  body {
-    @apply transition-colors duration-300 ease-in-out;
+/* Temporarily override local transition utilities when the theme changes.
+   The theme switch keeps its own coordinated movement and color transitions. */
+@media (prefers-reduced-motion: no-preference) {
+  html.theme-transitioning,
+  html.theme-transitioning :where(*:not(.theme, .theme *)),
+  html.theme-transitioning :where(*:not(.theme, .theme *))::before,
+  html.theme-transitioning :where(*:not(.theme, .theme *))::after {
+    transition:
+      background-color 600ms cubic-bezier(0.4, 0, 0.2, 1),
+      color 600ms cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 600ms cubic-bezier(0.4, 0, 0.2, 1),
+      outline-color 600ms cubic-bezier(0.4, 0, 0.2, 1),
+      text-decoration-color 600ms cubic-bezier(0.4, 0, 0.2, 1),
+      fill 600ms cubic-bezier(0.4, 0, 0.2, 1),
+      stroke 600ms cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 600ms cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
 }
 
@@ -25,7 +38,10 @@
   --font-headline-lg: var(--font-roboto-condensed), sans-serif;
   --font-label-sm: var(--font-roboto-condensed), sans-serif;
   --font-headline-xl-mobile: var(--font-roboto-condensed), sans-serif;
+}
 
+/* Keep color utilities bound to variables so .dark overrides apply at runtime. */
+@theme static {
   --color-surface-container-highest: #e2e2e2;
   --color-tertiary: #565e74;
   --color-inverse-on-surface: #f1f1f0;
@@ -73,7 +89,9 @@
   --color-on-error: #ffffff;
   --color-error: #ba1a1a;
   --color-surface-container-lowest: #ffffff;
+}
 
+@theme inline {
   --spacing-margin-screen: 1.25rem;
   --spacing-gutter-xl: 1.5rem;
   --spacing-gutter-xs: 0.25rem;

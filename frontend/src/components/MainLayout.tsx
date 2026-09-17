@@ -206,6 +206,7 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <ThemeToggle className="flex shrink-0 items-center justify-center" />
             <div className="relative">
               <button 
                 aria-label="Notifications" 

@@ -1,6 +1,6 @@
 /* From Uiverse.io by JkHuger */ 
 .theme {
-  --transDur: 0.3s;
+  --transDur: 0.6s;
   
   /* Light mode (sun) */
   --toggle-bg-light: #e5e7eb;
@@ -23,7 +23,7 @@
 }
 
 .theme__icon {
-  transition: 0.3s;
+  transition: transform var(--transDur) ease-in-out;
 }
 
 .theme__icon,
@@ -52,7 +52,10 @@
   left: calc(50% - 0.5em);
   width: 1em;
   height: 1em;
-  transition: box-shadow var(--transDur) ease-in-out,
+  transition: background-color var(--transDur) ease-in-out,
+        top var(--transDur) ease-in-out,
+        left var(--transDur) ease-in-out,
+        box-shadow var(--transDur) ease-in-out,
 		opacity var(--transDur) ease-in-out,
 		transform var(--transDur) ease-in-out;
   transform: scale(0.5);
@@ -130,7 +133,8 @@
   content: "";
   width: 2.5em;
   height: 2.5em;
-  transition: 0.3s;
+  transition: background-color var(--transDur) ease-in-out,
+    transform var(--transDur) ease-in-out;
 }
 
 .theme__toggle:focus {
@@ -197,6 +201,14 @@
 
 .theme__toggle-wrap {
   font-size: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme *,
+  .theme *::before,
+  .theme *::after {
+    transition: none !important;
+  }
 }
 
 @supports selector(:focus-visible) {

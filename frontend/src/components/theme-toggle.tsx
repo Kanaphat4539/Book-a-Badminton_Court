@@ -9,8 +9,8 @@ interface ThemeToggleProps {
   iconClassName?: string;
 }
 
-export function ThemeToggle({ className, iconClassName }: ThemeToggleProps) {
-  const { setTheme, theme } = useTheme();
+export function ThemeToggle({ className }: ThemeToggleProps) {
+  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -19,7 +19,7 @@ export function ThemeToggle({ className, iconClassName }: ThemeToggleProps) {
   }, []);
 
   if (!mounted) {
-    return <div className={`w-8 h-8 ${className || 'p-2'}`}></div>;
+    return <div aria-hidden="true" className={className || 'flex items-center justify-center p-2'}><span className="block h-9 w-[72px]" /></div>;
   }
 
   return (
@@ -27,14 +27,14 @@ export function ThemeToggle({ className, iconClassName }: ThemeToggleProps) {
       <label className="theme">
         <span className="theme__toggle-wrap" style={{ fontSize: '12px' }}>
           <input 
-            id="theme-toggle"
             className="theme__toggle" 
             type="checkbox" 
             role="switch" 
+            aria-label="Dark mode"
             name="theme" 
             value="dark"
-            checked={theme === 'dark'}
-            onChange={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            checked={resolvedTheme === 'dark'}
+            onChange={(event) => setTheme(event.target.checked ? 'dark' : 'light')}
           />
           <span className="theme__icon">
             <span className="theme__icon-part"></span>

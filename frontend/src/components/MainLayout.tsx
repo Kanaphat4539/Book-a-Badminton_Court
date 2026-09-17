@@ -107,26 +107,26 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
         
         // If Admin, fetch notifications
         if (parsedUser.role === 'ADMIN') {
-          fetchNotifications();
+                  const fetchNotifications = async () => {
+          try {
+            const token = localStorage.getItem('token');
+            const res = await fetch('/api/bookings/notifications', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+              const data = await res.json();
+              setNotifications(data);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        };
+        fetchNotifications();
         }
       } catch (e) {}
     }
   }, []);
 
-  const fetchNotifications = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/bookings/notifications', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');

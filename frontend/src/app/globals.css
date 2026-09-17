@@ -12,19 +12,19 @@
 }
 
 @theme inline {
-  --font-sans: 'Plus Jakarta Sans', sans-serif;
-  --font-user: var(--font-inter), 'Noto Sans Thai', 'Leelawadee UI', Tahoma, sans-serif;
-  --font-body-md: 'Plus Jakarta Sans', sans-serif;
-  --font-body-sm: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-md: 'Plus Jakarta Sans', sans-serif;
-  --font-body-lg: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-xl: 'Plus Jakarta Sans', sans-serif;
-  --font-label-lg: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-sm: 'Plus Jakarta Sans', sans-serif;
-  --font-label-md: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-lg: 'Plus Jakarta Sans', sans-serif;
-  --font-label-sm: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-xl-mobile: 'Plus Jakarta Sans', sans-serif;
+  --font-sans: var(--font-roboto-condensed), sans-serif;
+  --font-user: var(--font-roboto-condensed), 'Noto Sans Thai', 'Leelawadee UI', Tahoma, sans-serif;
+  --font-body-md: var(--font-roboto-condensed), sans-serif;
+  --font-body-sm: var(--font-roboto-condensed), sans-serif;
+  --font-headline-md: var(--font-roboto-condensed), sans-serif;
+  --font-body-lg: var(--font-roboto-condensed), sans-serif;
+  --font-headline-xl: var(--font-roboto-condensed), sans-serif;
+  --font-label-lg: var(--font-roboto-condensed), sans-serif;
+  --font-headline-sm: var(--font-roboto-condensed), sans-serif;
+  --font-label-md: var(--font-roboto-condensed), sans-serif;
+  --font-headline-lg: var(--font-roboto-condensed), sans-serif;
+  --font-label-sm: var(--font-roboto-condensed), sans-serif;
+  --font-headline-xl-mobile: var(--font-roboto-condensed), sans-serif;
 
   --color-surface-container-highest: #e2e2e2;
   --color-tertiary: #565e74;

@@ -125,7 +125,7 @@ export default function BookingPage() {
   }).length : 0;
 
   return (
-    <MainLayout width="wide">
+    <MainLayout width="full">
       {/* Rules Modal */}
       {showRulesModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
@@ -176,37 +176,37 @@ export default function BookingPage() {
         </div>
       )}
 
-      <main className="flex flex-col relative w-full pb-6 bg-surface min-h-screen">
+      <main className="flex flex-col relative w-full bg-surface min-h-screen">
         <div className="flex flex-col w-full pb-8">
-          {/* Campus Sports Arena Context Card */}
-          <section className="px-4 md:px-margin-screen lg:px-8 pt-4 pb-2">
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#F26522] to-yellow-500 p-5 md:p-card-padding shadow-[0_8px_24px_rgba(242,101,34,0.3)]">
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 z-0"></div>
-              <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/20 rounded-full blur-3xl pointer-events-none z-0"></div>
-              <div className="flex items-start justify-between relative z-10 gap-2">
-                <div className="flex flex-col min-w-0">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white w-fit mb-3 backdrop-blur-md border border-white/30 shadow-inner">
-                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shrink-0 shadow-[0_0_8px_#4ade80]"></span>
-                    <span className="font-label-sm text-[10px] md:text-label-sm uppercase tracking-widest font-black">เปิดให้บริการปกติ</span>
-                  </div>
-                  <h1 className="font-headline-sm text-xl md:text-[28px] text-white font-extrabold truncate drop-shadow-md">จองคอร์ทแบดมินตัน</h1>
-                  <p className="font-body-sm text-[12px] md:text-[14px] text-white/90 flex items-center gap-1.5 mt-1 truncate">
-                    <span className="material-symbols-outlined text-[16px] text-white shrink-0 drop-shadow-sm">stadium</span>
-                    <span className="truncate font-medium">อาคารยิมเนเซียม 1 (Gymnasium 1) • วิทยาเขตลาดกระบัง</span>
-                  </p>
+          {/* Campus Sports Arena Context Card (Edge-to-edge banner) */}
+          <section className="relative overflow-hidden bg-gradient-to-r from-[#F26522] to-yellow-500 shadow-[0_8px_24px_rgba(242,101,34,0.3)]">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 z-0"></div>
+            <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/20 rounded-full blur-3xl pointer-events-none z-0"></div>
+            
+            <div className="mx-auto max-w-7xl px-6 md:px-10 py-10 relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="flex flex-col min-w-0">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white w-fit mb-3 backdrop-blur-md border border-white/30 shadow-inner">
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shrink-0 shadow-[0_0_8px_#4ade80]"></span>
+                  <span className="font-label-sm text-[10px] md:text-label-sm uppercase tracking-widest font-black">เปิดให้บริการปกติ</span>
                 </div>
-                <div className="flex flex-col items-end shrink-0">
-                  <div className="px-3 py-1.5 md:px-3 rounded-xl bg-white shadow-lg flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[16px] text-[#F26522]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-                    <span className="font-label-sm text-[10px] md:text-label-sm text-[#F26522] font-black uppercase tracking-wider">โควตา นศ.</span>
-                  </div>
-                  <span className="font-label-sm text-[10px] md:text-label-sm text-white font-bold mt-2 bg-black/20 px-2 py-0.5 rounded backdrop-blur-sm">คงเหลือ 1 ชม./วัน</span>
+                <h1 className="font-headline-sm text-3xl md:text-[40px] text-white font-extrabold truncate drop-shadow-md pb-2">จองคอร์ทแบดมินตัน</h1>
+                <p className="font-body-sm text-[14px] md:text-[16px] text-white/90 flex items-center gap-1.5 mt-1 truncate">
+                  <span className="material-symbols-outlined text-[18px] text-white shrink-0 drop-shadow-sm">stadium</span>
+                  <span className="truncate font-medium">อาคารยิมเนเซียม 1 (Gymnasium 1) • วิทยาเขตลาดกระบัง</span>
+                </p>
+              </div>
+              <div className="flex flex-col items-start md:items-end shrink-0">
+                <div className="px-3 py-2 md:px-4 rounded-xl bg-white shadow-lg flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[18px] text-[#F26522]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                  <span className="font-label-sm text-[12px] md:text-label-sm text-[#F26522] font-black uppercase tracking-wider">โควตา นศ.</span>
                 </div>
+                <span className="font-label-sm text-[12px] md:text-label-sm text-white font-bold mt-2 bg-black/20 px-3 py-1 rounded backdrop-blur-sm">คงเหลือ 1 ชม./วัน</span>
               </div>
             </div>
           </section>
 
-          {/* Calendar View (Monthly) */}
+          <div className="mx-auto max-w-7xl px-4 md:px-10 w-full">
+            {/* Calendar View (Monthly) */}
           <section className="mt-4 px-4 md:px-margin-screen lg:px-8">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
@@ -367,6 +367,7 @@ export default function BookingPage() {
               </div>
               <span className="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
             </div>
+          </div>
           </div>
         </div>
       </main>

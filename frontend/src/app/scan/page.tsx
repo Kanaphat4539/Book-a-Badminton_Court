@@ -121,28 +121,34 @@ export default function ScanPage() {
   }, []);
 
   return (
-    <MainLayout>
-      <div className="max-w-md w-full mx-auto flex-1 flex flex-col px-4 relative z-10">
+    <MainLayout width="full">
+      <div className="w-full flex-1 flex flex-col relative z-10 pb-10">
         
-        {/* Sporty Header */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#F26522] to-yellow-500 p-6 mb-8 mt-4 shadow-[0_8px_24px_rgba(242,101,34,0.3)] flex items-center justify-between">
+        {/* Sporty Header (Edge-to-edge) */}
+        <div className="relative w-full overflow-hidden bg-gradient-to-r from-[#F26522] to-yellow-500 shadow-[0_8px_24px_rgba(242,101,34,0.3)]">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 z-0"></div>
-          <div className="relative z-10 flex flex-col">
-            <h1 className="font-headline-lg text-[28px] font-black text-white flex items-center gap-2 drop-shadow-md">
-              <span className="material-symbols-outlined text-[32px]">qr_code_scanner</span>
-              Scan & Play
-            </h1>
-            <p className="text-white/90 text-[13px] mt-1 font-medium">Verify your court booking</p>
-          </div>
-          <div className="relative z-10">
-            <button 
-              className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 py-2 rounded-xl font-bold text-[14px] transition-colors border border-white/30 shadow-sm" 
-              onClick={() => router.push('/dashboard')}
-            >
-              Cancel
-            </button>
+          <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/20 rounded-full blur-3xl pointer-events-none z-0"></div>
+          
+          <div className="mx-auto max-w-7xl px-6 md:px-10 py-10 relative z-10 flex items-center justify-between">
+            <div className="flex flex-col">
+              <h1 className="font-headline-lg text-[28px] md:text-[40px] font-black text-white flex items-center gap-2 drop-shadow-md pb-2">
+                <span className="material-symbols-outlined text-[32px] md:text-[40px]">qr_code_scanner</span>
+                Scan & Play
+              </h1>
+              <p className="text-white/90 text-[14px] md:text-[16px] mt-1 font-medium">Verify your court booking</p>
+            </div>
+            <div className="relative z-10">
+              <button 
+                className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-[14px] md:text-[16px] transition-colors border border-white/30 shadow-sm" 
+                onClick={() => router.push('/dashboard')}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
+
+        <div className="mx-auto max-w-md w-full px-4 flex-1 flex flex-col mt-10">
 
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="bg-surface/70 backdrop-blur-md p-2 rounded-2xl w-full max-w-sm overflow-hidden shadow-lg border border-outline-variant transition-colors duration-300">
@@ -162,6 +168,7 @@ export default function ScanPage() {
               </div>
             )}
           </div>
+        </div>
         </div>
       </div>
     </MainLayout>

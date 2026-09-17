@@ -182,9 +182,9 @@ function SelectCourtContent() {
     : null;
 
   return (
-    <MainLayout width="wide">
+    <MainLayout width="full">
       <main className="flex flex-col relative w-full pb-6 bg-surface min-h-screen">
-        <div className="flex flex-col w-full px-4 md:px-margin-screen lg:px-8 gap-4 md:gap-gutter-lg pb-6 mt-4">
+        <div className="mx-auto max-w-7xl flex flex-col w-full px-4 md:px-10 gap-4 md:gap-gutter-lg pb-6 mt-8">
           
           {/* Booking Session Context Bar */}
           <div className="flex items-center justify-between bg-surface-container-low rounded-xl px-3 md:px-card-padding py-2 md:py-gutter-sm shadow-sm gap-2">

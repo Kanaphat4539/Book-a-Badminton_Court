@@ -7,8 +7,8 @@ export default function NewsPage() {
   const router = useRouter();
 
   return (
-    <MainLayout>
-      <div className="flex-1 w-full pb-24">
+    <MainLayout width="full">
+      <div className="flex-1 w-full">
         {/* News Section (from landing page) */}
         <section className="relative py-16 px-6 md:px-12 lg:px-24 bg-cover bg-fixed bg-center min-h-[80vh] flex flex-col justify-center" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=1920&q=80')` }}>
           <div className="absolute inset-0 bg-black/80 z-0"></div>

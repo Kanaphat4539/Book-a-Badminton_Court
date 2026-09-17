@@ -169,7 +169,7 @@ export default function LandingPage() {
               <br className="md:hidden" /> BADMINTON
             </h1>
             <Link href="/login" className="font-bold text-[18px] md:text-[22px] text-[#F26522] hover:text-[#ff7e22] transition-all inline-flex items-center gap-2 w-fit bg-white/10 hover:bg-white/20 hover:scale-[1.05] active:scale-[0.98] px-8 py-4 rounded-full backdrop-blur-md border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.3)] pointer-events-auto">
-              / Start Booking <span className="material-symbols-outlined font-bold text-[20px] md:text-[24px]">arrow_forward_ios</span>
+              Let's Go <span className="material-symbols-outlined font-bold text-[20px] md:text-[24px]">arrow_forward_ios</span>
             </Link>
 
             {/* Slider Dots */}

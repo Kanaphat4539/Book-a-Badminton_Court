@@ -169,40 +169,59 @@ export default function Dashboard() {
 
   if (user.role === 'ADMIN') {
     return (
-      <MainLayout width="wide">
-        <div className="flex flex-col w-full pb-10">
+      <MainLayout width="full">
+        <div className="flex flex-col w-full">
           
-          {/* Admin Header - Matches User CI */}
-          <div className="relative w-full px-4 md:px-margin-screen pt-6 pb-6 mb-4 overflow-hidden rounded-b-[2.5rem] shadow-sm">
-            <div className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary/90 to-primary/80 z-0 opacity-90 dark:opacity-100"></div>
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 z-0"></div>
-            <div className="absolute -top-24 -right-10 w-64 h-64 bg-white/20 blur-3xl rounded-full z-0 pointer-events-none"></div>
+          {/* Admin Banner (smash-peach inspired) */}
+          <div className="relative w-full overflow-hidden bg-[#24150d] text-white flex-shrink-0">
+            <div className="absolute -right-24 -top-36 w-[28rem] h-[28rem] rounded-full border-[48px] border-primary/15"></div>
+            <div className="absolute -bottom-44 left-1/3 w-[26rem] h-[26rem] rounded-full border-[1px] border-primary-container/20"></div>
+            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#ffb469 1px, transparent 1px)', backgroundSize: '18px 18px' }}></div>
             
-            <div className="relative z-10 flex items-start justify-between gap-gutter-md">
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5 mb-1 bg-black/20 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
-                  <span className="inline-block w-2 h-2 rounded-full bg-secondary-container animate-pulse shadow-[0_0_8px_#ffb4a4]"></span>
-                  <span className="font-label-sm text-[10px] text-white tracking-widest uppercase font-black">Admin Portal</span>
+            <div className="relative z-10 flex flex-col mx-auto max-w-7xl px-6 md:px-10 pt-10 pb-16">
+              <div className="flex items-center justify-between mb-10">
+                <div className="flex items-center gap-3">
+                  <div className="grid w-11 h-11 place-items-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20">
+                    <span className="material-symbols-outlined text-[22px]">monitoring</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary-container">KMITL Sports Complex</p>
+                    <p className="text-sm font-semibold">Admin control center</p>
+                  </div>
                 </div>
-                <h1 className="font-headline-lg text-[28px] md:text-[36px] text-white font-black tracking-tight flex items-center gap-2 drop-shadow-md">
-                  Dashboard <span className="text-3xl md:text-4xl">👑</span>
-                </h1>
-                <p className="font-body-md text-[14px] md:text-[16px] text-white/90 font-medium mt-1">
-                  Manage courts and view all bookings
-                </p>
-              </div>
-              <div className="flex flex-col items-end">
                 <button
-                  className="bg-white text-secondary hover:bg-surface-container-lowest px-4 py-2.5 rounded-xl font-label-lg font-bold shadow-lg flex items-center gap-2 active:scale-95 transition-all"
+                  className="group inline-flex items-center justify-center h-9 gap-2 px-3.5 rounded-xl border border-white/15 bg-white/10 text-white hover:bg-white/20 transition-all text-sm font-medium"
                   onClick={() => router.push('/admin/users')}
                 >
-                  <span className="material-symbols-outlined text-[18px]">group</span>
-                  Users
+                  <span className="material-symbols-outlined text-[18px]">group</span> Users
                 </button>
+              </div>
+
+              <div className="max-w-3xl">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary-container/25 bg-primary/20 px-3 py-1.5 text-xs font-semibold text-primary-container">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_#F26522]"></span> Live system overview
+                </div>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight">Good morning, Admin.</h1>
+                <p className="mt-4 max-w-xl text-base md:text-lg leading-7 text-white/70">
+                  Stay on top of every booking, court schedule, and player experience in one place.
+                </p>
+              </div>
+
+              <div className="mt-9 flex flex-wrap gap-3 text-xs font-medium text-white/70">
+                <span className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2">
+                  <span className="material-symbols-outlined text-[14px] text-primary-container">pin_drop</span> Lat Krabang Campus
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2">
+                  <span className="material-symbols-outlined text-[14px] text-primary-container">schedule</span> Last synced just now
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2">
+                  <span className="material-symbols-outlined text-[14px] text-primary-container">security</span> Secure admin mode
+                </span>
               </div>
             </div>
           </div>
 
+          <div className="mx-auto max-w-7xl px-4 md:px-10 w-full flex flex-col gap-6 mt-8 pb-10">
           {/* Booking Statistics (A06) */}
           <div className="px-4 md:px-margin-screen flex flex-col gap-4 mt-4 mb-2">
             <div className="flex items-center justify-between">
@@ -516,53 +535,51 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+        </div>
       </MainLayout>
     );
   }
 
   return (
-    <MainLayout width="wide">
-      <div className="flex flex-col w-full pb-10">
+    <MainLayout width="full">
+      <div className="flex flex-col w-full">
         
-        {/* Sporty Dynamic Ambient Backdrop (Scroll-driven Parallax S06) */}
-        <div className="relative w-full px-4 md:px-margin-screen pt-6 pb-6 mb-4 overflow-hidden rounded-b-[2.5rem] shadow-sm flex-shrink-0">
-          <div 
-            className="absolute inset-0 bg-gradient-to-br from-[#F26522] via-[#ff7e22] to-yellow-500 z-0 opacity-90 dark:opacity-100 transform origin-center transition-transform duration-75"
-            style={{ transform: `scale(${Math.min(1 + scrollY * 0.001, 1.2)})` }}
-          ></div>
-          <div 
-            className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 z-0 transform transition-transform duration-75"
-            style={{ transform: `scale(${Math.min(1 + scrollY * 0.001, 1.2)})` }}
-          ></div>
-          <div className="absolute -top-24 -right-10 w-64 h-64 bg-white/20 blur-3xl rounded-full z-0 pointer-events-none"></div>
+        {/* User Banner (smash-peach inspired) */}
+        <div className="relative w-full overflow-hidden bg-[#24150d] text-white flex-shrink-0">
+          <div className="absolute -right-24 -top-36 w-[28rem] h-[28rem] rounded-full border-[48px] border-primary/15"></div>
+          <div className="absolute -bottom-44 left-1/3 w-[26rem] h-[26rem] rounded-full border-[1px] border-primary-container/20"></div>
+          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#ffb469 1px, transparent 1px)', backgroundSize: '18px 18px' }}></div>
           
-          {/* User Welcome Greeting & Badges */}
-          <div 
-            className="relative z-10 flex items-start justify-between gap-gutter-md transition-transform duration-75"
-            style={{ transform: `translateY(${scrollY * 0.25}px)`, opacity: Math.max(1 - scrollY * 0.005, 0) }}
-          >
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5 mb-1 bg-black/20 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
-                <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_#4ade80]"></span>
-                <span className="font-label-sm text-[10px] text-white tracking-widest uppercase font-black">KMITL Sports Portal</span>
+          <div className="relative z-10 flex flex-col mx-auto max-w-7xl px-6 md:px-10 pt-10 pb-16">
+            <div className="flex items-center justify-between mb-10">
+              <div className="flex items-center gap-3">
+                <div className="grid w-11 h-11 place-items-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20">
+                  <span className="material-symbols-outlined text-[22px]">sports_tennis</span>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary-container">KMITL Badminton</p>
+                  <p className="text-sm font-semibold">Player Dashboard</p>
+                </div>
               </div>
-              <h1 className="font-headline-lg text-[28px] md:text-[36px] text-white font-black tracking-tight flex items-center gap-2 drop-shadow-md">
-                Hi, {user.name} <span className="text-3xl md:text-4xl animate-bounce">🏸</span>
-              </h1>
-              <p className="font-body-md text-[14px] md:text-[16px] text-white/90 font-medium mt-1">
-                Welcome back to KMITL Badminton
-              </p>
-            </div>
-            {/* Student Badge Avatar / Tier */}
-            <div className="flex flex-col items-end">
-              <span className="px-3 py-1.5 rounded-full bg-white text-[#F26522] font-label-sm text-[11px] font-black shadow-lg flex items-center gap-1 uppercase tracking-wider">
-                <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+              <span className="px-3 py-1.5 rounded-full border border-white/15 bg-white/10 text-white text-[11px] font-black uppercase tracking-wider flex items-center gap-1">
+                <span className="material-symbols-outlined text-[16px] text-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
                 {user.role}
               </span>
+            </div>
+
+            <div className="max-w-3xl">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary-container/25 bg-primary/20 px-3 py-1.5 text-xs font-semibold text-primary-container">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_10px_#4ade80] animate-pulse"></span> Ready to play
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight">Hi, {user.name} <span className="animate-bounce inline-block">🏸</span></h1>
+              <p className="mt-4 max-w-xl text-base md:text-lg leading-7 text-white/70">
+                Welcome back to your personal KMITL Badminton portal. Book a court, check your schedule, and get ready to smash.
+              </p>
             </div>
           </div>
         </div>
 
+        <div className="mx-auto max-w-7xl px-4 md:px-10 w-full flex flex-col gap-6 mt-8 pb-10">
         {/* Main Content Flow */}
         <div className="px-4 md:px-margin-screen flex flex-col gap-6 mt-3">
           
@@ -831,6 +848,7 @@ export default function Dashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </MainLayout>
   );
 }

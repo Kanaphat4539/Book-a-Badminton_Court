@@ -17,12 +17,12 @@ import { Court } from './courts/entities/court.entity';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: (process.env.DB_TYPE as any) || 'better-sqlite3',
+      type: (process.env.DB_TYPE as any) || 'mysql',
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '3306'),
       username: process.env.DB_USER || 'badminton_user',
       password: process.env.DB_PASSWORD || 'password',
-      database: process.env.DB_NAME || 'database.sqlite',
+      database: process.env.DB_NAME || 'badminton_db',
       entities: [Admin, Student, Booking, Court],
       synchronize: true, // Use only in dev, not in production
       ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,

@@ -124,6 +124,7 @@ function DialogDescription({
 }: DialogPrimitive.Description.Props) {
   return (
     <DialogPrimitive.Description
+      render={<div />}
       data-slot="dialog-description"
       className={cn("text-sm text-on-surface-variant", className)}
       {...props}

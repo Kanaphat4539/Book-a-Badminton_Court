@@ -127,6 +127,38 @@ export class BookingsService {
     return notifications.map(b => ({ ...b, id: b.booking_id }));
   }
 
+  async getUserNotifications(stu_id: string) {
+    const userBookings = await this.bookingsRepository.find({
+      where: { stu_id },
+      order: { booking_id: 'DESC' },
+      take: 20,
+    });
+
+    const notifications: any[] = userBookings.map(b => ({ ...b, id: b.booking_id, is_read: false }));
+    
+    // Check if courts are fully booked for today
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
+    const allTodayBookings = await this.bookingsRepository.count({
+      where: [
+        { booking_date: today, status: BookingStatus.PENDING },
+        { booking_date: today, status: BookingStatus.CHECKED_IN },
+        { booking_date: today, status: BookingStatus.COMPLETED }
+      ]
+    });
+
+    // 4 courts * 15 hours (08:00 to 23:00) = 60 slots
+    if (allTodayBookings >= 60) {
+      notifications.unshift({
+        type: 'SYSTEM',
+        message: 'คอร์ทสำหรับวันนี้ถูกจองเต็มหมดแล้ว ขออภัยในความไม่สะดวก',
+        is_read: false,
+        booking_id: 'sys-full'
+      });
+    }
+
+    return notifications;
+  }
+
   async checkIn(bookingId: number, stu_id: string, courtId: number) {
     const booking = await this.bookingsRepository.findOne({
       where: { booking_id: bookingId, stu_id, court: courtId }

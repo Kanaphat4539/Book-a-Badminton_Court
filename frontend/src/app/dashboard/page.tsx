@@ -435,9 +435,17 @@ export default function Dashboard() {
                             @{booking.student?.username}
                           </span>
                         </div>
-                        <span className={`shrink-0 px-2.5 py-0.5 rounded-full font-label-sm font-bold uppercase tracking-wide ${badgeClass}`}>
-                          {booking.status}
-                        </span>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <span className={`px-2.5 py-0.5 rounded-full font-label-sm font-bold uppercase tracking-wide ${badgeClass}`}>
+                            {booking.status}
+                          </span>
+                          {(booking.status === 'CANCELLED' || booking.status === 'CHECKED_IN' || booking.status === 'COMPLETED') && booking.updated_at && (
+                            <span className="text-[10px] text-on-surface-variant font-medium whitespace-nowrap">
+                              {booking.status === 'CANCELLED' ? 'ยกเลิกเมื่อ ' : booking.status === 'CHECKED_IN' ? 'เข้าเล่นเมื่อ ' : 'เสร็จสิ้นเมื่อ '}
+                              {new Date(booking.updated_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Bottom Row: Details and Time */}
@@ -806,9 +814,7 @@ export default function Dashboard() {
                     <div className="shrink-0 pl-2">
                       {isPending ? (
                         <span className="material-symbols-outlined text-orange-500 text-[20px]">pending</span>
-                      ) : isCancelled ? (
-                        <span className="material-symbols-outlined text-on-surface-variant text-[18px]">cancel</span>
-                      ) : (
+                      ) : isCancelled ? null : (
                         <span className="material-symbols-outlined text-secondary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                       )}
                     </div>
@@ -824,7 +830,7 @@ export default function Dashboard() {
             <div className="flex flex-col">
               <span className="font-label-md text-label-md text-on-surface font-bold">กฎการเข้าใช้คอร์ทและเช็คอิน</span>
               <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
-                กรุณาสแกน QR หน้าสนามก่อนเวลาเริ่ม 15 นาที หากเลยเวลาเกิน 15 นาที ระบบจะยกเลิกการจองโดยอัตโนมัติเพื่อให้สิทธิ์ผู้รอคิวถัดไป
+                กรุณาสแกน QR หน้าสนามเพื่อเช็คอิน หากยกเลิกช้าหรือมาสายเกิน 15 นาที ระบบจะนับว่าผิดกฎ 1 ครั้ง (สะสมความผิดครบ 2 ครั้งจะถูกแบน 24 ชั่วโมง)
               </p>
             </div>
           </section>

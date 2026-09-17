@@ -50,3 +50,26 @@ export function createBookingConfirmationDetails(
     booker: _input.bookerName,
   };
 }
+
+export function isBookingSlotSelectable(
+  date: string,
+  time: string,
+  now: Date
+): boolean {
+  if (!time.endsWith(':00')) return false;
+  
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const dayOfMonth = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${dayOfMonth}`;
+  
+  if (date !== todayStr) return false;
+  
+  const [hour, minute] = time.split(':').map(Number);
+  if (hour > 23 || hour < 0) return false;
+  
+  const slotDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0);
+  
+  return now.getTime() < slotDate.getTime();
+}
+

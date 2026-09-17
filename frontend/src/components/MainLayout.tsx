@@ -8,7 +8,7 @@ import { BanPopup } from '@/components/BanPopup';
 
 const GlobalFooter = () => (
   <footer className="hidden md:block w-full mt-auto bg-[#24150d] text-[#ffddc2] overflow-hidden relative">
-    <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full border-[30px] border-primary/10 pointer-events-none"></div>
+    <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full border-30 border-primary/10 pointer-events-none"></div>
     <div className="mx-auto max-w-7xl px-6 py-12 md:px-10">
       <div className="grid gap-12 md:grid-cols-4 lg:grid-cols-5">
         <div className="md:col-span-2 lg:col-span-2">
@@ -95,38 +95,56 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
   const [mounted, setMounted] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/rules-of-hooks, @typescript-eslint/no-unused-vars, no-restricted-syntax, react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
+    const fetchNotifications = async () => {
       try {
-        const parsedUser = JSON.parse(userStr);
-        setUserRole(parsedUser.role);
-        
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await api.get('/admin/notifications', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setNotifications(res.data);
+        const unreadCount = res.data.filter((n: any) => !n.is_read).length;
+        setHasUnreadNotifications(unreadCount > 0);
+      } catch (err) {
+        console.error('Failed to fetch notifications', err);
+      }
+    };
+
+    const checkAuth = () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsAuthenticated(false);
+        if (typeof window !== 'undefined' && 
+            !window.location.pathname.startsWith('/login') && 
+            !window.location.pathname.startsWith('/register') && 
+            window.location.pathname !== '/') {
+          router.push('/login');
+        }
+        return;
+      }
+
+      try {
+        const parsedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        setUserRole(parsedUser.role || 'USER');
+        setIsAuthenticated(true);
         // If Admin, fetch notifications
         if (parsedUser.role === 'ADMIN') {
           fetchNotifications();
         }
       } catch (e) {}
-    }
-  }, []);
+    };
 
-  const fetchNotifications = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/bookings/notifications', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
+    checkAuth();
+    
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -240,19 +258,19 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
       {userRole !== 'ADMIN' && (
         <nav className="fixed bottom-0 w-full z-40 pb-safe bg-surface/85 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.05)] md:hidden">
           <div className={cn('h-20 px-gutter-sm flex items-center justify-around mx-auto', containerWidth)}>
-            <button onClick={() => router.push('/dashboard')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
+            <button onClick={() => router.push('/dashboard')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/dashboard') ? { fontVariationSettings: "'FILL' 1" } : {}}>home</span>
               <span className="font-label-sm text-[10px] md:text-label-sm">หน้าหลัก</span>
             </button>
-            <button onClick={() => router.push('/booking')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/booking') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
+            <button onClick={() => router.push('/booking')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/booking') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/booking') ? { fontVariationSettings: "'FILL' 1" } : {}}>calendar_month</span>
               <span className="font-label-sm text-[10px] md:text-label-sm">จองคอร์ท</span>
             </button>
-            <button onClick={() => router.push('/scan')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/scan') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
+            <button onClick={() => router.push('/scan')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/scan') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/scan') ? { fontVariationSettings: "'FILL' 1" } : {}}>qr_code_scanner</span>
               <span className="font-label-sm text-[10px] md:text-label-sm">สแกนเข้าสนาม</span>
             </button>
-            <button onClick={() => router.push('/news')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/news') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
+            <button onClick={() => router.push('/news')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/news') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/news') ? { fontVariationSettings: "'FILL' 1" } : {}}>newspaper</span>
               <span className="font-label-sm text-[10px] md:text-label-sm">ข่าวสาร</span>
             </button>
@@ -262,9 +280,9 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
 
       {/* Sidebar Overlay */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end">
+        <div className="fixed inset-0 z-100 flex justify-end">
           <div className="absolute inset-0 bg-on-background/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
-          <div className="relative w-[280px] bg-surface h-full shadow-2xl flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
+          <div className="relative w-70 bg-surface h-full shadow-2xl flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
             <div className="flex justify-between items-center mb-8">
               <span className="font-headline-sm text-on-surface font-bold">KMITL Menu</span>
               <button onClick={() => setIsSidebarOpen(false)} className="text-on-surface-variant hover:text-on-surface">

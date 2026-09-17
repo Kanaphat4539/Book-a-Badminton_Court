@@ -97,11 +97,13 @@ export class BookingsService {
   }
 
   async getMyBookings(stu_id: string) {
+    if (!stu_id) return [];
     const bookings = await this.bookingsRepository.find({
       where: { stu_id },
       order: { booking_date: 'DESC', time_in: 'DESC' },
     });
-    return bookings.map(b => ({ ...b, id: b.booking_id }));
+    // Filter strictly to avoid TypeORM dropping undefined/empty where clauses
+    return bookings.filter(b => b.stu_id === stu_id).map(b => ({ ...b, id: b.booking_id }));
   }
 
   async getAllBookings(date?: string) {
@@ -128,13 +130,16 @@ export class BookingsService {
   }
 
   async getUserNotifications(stu_id: string) {
+    if (!stu_id) return [];
     const userBookings = await this.bookingsRepository.find({
       where: { stu_id },
       order: { booking_id: 'DESC' },
       take: 20,
     });
 
-    const notifications: any[] = userBookings.map(b => ({ ...b, id: b.booking_id, is_read: false }));
+    const notifications: any[] = userBookings
+      .filter(b => b.stu_id === stu_id) // Strict filtering
+      .map(b => ({ ...b, id: b.booking_id, is_read: false }));
     
     // Check if courts are fully booked for today
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());

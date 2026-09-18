@@ -1,6 +1,6 @@
 /* From Uiverse.io by JkHuger */ 
 .theme {
-  --transDur: 0.6s;
+  --transDur: var(--theme-transition-duration, 250ms);
   
   /* Light mode (sun) */
   --toggle-bg-light: #e5e7eb;

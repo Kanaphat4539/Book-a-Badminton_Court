@@ -76,14 +76,12 @@ export default function LandingPage() {
             Log in to Console
           </Link>
           <button
-            className="lg:hidden w-11 h-11 flex items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors"
+            aria-label="Open menu"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors"
             onClick={() => setIsSidebarOpen(true)}
           >
             <span className="material-symbols-outlined text-[28px]">menu</span>
           </button>
-          <div className="hidden md:flex md:ml-2">
-            <ThemeToggle className="w-10 h-10 flex items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors" iconClassName="text-[24px]" />
-          </div>
         </div>
       </nav>
 

@@ -45,4 +45,8 @@ export class Booking {
 
   @UpdateDateColumn({ nullable: true })
   updated_at: Date;
+
+  // Nullable for pre-existing bookings; new bookings set this once on creation.
+  @Column({ type: 'datetime', nullable: true })
+  created_at: Date | null;
 }

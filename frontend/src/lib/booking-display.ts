@@ -13,9 +13,8 @@ type BookingConfirmationInput = {
 };
 
 export function createTodayBookingDate(_now: Date): BookingDate {
-  const year = _now.getFullYear();
-  const month = String(_now.getMonth() + 1).padStart(2, '0');
-  const dayOfMonth = String(_now.getDate()).padStart(2, '0');
+  const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(_now);
+  const calendarDate = new Date(`${date}T00:00:00Z`);
   const thaiDays = [
     'อาทิตย์',
     'จันทร์',
@@ -27,10 +26,10 @@ export function createTodayBookingDate(_now: Date): BookingDate {
   ];
 
   return {
-    date: `${year}-${month}-${dayOfMonth}`,
-    day: thaiDays[_now.getDay()],
-    num: String(_now.getDate()),
-    month: _now.toLocaleDateString('th-TH', { month: 'long' }),
+    date,
+    day: thaiDays[calendarDate.getUTCDay()],
+    num: String(calendarDate.getUTCDate()),
+    month: _now.toLocaleDateString('th-TH', { month: 'long', timeZone: 'Asia/Bangkok' }),
   };
 }
 
@@ -56,20 +55,17 @@ export function isBookingSlotSelectable(
   time: string,
   now: Date
 ): boolean {
-  if (!time.endsWith(':00')) return false;
-  
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const dayOfMonth = String(now.getDate()).padStart(2, '0');
-  const todayStr = `${year}-${month}-${dayOfMonth}`;
+  if (!/^\d{2}:00$/.test(time)) return false;
+  const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(now);
   
   if (date !== todayStr) return false;
   
-  const [hour, minute] = time.split(':').map(Number);
-  if (hour > 23 || hour < 0) return false;
+  const hour = Number(time.split(':')[0]);
+  if (hour > 22 || hour < 8) return false;
   
-  const slotDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0);
+  const slotDate = new Date(`${date}T${time}:00+07:00`);
   
-  return now.getTime() < slotDate.getTime();
+  // An ongoing round remains bookable until its original end, not its start.
+  return now.getTime() < slotDate.getTime() + 60 * 60 * 1000;
 }
 

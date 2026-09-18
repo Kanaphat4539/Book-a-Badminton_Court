@@ -13,13 +13,12 @@ export function ThemeProvider({ children, ...props }: React.ComponentProps<typeo
       if (nextDark === dark) return;
       dark = nextDark;
       clearTimeout(timer);
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        root.classList.remove('theme-transitioning');
-        return;
-      }
       root.classList.add('theme-transitioning');
-      // Keep the override until the 600 ms color transition has settled.
-      timer = setTimeout(() => root.classList.remove('theme-transitioning'), 650);
+      // Read the shared CSS clock so cleanup never cuts the transition short.
+      const duration = Number.parseFloat(
+        getComputedStyle(root).getPropertyValue('--theme-transition-duration'),
+      ) || 250;
+      timer = setTimeout(() => root.classList.remove('theme-transitioning'), duration + 50);
     });
     observer.observe(root, { attributes: true, attributeFilter: ['class'] });
     return () => {

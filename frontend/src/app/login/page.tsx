@@ -1,37 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { useTheme } from 'next-themes';
-
-function GalahhadThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  return (
-    <div style={{ width: '48px', height: '32px' }}>
-      <div style={{ opacity: mounted ? 1 : 0, transition: 'opacity 0.2s', pointerEvents: mounted ? 'auto' : 'none' }}>
-        <label className="ui-switch">
-          <input
-            type="checkbox"
-            checked={mounted ? theme === 'dark' : false}
-            onChange={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-          />
-          <div className="slider">
-            <div className="circle"></div>
-          </div>
-        </label>
-      </div>
-    </div>
-  );
-}
 
 
 export default function LoginPage() {
@@ -79,10 +52,6 @@ export default function LoginPage() {
           <span className="material-symbols-outlined text-[20px]">arrow_back</span>
         </a>
 
-        {/* Theme Toggle */}
-        <div className="flex items-center justify-center">
-          <GalahhadThemeToggle />
-        </div>
       </div>
 
       <main className="w-full max-w-md relative z-10 flex flex-col items-center">

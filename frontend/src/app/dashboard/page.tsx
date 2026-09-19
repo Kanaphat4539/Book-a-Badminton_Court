@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import api, { isSessionExpiredError } from '@/lib/api';
 import { toast } from 'sonner';
 import QRCode from 'react-qr-code';
 import MainLayout from '@/components/MainLayout';
@@ -101,6 +101,7 @@ export default function Dashboard() {
       const response = await api.get('/bookings/me');
       setBookings(response.data);
     } catch (err) {
+      if (isSessionExpiredError(err)) return;
       console.error(err);
     }
   };
@@ -110,6 +111,7 @@ export default function Dashboard() {
       const response = await api.get('/bookings');
       setAllBookings(response.data);
     } catch (err) {
+      if (isSessionExpiredError(err)) return;
       console.error(err);
     }
   };

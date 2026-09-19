@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { cn } from '@/lib/utils';
-import api from '@/lib/api';
+import api, { isSessionExpiredError } from '@/lib/api';
 import { BanPopup } from '@/components/BanPopup';
 
 const GlobalFooter = () => (
@@ -117,6 +117,7 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
         const unreadCount = res.data.filter((n: any) => !n.is_read).length;
         setHasUnreadNotifications(unreadCount > 0);
       } catch (err) {
+        if (isSessionExpiredError(err)) return;
         console.error('Failed to fetch notifications', err);
       }
     };
@@ -132,6 +133,7 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
         const unreadCount = res.data.filter((n: any) => !n.is_read).length;
         setHasUnreadNotifications(unreadCount > 0);
       } catch (err) {
+        if (isSessionExpiredError(err)) return;
         console.error('Failed to fetch user notifications', err);
       }
     };

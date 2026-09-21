@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import api, { isSessionExpiredError } from '@/lib/api';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/theme-toggle';
 import MainLayout from '@/components/MainLayout';
@@ -43,6 +43,7 @@ export default function ManageUsers() {
       const response = await api.get('/users');
       setUsers(response.data);
     } catch (err) {
+      if (isSessionExpiredError(err)) return;
       console.error(err);
       toast.error('Failed to load users');
     } finally {

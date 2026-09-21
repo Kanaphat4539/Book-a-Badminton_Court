@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import MainLayout from '@/components/MainLayout';
-import { createTodayBookingDate, type BookingDate } from '@/lib/booking-display';
+import { createTodayBookingDate, isBookingSlotSelectable, type BookingDate } from '@/lib/booking-display';
 
 type CourtBooking = {
   start_time: string;
@@ -93,19 +93,16 @@ export default function BookingPage() {
   };
 
   const isTimeInPast = (timeStr: string) => {
-    if (!selectedDate) return false;
-    const now = new Date();
-    const todayStr = createTodayBookingDate(now).date;
-    if (selectedDate !== todayStr) return false;
-
-    const slotHour = parseInt(timeStr.split(':')[0], 10);
-    const currentHour = now.getHours();
-    return currentHour > slotHour;
+    return !isBookingSlotSelectable(selectedDate, timeStr, new Date());
   };
 
   const handleNext = () => {
     if (!selectedTime) {
       toast.error('กรุณาเลือกรอบเวลาก่อนทำรายการ');
+      return;
+    }
+    if (isTimeInPast(selectedTime)) {
+      toast.error('รอบนี้หมดเวลาแล้ว กรุณาเลือกรอบใหม่');
       return;
     }
     router.push(`/booking/select-court?date=${selectedDate}&time=${selectedTime}`);

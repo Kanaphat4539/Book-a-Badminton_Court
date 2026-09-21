@@ -5,6 +5,7 @@ import { Repository, LessThanOrEqual } from 'typeorm';
 import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
 import { Student } from '../users/entities/student.entity';
 import { dbMutex } from '../utils/mutex';
+import { getBookingTimes } from '../bookings/booking-time';
 
 @Injectable()
 export class CronService {
@@ -19,24 +20,12 @@ export class CronService {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
-    // We should use Asia/Bangkok time
     const now = new Date();
-    // format as YYYY-MM-DD in Asia/Bangkok
-    const currentDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(now);
-    
-    // Convert current time to Asia/Bangkok to find 15 mins ago in local time
-    const bangkokTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
-    
-    const fifteenMinsAgo = new Date(bangkokTime.getTime() - 15 * 60000);
-    const fifteenMinsAgoStr = fifteenMinsAgo.toTimeString().split(' ')[0];
-
-    const oneHourAgo = new Date(bangkokTime.getTime() - 60 * 60000);
-    const oneHourAgoStr = oneHourAgo.toTimeString().split(' ')[0];
 
     const release = await dbMutex.acquire();
     try {
       await this.bookingsRepository.manager.transaction(async (manager) => {
-        // 1. Cancel PENDING bookings where time_in + 15 mins <= now
+        // 1. Expire pending reservations using their own grace period and round end.
         const pendingBookings = await manager.find(Booking, {
           where: { status: BookingStatus.PENDING },
           relations: { student: true },
@@ -44,14 +33,11 @@ export class CronService {
 
         if (pendingBookings.length > 0) {
           for (const booking of pendingBookings) {
-            // Parse booking time as Bangkok time
-            const bookingTimeStr = `${booking.booking_date}T${booking.time_in}+07:00`;
-            const bookingTime = new Date(bookingTimeStr).getTime();
-            const deadline = bookingTime + 15 * 60000;
+            const { deadline, end } = getBookingTimes(booking);
 
-            if (now.getTime() >= deadline) {
+            if (now.getTime() >= Math.min(deadline, end)) {
               booking.status = BookingStatus.CANCELLED;
-              if (booking.student) {
+              if (booking.student && deadline <= end) {
                 // Refetch student to get the latest strikes count in case of multiple missed bookings for same user
                 const student = await manager.findOneBy(Student, { stu_id: booking.student.stu_id });
                 if (student) {
@@ -68,16 +54,14 @@ export class CronService {
           }
         }
 
-        // 2. Complete CHECKED_IN bookings where time_in + 1 hour <= now
+        // 2. Complete at the original round end, even for bookings made mid-round.
         const checkedInBookings = await manager.find(Booking, {
           where: { status: BookingStatus.CHECKED_IN }
         });
 
         if (checkedInBookings.length > 0) {
           for (const booking of checkedInBookings) {
-            const bookingTimeStr = `${booking.booking_date}T${booking.time_in}+07:00`;
-            const bookingTime = new Date(bookingTimeStr).getTime();
-            const completeTime = bookingTime + 60 * 60000;
+            const { end: completeTime } = getBookingTimes(booking);
 
             if (now.getTime() >= completeTime) {
               booking.status = BookingStatus.COMPLETED;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import api from '@/lib/api';
+import api, { isSessionExpiredError } from '@/lib/api';
 
 interface BanStatus {
   isBanned: boolean;
@@ -37,6 +37,7 @@ export function BanPopup() {
           setOpen(true);
         }
       } catch (err) {
+        if (isSessionExpiredError(err)) return;
         console.error('Failed to fetch ban status', err);
       }
     };

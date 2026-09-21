@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import api, { isSessionExpiredError } from '@/lib/api';
 import { toast } from 'sonner';
 import QRCode from 'react-qr-code';
 import MainLayout from '@/components/MainLayout';
@@ -36,7 +36,7 @@ export default function Dashboard() {
     const updateTimer = () => {
       const now = new Date();
       // Calculate countdown to time_out
-      const endTimeStr = `${selectedBooking.booking_date}T${selectedBooking.time_out}`;
+      const endTimeStr = `${selectedBooking.booking_date}T${selectedBooking.time_out}+07:00`;
       const endTime = new Date(endTimeStr);
 
       const diff = endTime.getTime() - now.getTime();
@@ -101,6 +101,7 @@ export default function Dashboard() {
       const response = await api.get('/bookings/me');
       setBookings(response.data);
     } catch (err) {
+      if (isSessionExpiredError(err)) return;
       console.error(err);
     }
   };
@@ -110,6 +111,7 @@ export default function Dashboard() {
       const response = await api.get('/bookings');
       setAllBookings(response.data);
     } catch (err) {
+      if (isSessionExpiredError(err)) return;
       console.error(err);
     }
   };
@@ -152,7 +154,7 @@ export default function Dashboard() {
     if (activeBooking && user?.role !== 'ADMIN') {
       interval = setInterval(() => {
         const now = new Date();
-        const endDateStr = `${activeBooking.booking_date}T${activeBooking.time_out}`;
+        const endDateStr = `${activeBooking.booking_date}T${activeBooking.time_out}+07:00`;
         const endDate = new Date(endDateStr);
         const diff = endDate.getTime() - now.getTime();
 
@@ -488,7 +490,7 @@ export default function Dashboard() {
 
               {selectedBooking.status === 'PENDING' && (() => {
                 const now = new Date();
-                const bookingDateTime = new Date(`${selectedBooking.booking_date}T${selectedBooking.time_in}`);
+                const bookingDateTime = new Date(`${selectedBooking.booking_date}T${selectedBooking.time_in}+07:00`);
                 const isEarly = now < bookingDateTime;
 
                 return (

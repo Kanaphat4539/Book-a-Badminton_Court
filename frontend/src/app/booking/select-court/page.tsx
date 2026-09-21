@@ -18,6 +18,7 @@ import {
 import {
   createBookingConfirmationDetails,
   createTodayBookingDate,
+  isBookingSlotSelectable,
 } from '@/lib/booking-display';
 
 type Court = {
@@ -128,6 +129,13 @@ function SelectCourtContent() {
   const handleBook = async () => {
     if (!timeParam || !dateParam || !selectedBooking) {
       toast.error('Missing date or time parameters');
+      return;
+    }
+
+    if (!isBookingSlotSelectable(dateParam, timeParam, new Date())) {
+      toast.error('รอบนี้หมดเวลาแล้ว กรุณาเลือกรอบใหม่');
+      setSelectedBooking(null);
+      router.replace('/booking');
       return;
     }
 

@@ -1,0 +1,384 @@
+{
+  "executedAt": "2026-09-19T06:11:14.034Z",
+  "database": ":memory:",
+  "driver": "sqljs (SQLite)",
+  "runtime": "v26.4.0",
+  "results": [
+    {
+      "id": "SET-02",
+      "label": "Database/seed idempotence",
+      "status": "PASS",
+      "details": {
+        "database": "SQL.js in-memory",
+        "counts": [
+          3,
+          1
+        ],
+        "seedReinitialized": true
+      }
+    },
+    {
+      "id": "SET-03",
+      "label": "Separate users/admin/guest",
+      "status": "PASS",
+      "details": {
+        "studentIds": [
+          "71000001",
+          "71000002"
+        ],
+        "guestStatus": 401
+      }
+    },
+    {
+      "id": "SET-04",
+      "label": "Strike/ban fixtures",
+      "status": "PASS",
+      "details": "Prepared 0/1/2 strikes, active and expired bans"
+    },
+    {
+      "id": "SET-05",
+      "label": "All booking status/date/legacy fixtures",
+      "status": "PASS",
+      "details": "8 isolated rows; four statuses × two dates; legacy created_at null"
+    },
+    {
+      "id": "SET-06",
+      "label": "Empty/partial/full availability fixtures",
+      "status": "PASS",
+      "details": "Verified totals 0, 1, 4, 60; synthetic capacity fixtures bypass daily quota"
+    },
+    {
+      "id": "SET-07",
+      "label": "Controlled deadline clock",
+      "status": "PASS",
+      "details": "10:15:00 rejected; 10:14:59 accepted; server Asia/Bangkok"
+    },
+    {
+      "id": "SET-08",
+      "label": "Fixture backup/restore",
+      "status": "PASS",
+      "details": "Full SQLite database export/restore in memory verified bookings and users; not production disaster recovery"
+    },
+    {
+      "id": "SMK-01",
+      "label": "Register API identity",
+      "status": "PASS",
+      "details": "API only; Dashboard requires browser"
+    },
+    {
+      "id": "SMK-02",
+      "label": "Login and create one booking API",
+      "status": "PASS",
+      "details": "API only; selection UI not exercised"
+    },
+    {
+      "id": "SMK-03",
+      "label": "Admin reads booking / owner checks in via API",
+      "status": "PASS",
+      "details": "API only; no physical QR scan or UI assertion"
+    },
+    {
+      "id": "SMK-04",
+      "label": "Round completion",
+      "status": "PASS",
+      "details": "Real Cron handler invoked at controlled end; history retained"
+    },
+    {
+      "id": "SMK-05",
+      "label": "Cancel and another user rebooks",
+      "status": "PASS",
+      "details": "API cancel/rebook passed; confirmation UI not exercised"
+    },
+    {
+      "id": "SMK-06",
+      "label": "No show once",
+      "status": "PASS",
+      "details": "Repeated Cron did not double strike"
+    },
+    {
+      "id": "SMK-07",
+      "label": "Second strike and 24h unban",
+      "status": "PASS",
+      "details": "2 strikes, 24h ban, rejection while banned, new booking after unban"
+    },
+    {
+      "id": "REG-01",
+      "label": "Valid registration fields",
+      "status": "PASS",
+      "details": "All submitted fields matched DB; UI pending"
+    },
+    {
+      "id": "REG-02",
+      "label": "Empty required studentId",
+      "status": "FAIL",
+      "details": "HTTP 500; studentId empty; accountCreated=false"
+    },
+    {
+      "id": "REG-02",
+      "label": "Empty required email",
+      "status": "PASS",
+      "details": "HTTP 400"
+    },
+    {
+      "id": "REG-02",
+      "label": "Empty required name",
+      "status": "FAIL",
+      "details": "HTTP 201; name empty; accountCreated=true"
+    },
+    {
+      "id": "REG-02",
+      "label": "Empty required phone",
+      "status": "FAIL",
+      "details": "HTTP 201; phone empty; accountCreated=true"
+    },
+    {
+      "id": "REG-02",
+      "label": "Empty required major",
+      "status": "FAIL",
+      "details": "HTTP 201; major empty; accountCreated=true"
+    },
+    {
+      "id": "REG-02",
+      "label": "Empty required year",
+      "status": "FAIL",
+      "details": "HTTP 201; year empty; accountCreated=true"
+    },
+    {
+      "id": "REG-02",
+      "label": "Empty required username",
+      "status": "FAIL",
+      "details": "HTTP 201; username empty; accountCreated=true"
+    },
+    {
+      "id": "REG-02",
+      "label": "Empty required password",
+      "status": "FAIL",
+      "details": "HTTP 201; password empty; accountCreated=true"
+    },
+    {
+      "id": "REG-03",
+      "label": "Reject domain qa@gmail.com",
+      "status": "PASS",
+      "details": "HTTP 400"
+    },
+    {
+      "id": "REG-03",
+      "label": "Reject domain qa@kmitl.ac.th.evil.test",
+      "status": "PASS",
+      "details": "HTTP 400"
+    },
+    {
+      "id": "REG-04",
+      "label": "Malformed email @kmitl.ac.th",
+      "status": "FAIL",
+      "details": "Malformed email accepted: HTTP 201\n\n201 !== 400\n"
+    },
+    {
+      "id": "REG-04",
+      "label": "Malformed email qa space@kmitl.ac.th",
+      "status": "FAIL",
+      "details": "Malformed email accepted: HTTP 201\n\n201 !== 400\n"
+    },
+    {
+      "id": "REG-04",
+      "label": "Malformed email qa@@kmitl.ac.th",
+      "status": "FAIL",
+      "details": "Malformed email accepted: HTTP 201\n\n201 !== 400\n"
+    },
+    {
+      "id": "REG-05",
+      "label": "Duplicate username qa1",
+      "status": "PASS",
+      "details": "Username already exists"
+    },
+    {
+      "id": "REG-05",
+      "label": "Duplicate username admin",
+      "status": "PASS",
+      "details": "Username already exists"
+    },
+    {
+      "id": "REG-06",
+      "label": "Duplicate studentId",
+      "status": "FAIL",
+      "details": "Existing account overwritten; HTTP 201; username qa23 -> qa24\n\n'qa24' !== 'qa23'\n"
+    },
+    {
+      "id": "REG-06",
+      "label": "Duplicate email",
+      "status": "FAIL",
+      "details": "HTTP 500: Internal server error"
+    },
+    {
+      "id": "REG-07",
+      "label": "Invalid student ID ",
+      "status": "FAIL",
+      "details": "HTTP 500; persisted=false"
+    },
+    {
+      "id": "REG-07",
+      "label": "Invalid student ID 123456789",
+      "status": "FAIL",
+      "details": "HTTP 201; persisted=true"
+    },
+    {
+      "id": "REG-07",
+      "label": "Invalid student ID abcdefgh",
+      "status": "FAIL",
+      "details": "HTTP 201; persisted=true"
+    },
+    {
+      "id": "REG-08",
+      "label": "Name สมชาย ใจดี",
+      "status": "PASS",
+      "details": "สมชาย ใจดี"
+    },
+    {
+      "id": "REG-08",
+      "label": "Name Jane Mary Doe",
+      "status": "PASS",
+      "details": "Jane Mary Doe"
+    },
+    {
+      "id": "REG-08",
+      "label": "Name   Jane Mary Doe  ",
+      "status": "PASS",
+      "details": "Jane Mary Doe"
+    },
+    {
+      "id": "REG-09",
+      "label": "Invalid {\"phone\":\"1234567890123456\"}",
+      "status": "FAIL",
+      "details": "HTTP 201; stored year=3"
+    },
+    {
+      "id": "REG-09",
+      "label": "Invalid {\"year\":\"abc\"}",
+      "status": "FAIL",
+      "details": "HTTP 201; stored year=1"
+    },
+    {
+      "id": "REG-10",
+      "label": "Probe year 0",
+      "status": "OBSERVED",
+      "details": {
+        "http": 201,
+        "storedYear": 1,
+        "policy": "NOT CONFIRMED"
+      }
+    },
+    {
+      "id": "REG-10",
+      "label": "Probe year -1",
+      "status": "OBSERVED",
+      "details": {
+        "http": 201,
+        "storedYear": -1,
+        "policy": "NOT CONFIRMED"
+      }
+    },
+    {
+      "id": "REG-10",
+      "label": "Probe year 1.5",
+      "status": "OBSERVED",
+      "details": {
+        "http": 201,
+        "storedYear": 1,
+        "policy": "NOT CONFIRMED"
+      }
+    },
+    {
+      "id": "REG-10",
+      "label": "Probe year 99",
+      "status": "OBSERVED",
+      "details": {
+        "http": 201,
+        "storedYear": 99,
+        "policy": "NOT CONFIRMED"
+      }
+    },
+    {
+      "id": "REG-11",
+      "label": "Empty password",
+      "status": "FAIL",
+      "details": "Registration HTTP 201; default-password login HTTP 201"
+    },
+    {
+      "id": "REG-11",
+      "label": "Missing password",
+      "status": "FAIL",
+      "details": "Registration HTTP 201; default-password login HTTP 201"
+    },
+    {
+      "id": "REG-12",
+      "label": "Password length probe",
+      "status": "OBSERVED",
+      "details": {
+        "observations": [
+          {
+            "length": 1,
+            "http": 201
+          },
+          {
+            "length": 100,
+            "http": 201
+          }
+        ],
+        "policy": "NOT CONFIRMED"
+      }
+    },
+    {
+      "id": "REG-13",
+      "label": "Case/whitespace probe",
+      "status": "OBSERVED",
+      "details": {
+        "observations": [
+          {
+            "username": "QaCaseTest",
+            "http": 201
+          },
+          {
+            "username": "qacasetest",
+            "http": 401
+          },
+          {
+            "username": " QaCaseTest ",
+            "http": 401
+          }
+        ],
+        "policy": "NOT CONFIRMED"
+      }
+    },
+    {
+      "id": "REG-14",
+      "label": "Concurrent identical registrations",
+      "status": "PASS",
+      "details": {
+        "statuses": [
+          201,
+          201
+        ],
+        "count": 1,
+        "note": "API produces one account; both requests can return success; UI rapid submit not tested"
+      }
+    },
+    {
+      "id": "REG-16",
+      "label": "Register/login excludes password hash",
+      "status": "PASS",
+      "details": "Login succeeded; auth responses contain no password/hash"
+    },
+    {
+      "id": "SET-02",
+      "label": "Application restart with exported database",
+      "status": "PASS",
+      "details": {
+        "appRestartVerified": true,
+        "counts": [
+          37,
+          1
+        ]
+      }
+    }
+  ]
+}

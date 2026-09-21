@@ -5,22 +5,44 @@
 /* Enable class-based dark mode for Tailwind v4 */
 @custom-variant dark (&:is(.dark *));
 
-/* Temporarily override local transition utilities when the theme changes.
-   The theme switch keeps its own coordinated movement and color transitions. */
+:root {
+  --theme-transition-duration: 250ms;
+  --theme-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* One clock for theme colors, including icons, overlays and pseudo-elements.
+   These overrides only apply while the theme changes, preserving normal hover effects. */
 @media (prefers-reduced-motion: no-preference) {
   html.theme-transitioning,
-  html.theme-transitioning :where(*:not(.theme, .theme *)),
-  html.theme-transitioning :where(*:not(.theme, .theme *))::before,
-  html.theme-transitioning :where(*:not(.theme, .theme *))::after {
-    transition:
-      background-color 600ms cubic-bezier(0.4, 0, 0.2, 1),
-      color 600ms cubic-bezier(0.4, 0, 0.2, 1),
-      border-color 600ms cubic-bezier(0.4, 0, 0.2, 1),
-      outline-color 600ms cubic-bezier(0.4, 0, 0.2, 1),
-      text-decoration-color 600ms cubic-bezier(0.4, 0, 0.2, 1),
-      fill 600ms cubic-bezier(0.4, 0, 0.2, 1),
-      stroke 600ms cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow 600ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  html.theme-transitioning *,
+  html.theme-transitioning::before,
+  html.theme-transitioning::after,
+  html.theme-transitioning *::before,
+  html.theme-transitioning *::after {
+    transition-property: background-color, color, border-color, outline-color,
+      text-decoration-color, fill, stroke, box-shadow, opacity, filter,
+      backdrop-filter, --tw-gradient-from, --tw-gradient-via,
+      --tw-gradient-to !important;
+    transition-duration: var(--theme-transition-duration) !important;
+    transition-timing-function: var(--theme-transition-easing) !important;
+    transition-delay: 0s !important;
+  }
+
+  /* Keep the sun/moon movement on the same clock as the page colors. */
+  html.theme-transitioning :is(.theme, .ui-switch) *,
+  html.theme-transitioning :is(.theme, .ui-switch) *::before,
+  html.theme-transitioning :is(.theme, .ui-switch) *::after {
+    transition-property: background-color, color, border-color, box-shadow,
+      opacity, transform, top, left !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-transitioning,
+  html.theme-transitioning *,
+  html.theme-transitioning *::before,
+  html.theme-transitioning *::after {
+    transition: none !important;
   }
 }
 

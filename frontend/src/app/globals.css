@@ -1,3 +1,4 @@
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -416,4 +417,23 @@
     width: 0;
     height: 0;
   }
+}
+
+/* Fix for Material Symbols not rendering on mobile Safari (ligatures breaking) */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-style: normal;
+  font-weight: normal;
+  font-variant-ligatures: normal !important;
+  -webkit-font-feature-settings: 'liga' !important;
+  font-feature-settings: 'liga' !important;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
 }

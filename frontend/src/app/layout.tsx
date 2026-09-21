@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
 import Script from 'next/script';
+import 'material-symbols/outlined.css';
 
 
 const robotoCondensed = Roboto_Condensed({
@@ -29,7 +30,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
         <script
           id="storage-polyfill"
           dangerouslySetInnerHTML={{

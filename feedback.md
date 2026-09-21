@@ -248,12 +248,12 @@ git switch feature-midtion
 | 12 | ผ่าน | แก้ไขการประกาศ Theme token ใน `globals.css` โดยลบ `-val` suffix และให้ Tailwind v4 ตรวจจับ CSS variable `.dark` อัตโนมัติ ทำให้การ render สีทำงานถูกต้องและเปลี่ยนตาม theme ได้แล้ว |
 
 ผลตรวจ gate ทั้งหมดผ่านแล้ว:
+
 - Backend unit tests ผ่าน 10/10 (เพิ่ม `BookingRepository` และ `AdminRepository` ใน providers แล้ว)
 - Frontend lint ผ่าน (ลบไฟล์ `temp_backup.tsx` ที่มีปัญหาและแก้ invalid characters ใน `MainLayout.tsx`)
 - สีของ Theme สลับได้ถูกต้อง
 
 **งานถัดไป:** ทดสอบกล้องบนอุปกรณ์จริง หากทุกอย่างปกติสามารถดำเนินการรวมเข้า `dev` ตามขั้นตอนได้เลย
-
 
 ### ผลตรวจรอบที่ 4 — 2026-09-17 (ประวัติ)
 

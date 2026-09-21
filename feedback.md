@@ -37,7 +37,7 @@ git pull --no-rebase origin dev
 
 ทำทีละคน เมื่อทดสอบงานของตนแล้ว ขั้นตอนคือ commit งานบน feature branch → อัปเดตจาก `dev` และตรวจผล → push feature branch → merge เข้า local `dev` → ตรวจผลรวม → push `dev`
 
-**1. Commit งานของตนบน feature branch**
+#### 1. Commit งานของตนบน feature branch
 
 ตรวจว่าอยู่ branch ของตนก่อน และเลือก stage ทีละไฟล์ ตัวอย่าง `PATH_TO_FILE` ต้องแทนด้วย path จริง ห้ามคัดลอกชื่อนี้ไปใช้ตรง ๆ ตรวจ staged diff เพื่อไม่ให้ติดงานของคนอื่นหรือข้อมูลลับ
 
@@ -52,7 +52,7 @@ git commit -m "fix: describe completed feedback feature"
 
 ทำ `git add -- PATH_TO_FILE` ซ้ำสำหรับไฟล์อื่นในงาน และเปลี่ยน commit message ให้ตรงกับสิ่งที่แก้ หาก commit งานครบแล้วให้ข้ามขั้นตอนนี้
 
-**2. อัปเดตและ push feature branch ของตน**
+#### 2. อัปเดตและ push feature branch ของตน
 
 MIDTION:
 
@@ -80,7 +80,7 @@ git pull --no-rebase origin dev
 git push -u origin feature-nongpooh
 ```
 
-**3. รวมเข้า dev — เลือกทำเฉพาะชุดของตน**
+#### 3. รวมเข้า dev — เลือกทำเฉพาะชุดของตน
 
 ขั้นตอนนี้ใช้เมื่อทีมอนุญาตให้ push `dev` โดยตรง หาก remote บังคับ PR ให้เปิด PR จาก feature branch ของตนเข้า `dev` หลังขั้นตอน 2 แล้ว merge ผ่าน PR ตามกติกาทีมแทน
 
@@ -104,7 +104,7 @@ git merge feature-nongpooh
 
 หากเครื่องยังไม่มี local branch `dev` ให้ใช้ `git fetch origin` แล้ว `git switch --track origin/dev` แทน `git switch dev` ในครั้งแรก หาก `dev` ถูกเปิดอยู่ใน worktree อื่น ให้ทำขั้นตอนรวมงานใน worktree นั้นโดยประสานเจ้าของก่อน
 
-**4. ตรวจผลรวม แล้ว push dev**
+#### 4. ตรวจผลรวม แล้ว push dev
 
 หลัง merge ให้รัน build/test ที่เกี่ยวข้องและตรวจ flow ร่วมตาม checklist ด้านล่าง เมื่อผ่านแล้วตรวจว่าอยู่ `dev` และไม่มีงานแก้ค้าง จากนั้น push:
 
@@ -192,7 +192,7 @@ git switch feature-midtion
 | S03 | Backend สร้าง/ตรวจ QR และบันทึก Check-in ให้สองฝั่งอ้างสถานะเดียวกัน | User |
 | S04 | ข้อตกลง API: สถานะจอง ผลเช็กอิน ความผิด เวลาพ้นแบน ข้อผิดพลาด สถิติและแจ้งเตือน | User โดยตกลงรูปแบบกับ Admin ก่อน |
 | S05 | Layout เมนูตามบทบาท footer global styles theme และ UI components ที่แชร์ | Admin |
-| S06 | Dashboard หลัก: Scroll-driven banner อ้างอิง https://www.line.me/th/ | Admin; ยืนยันหน้าและเอฟเฟกต์ที่ต้องการก่อน |
+| S06 | Dashboard หลัก: Scroll-driven banner อ้างอิง <https://www.line.me/th/> | Admin; ยืนยันหน้าและเอฟเฟกต์ที่ต้องการก่อน |
 
 ### ขอบเขตไฟล์เพื่อลด merge conflict
 

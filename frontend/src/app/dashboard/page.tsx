@@ -6,6 +6,7 @@ import api, { isSessionExpiredError } from '@/lib/api';
 import { toast } from 'sonner';
 import QRCode from 'react-qr-code';
 import MainLayout from '@/components/MainLayout';
+import SportBanner from '@/components/SportBanner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
@@ -180,54 +181,37 @@ export default function Dashboard() {
       <MainLayout width="full">
         <div className="flex flex-col w-full">
           
-          {/* Admin Banner (smash-peach inspired) */}
-          <div className="relative w-full overflow-hidden bg-primary-fixed text-on-primary-fixed dark:bg-surface-container-low dark:text-on-surface shrink-0">
-            <div className="absolute -right-24 -top-36 w-md h-112 rounded-full border-48 border-primary/15"></div>
-            <div className="absolute -bottom-44 left-1/3 w-104 h-104 rounded-full border border-primary-container/20"></div>
-            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#ffb469 1px, transparent 1px)', backgroundSize: '18px 18px' }}></div>
-            
-            <div className="relative z-10 flex flex-col mx-auto max-w-7xl px-6 md:px-10 pt-10 pb-16">
-              <div className="flex items-center justify-between mb-10">
-                <div className="flex items-center gap-3">
-                  <div className="grid w-11 h-11 place-items-center rounded-2xl bg-primary text-on-primary shadow-lg shadow-primary/20">
-                    <span className="material-symbols-outlined text-[22px]">monitoring</span>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">KMITL Sports Complex</p>
-                    <p className="text-sm font-semibold">Admin control center</p>
-                  </div>
-                </div>
-                <button
-                  className="group inline-flex items-center justify-center h-9 gap-2 px-3.5 rounded-xl border border-outline-variant bg-surface/60 text-on-surface hover:bg-surface transition-all text-sm font-medium"
-                  onClick={() => router.push('/admin/users')}
-                >
-                  <span className="material-symbols-outlined text-[18px]">group</span> Users
-                </button>
-              </div>
-
-              <div className="max-w-3xl">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary-container/25 bg-primary/20 px-3 py-1.5 text-xs font-semibold text-primary">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_#F26522]"></span> Live system overview
-                </div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight">Good morning, Admin.</h1>
-                <p className="mt-4 max-w-xl text-base md:text-lg leading-7 text-on-primary-fixed-variant dark:text-on-surface-variant">
-                  Stay on top of every booking, court schedule, and player experience in one place.
-                </p>
-              </div>
-
-              <div className="mt-9 flex flex-wrap gap-3 text-xs font-medium text-on-primary-fixed-variant dark:text-on-surface-variant">
-                <span className="inline-flex items-center gap-2 rounded-lg bg-surface/60 px-3 py-2">
-                  <span className="material-symbols-outlined text-[14px] text-primary">pin_drop</span> Lat Krabang Campus
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-lg bg-surface/60 px-3 py-2">
-                  <span className="material-symbols-outlined text-[14px] text-primary">schedule</span> Last synced just now
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-lg bg-surface/60 px-3 py-2">
-                  <span className="material-symbols-outlined text-[14px] text-primary">security</span> Secure admin mode
-                </span>
-              </div>
-            </div>
-          </div>
+          {/* Admin Banner */}
+                    <SportBanner
+                      contentClassName="px-6 md:px-10 pt-10 pb-12"
+                      leading={
+                        <div className="flex items-center gap-3">
+                          <div className="grid w-11 h-11 place-items-center rounded-2xl bg-white/20 ring-1 ring-white/30 text-white shadow-lg">
+                            <span className="material-symbols-outlined text-[22px]">monitoring</span>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/90">KMITL Sports Complex</p>
+                            <p className="text-sm font-semibold text-white">Admin control center</p>
+                          </div>
+                        </div>
+                      }
+                      topRight={
+                        <button
+                          className="group inline-flex items-center justify-center h-9 gap-2 px-3.5 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/25 transition-all text-sm font-medium backdrop-blur-sm"
+                          onClick={() => router.push('/admin/users')}
+                        >
+                          <span className="material-symbols-outlined text-[18px]">group</span> Users
+                        </button>
+                      }
+                      eyebrow="Live system overview"
+                      title="Good morning, Admin."
+                      subtitle="Stay on top of every booking, court schedule, and player experience in one place."
+                      meta={[
+                        <span key="campus" className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px]">pin_drop</span> Lat Krabang Campus</span>,
+                        <span key="sync" className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px]">schedule</span> Last synced just now</span>,
+                        <span key="sec" className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px]">security</span> Secure admin mode</span>,
+                      ]}
+                    />
 
           <div className="mx-auto max-w-7xl px-4 md:px-10 w-full flex flex-col gap-6 mt-8 pb-10">
           {/* Booking Statistics (A06) */}
@@ -560,40 +544,35 @@ export default function Dashboard() {
     <MainLayout width="full">
       <div className="flex flex-col w-full">
         
-        {/* User Banner (smash-peach inspired) */}
-        <div className="relative w-full overflow-hidden bg-primary-fixed text-on-primary-fixed dark:bg-surface-container-low dark:text-on-surface shrink-0">
-          <div className="absolute -right-24 -top-36 w-md h-112 rounded-full border-48 border-primary/15"></div>
-          <div className="absolute -bottom-44 left-1/3 w-104 h-104 rounded-full border border-primary-container/20"></div>
-          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#ffb469 1px, transparent 1px)', backgroundSize: '18px 18px' }}></div>
-          
-          <div className="relative z-10 flex flex-col mx-auto max-w-7xl px-6 md:px-10 pt-10 pb-16">
-            <div className="flex items-center justify-between mb-10">
-              <div className="flex items-center gap-3">
-                <div className="grid w-11 h-11 place-items-center rounded-2xl bg-primary text-on-primary shadow-lg shadow-primary/20">
-                  <span className="material-symbols-outlined text-[22px]">sports_tennis</span>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">KMITL Badminton</p>
-                  <p className="text-sm font-semibold">Player Dashboard</p>
-                </div>
-              </div>
-              <span className="px-3 py-1.5 rounded-full border border-outline-variant bg-surface/60 text-on-surface text-[11px] font-black uppercase tracking-wider flex items-center gap-1">
-                <span className="material-symbols-outlined text-[16px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-                {user.role}
-              </span>
-            </div>
-
-            <div className="max-w-3xl">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary-container/25 bg-primary/20 px-3 py-1.5 text-xs font-semibold text-primary">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_10px_#4ade80] animate-pulse"></span> Ready to play
-              </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight">Hi, {user.name} <span className="animate-bounce inline-block">🏸</span></h1>
-              <p className="mt-4 max-w-xl text-base md:text-lg leading-7 text-on-primary-fixed-variant dark:text-on-surface-variant">
-                Welcome back to your personal KMITL Badminton portal. Book a court, check your schedule, and get ready to smash.
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* User Banner */}
+                <SportBanner
+                  contentClassName="px-6 md:px-10 pt-10 pb-12"
+                  leading={
+                    <div className="flex items-center gap-3">
+                      <div className="grid w-11 h-11 place-items-center rounded-2xl bg-white/20 ring-1 ring-white/30 text-white shadow-lg">
+                        <span className="material-symbols-outlined text-[22px]">sports_tennis</span>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/90">KMITL Badminton</p>
+                        <p className="text-sm font-semibold text-white">Player Dashboard</p>
+                      </div>
+                    </div>
+                  }
+                  topRight={
+                    <span className="px-3 py-1.5 rounded-full bg-white/15 border border-white/25 text-white text-[11px] font-black uppercase tracking-wider flex items-center gap-1 backdrop-blur-sm">
+                      <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                      {user.role}
+                    </span>
+                  }
+                  eyebrow="Ready to play"
+                  title={
+                    <span className="flex flex-wrap items-center gap-3">
+                      Hi, {user.name}
+                      <span className="inline-block text-[0.5em] align-middle">🏸</span>
+                    </span>
+                  }
+                  subtitle="Welcome back to your personal KMITL Badminton portal. Book a court, check your schedule, and get ready to smash."
+                />
 
         <div className="mx-auto max-w-7xl px-4 md:px-10 w-full flex flex-col gap-6 mt-8 pb-10">
         {/* Main Content Flow */}

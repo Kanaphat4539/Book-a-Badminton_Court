@@ -437,3 +437,72 @@
   direction: ltr;
   -webkit-font-smoothing: antialiased;
 }
+
+/* ===== Sport banner motion ===== */
+@keyframes sport-floatY {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50%      { transform: translateY(-14px) rotate(4deg); }
+}
+@keyframes sport-twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.7); }
+  50%      { opacity: 1; transform: scale(1.15); }
+}
+@keyframes sport-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(14px, -18px) scale(1.08); }
+}
+@keyframes sport-spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-sport-float  { animation: sport-floatY 4.5s ease-in-out infinite; }
+.animate-sport-drift  { animation: sport-drift 8s ease-in-out infinite; }
+.animate-sport-twinkle{ animation: sport-twinkle 3s ease-in-out infinite; }
+.animate-sport-spin-slow { animation: sport-spin-slow 26s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-sport-float, .animate-sport-drift,
+  .animate-sport-twinkle, .animate-sport-spin-slow { animation: none !important; }
+}
+
+/* badminton action: racket smash swing */
+@keyframes sport-smash {
+  0%, 48%  { transform: rotate(-38deg) translateY(0); }
+  56%      { transform: rotate(8deg)  translateY(-2px); }
+  64%      { transform: rotate(-14deg) translateY(0); }
+  100%     { transform: rotate(-38deg) translateY(0); }
+}
+@keyframes sport-steak {
+  0%, 50%  { opacity: 0; transform: translateX(-6px) scaleX(0.6); }
+  56%      { opacity: 0.9; transform: translateX(6px) scaleX(1); }
+  66%, 100%{ opacity: 0; transform: translateX(10px) scaleX(1.1); }
+}
+.animate-sport-smash { animation: sport-smash 4.8s ease-in-out infinite; transform-origin: 82% 96%; }
+.animate-sport-steak{ animation: sport-steak 4.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-sport-smash, .animate-sport-steak { animation: none !important; }
+  .animate-sport-smash { transform: rotate(-14deg); }
+}
+
+/* banner: moving gradient + shine sweep */
+@keyframes sport-gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@keyframes sport-shine {
+  0%                       { transform: translateX(-140%) skewX(-22deg); }
+  55%, 100%                { transform: translateX(260%) skewX(-22deg); }
+}
+@keyframes sport-ring-rise {
+  0%   { transform: translateY(0) scale(1); opacity: 0.35; }
+  50%  { transform: translateY(-26px) scale(1.12); opacity: 0.7; }
+  100% { transform: translateY(0) scale(1); opacity: 0.35; }
+}
+.animate-sport-gradient {
+  background-size: 260% 260%;
+  animation: sport-gradient 16s ease-in-out infinite;
+}
+.animate-sport-shine  { animation: sport-shine 5.5s ease-in-out infinite; }
+.animate-sport-ring   { animation: sport-ring-rise 7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-sport-gradient, .animate-sport-shine, .animate-sport-ring { animation: none !important; }
+}

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import MainLayout from '@/components/MainLayout';
+import SportBanner from '@/components/SportBanner';
 import { createTodayBookingDate, isBookingSlotSelectable, type BookingDate } from '@/lib/booking-display';
 
 type CourtBooking = {
@@ -31,6 +32,8 @@ export default function BookingPage() {
   const [courts, setCourts] = useState<Court[]>([]);
   const [loading, setLoading] = useState(true);
   const selectedDate = bookingDate.date;
+
+    // Calendar is static — shows the current month only (booking is on today)
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -178,87 +181,124 @@ export default function BookingPage() {
       <main className="flex flex-col relative w-full bg-surface min-h-screen">
         <div className="flex flex-col w-full pb-8">
           {/* Campus Sports Arena Context Card (Edge-to-edge banner) */}
-          <section className="relative overflow-hidden bg-gradient-to-r from-[#F26522] to-yellow-500 shadow-[0_8px_24px_rgba(242,101,34,0.3)]">
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 z-0"></div>
-            <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/20 rounded-full blur-3xl pointer-events-none z-0"></div>
-            
-            <div className="mx-auto max-w-7xl px-6 md:px-10 py-10 relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div className="flex flex-col min-w-0">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white w-fit mb-3 backdrop-blur-md border border-white/30 shadow-inner">
-                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shrink-0 shadow-[0_0_8px_#4ade80]"></span>
-                  <span className="font-label-sm text-[10px] md:text-label-sm uppercase tracking-widest font-black">เปิดให้บริการปกติ</span>
-                </div>
-                <h1 className="font-headline-sm text-3xl md:text-[40px] text-white font-extrabold truncate drop-shadow-md pb-2">จองคอร์ทแบดมินตัน</h1>
-                <p className="font-body-sm text-[14px] md:text-[16px] text-white/90 flex items-center gap-1.5 mt-1 truncate">
-                  <span className="material-symbols-outlined text-[18px] text-white shrink-0 drop-shadow-sm">stadium</span>
-                  <span className="truncate font-medium">อาคารยิมเนเซียม 1 (Gymnasium 1) • วิทยาเขตลาดกระบัง</span>
-                </p>
-              </div>
-              <div className="flex flex-col items-start md:items-end shrink-0">
-                <div className="px-3 py-2 md:px-4 rounded-xl bg-white shadow-lg flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[18px] text-[#F26522]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-                  <span className="font-label-sm text-[12px] md:text-label-sm text-[#F26522] font-black uppercase tracking-wider">โควตา นศ.</span>
-                </div>
-                <span className="font-label-sm text-[12px] md:text-label-sm text-white font-bold mt-2 bg-black/20 px-3 py-1 rounded backdrop-blur-sm">คงเหลือ 1 ชม./วัน</span>
-              </div>
-            </div>
-          </section>
+                    <SportBanner
+                      eyebrow="เปิดให้บริการปกติ"
+                      title="จองคอร์ทแบดมินตัน"
+                      subtitle={
+                        <>
+                          <span className="material-symbols-outlined text-[18px] text-white shrink-0 drop-shadow-sm">stadium</span>
+                          <span className="truncate font-medium">อาคารยิมเนเซียม 1 (Gymnasium 1) • วิทยาเขตลาดกระบัง</span>
+                        </>
+                      }
+                      right={
+                        <div className="flex flex-col items-start gap-2">
+                          <div className="px-4 py-2.5 rounded-xl bg-white shadow-lg flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[18px] text-[#F26522]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                            <span className="font-label-sm text-[12px] md:text-label-sm text-[#F26522] font-black uppercase tracking-wider">โควตา นศ.</span>
+                          </div>
+                          <span className="font-label-sm text-[12px] md:text-label-sm text-white font-bold bg-black/25 px-3 py-1 rounded-lg backdrop-blur-sm">คงเหลือ 1 ชม./วัน</span>
+                        </div>
+                      }
+                    />
 
           <div className="mx-auto max-w-7xl px-4 md:px-10 w-full">
             {/* Calendar View (Monthly) */}
-          <section className="mt-4 px-4 md:px-margin-screen lg:px-8">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
-                <h2 className="font-headline-sm text-base md:text-headline-sm text-on-surface">ปฏิทินการจอง (Calendar)</h2>
-              </div>
-              <span className="rounded-full bg-surface-container-high px-3 py-1 font-label-md text-[11px] text-on-surface md:text-label-md">
-                {new Date().toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}
-              </span>
-            </div>
-            
-            <div className="bg-surface-container-lowest rounded-2xl p-4 shadow-sm ring-1 ring-outline-variant/30">
-              {/* Day Headers */}
-              <div className="grid grid-cols-7 gap-1 mb-2 text-center">
-                {['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map(day => (
-                  <div key={day} className="font-label-sm text-[10px] md:text-label-sm text-on-surface-variant font-bold">
-                    {day}
-                  </div>
-                ))}
-              </div>
-              
-              {/* Calendar Grid */}
-              <div className="grid grid-cols-7 gap-1 sm:gap-2">
-                {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() }).map((_, i) => (
-                  <div key={`empty-${i}`} className="p-2" />
-                ))}
-                
-                {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }).map((_, i) => {
-                  const date = i + 1;
-                  const today = new Date().getDate();
-                  const isToday = date === today;
-                  const isPast = date < today;
-                  const isFuture = date > today;
-                  
-                  return (
-                    <button
-                      key={date}
-                      disabled={!isToday}
-                      className={`
-                        flex flex-col items-center justify-center py-1.5 sm:py-2 rounded-xl transition-all
-                        ${isToday ? 'bg-primary text-on-primary font-bold shadow-[0_4px_12px_rgba(255,94,30,0.3)] ring-2 ring-primary scale-105 z-10' : ''}
-                        ${isPast ? 'text-on-surface-variant/30 bg-surface/50 cursor-not-allowed' : ''}
-                        ${isFuture ? 'text-on-surface-variant/50 bg-surface-container-low cursor-not-allowed' : ''}
-                      `}
-                    >
-                      <span className="text-[12px] sm:text-[14px]">{date}</span>
-                      {isToday && <span className="text-[8px] sm:text-[10px] font-medium uppercase mt-0.5 opacity-90">วันนี้</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
+                      <section className="mt-4 px-4 md:px-margin-screen lg:px-8">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 mb-3">
+                          <div className="flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
+                            <h2 className="font-headline-sm text-base md:text-headline-sm text-on-surface">ปฏิทินการจอง <span className="font-body-sm text-[13px] text-on-surface-variant font-medium">(Calendar)</span></h2>
+                          </div>
+                          <span className="ml-auto rounded-full bg-surface-container-high px-2.5 py-1 font-label-sm text-[10px] text-on-surface md:font-label-md md:text-label-sm">
+                            เฉพาะวันนี้เท่านั้นที่จองได้
+                          </span>
+                        </div>
+
+                        {/* Modern calendar card */}
+                        <div className="rounded-2xl overflow-hidden bg-surface-container-lowest shadow-[0_14px_40px_-18px_rgba(171,53,0,0.35)] ring-1 ring-black/5 dark:ring-white/10">
+
+                          {/* Gradient month header (static — current month only) */}
+                          <div className="relative bg-gradient-to-br from-[#D2470A] via-primary to-[#7C2600]">
+                            <div className="absolute inset-0 [background:radial-gradient(circle_at_top_right,rgba(255,255,255,0.22),transparent_55%),radial-gradient(circle_at_bottom_left,rgba(0,0,0,0.18),transparent_45%)] pointer-events-none"></div>
+                            <div className="relative flex flex-col items-center text-center select-none px-4 py-4 sm:py-5">
+                              <span className="text-[22px] sm:text-[34px] font-extrabold text-white leading-none drop-shadow-sm tracking-tight">
+                                {new Date().toLocaleDateString('th-TH', { month: 'long' })}
+                              </span>
+                              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1 text-[11px] font-bold text-white/90 uppercase tracking-widest backdrop-blur-sm">
+                                <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                                {new Date().toLocaleDateString('th-TH', { year: 'numeric' })}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Day headers */}
+                          <div className="pt-3 sm:pt-4 pb-1.5 px-2.5 sm:px-4">
+                            <div className="grid grid-cols-7 text-center">
+                              {['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map((day, i) => (
+                                <div key={day} className={`font-label-md text-[12px] sm:text-[13px] font-bold ${i === 0 || i === 6 ? 'text-primary' : 'text-on-surface-variant'}`}>
+                                  {day}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Day grid */}
+                          <div className="px-2.5 sm:px-4 pb-4 sm:pb-5">
+                            <div className="grid grid-cols-7 gap-0.5 sm:gap-1.5">
+                              {/* Leading blanks aligned to weekday start */}
+                              {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() }).map((_, i) => (
+                                <div key={`empty-${i}`} aria-hidden="true" />
+                              ))}
+
+                              {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }).map((_, i) => {
+                                const day = i + 1;
+                                const cellDate = new Date(new Date().getFullYear(), new Date().getMonth(), day);
+                                const dow = cellDate.getDay();
+                                const isWeekend = dow === 0 || dow === 6;
+                                const isPast = cellDate.getTime() < new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
+                                const isToday =
+                                  day === new Date().getDate() &&
+                                  new Date().getMonth() === cellDate.getMonth() &&
+                                  new Date().getFullYear() === cellDate.getFullYear();
+
+                                if (isToday) {
+                                  return (
+                                    <button
+                                      key={day}
+                                      type="button"
+                                      aria-label={`วันที่ ${day} วันนี้`}
+                                      className="relative flex flex-col items-center justify-center rounded-xl sm:rounded-2xl py-2 sm:py-3 bg-gradient-to-b from-primary to-[#8A2B00] text-white shadow-[0_8px_20px_-6px_rgba(171,53,0,0.65)] ring-2 ring-primary/40 scale-[1.04] z-10 cursor-pointer transition-transform hover:scale-[1.07]"
+                                    >
+                                      <span className="text-[15px] sm:text-[17px] font-extrabold leading-none select-none">{day}</span>
+                                      <span className="mt-1 text-[8px] sm:text-[10px] font-bold text-white/95 uppercase tracking-wide select-none">
+                                        วันนี้ {cellDate.toLocaleDateString('th-TH', { weekday: 'short' })}
+                                      </span>
+                                    </button>
+                                  );
+                                }
+
+                                return (
+                                  <button
+                                    key={day}
+                                    type="button"
+                                    disabled
+                                    aria-label={`วันที่ ${day}`}
+                                    className={`relative flex flex-col items-center justify-center rounded-xl sm:rounded-2xl py-2 sm:py-3 select-none cursor-not-allowed transition-colors ${
+                                      isPast
+                                        ? 'bg-surface-container-low text-on-surface-variant'
+                                        : 'bg-surface-container-lowest text-on-surface ring-1 ring-outline-variant/40 hover:bg-surface-container-low'
+                                    }`}
+                                  >
+                                    <span className="text-[14px] sm:text-[15px] font-semibold leading-none">{day}</span>
+                                    {isWeekend && !isPast && <span className="mt-1 w-1 h-1 rounded-full bg-primary/40"></span>}
+                                    {isWeekend && isPast && <span className="mt-1 w-1 h-1 rounded-full bg-outline/50"></span>}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </section>
 
           {/* Time Slots Matrix */}
           <section className="mt-6 px-4 md:px-margin-screen lg:px-8">

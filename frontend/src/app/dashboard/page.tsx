@@ -55,7 +55,7 @@ export default function Dashboard() {
   // Cybercourt telemetry filters & controls
   const [chartCourtFilter, setChartCourtFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'CANCELLED' | 'ACTIVE'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'CANCELLED' | 'ACTIVE' | 'READY_CHECK_IN'>('ALL');
   const [courtFilter, setCourtFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -344,6 +344,14 @@ export default function Dashboard() {
   const filteredBookings = allBookings.filter(b => {
     if (statusFilter === 'CANCELLED' && b.status !== 'CANCELLED') return false;
     if (statusFilter === 'ACTIVE' && b.status !== 'CHECKED_IN' && b.status !== 'PENDING') return false;
+    if (statusFilter === 'READY_CHECK_IN') {
+      if (b.status !== 'PENDING') return false;
+      const now = new Date();
+      const startStr = `${b.booking_date}T${b.time_in}+07:00`;
+      const startTime = new Date(startStr);
+      const diffMs = now.getTime() - startTime.getTime();
+      if (diffMs < 0 || diffMs > 15 * 60 * 1000) return false;
+    }
 
     if (courtFilter !== 'ALL' && String(b.court) !== courtFilter) return false;
 
@@ -916,6 +924,16 @@ export default function Dashboard() {
                       CANCELLED
                     </button>
                     <button
+                      onClick={() => { setStatusFilter('READY_CHECK_IN'); setCurrentPage(1); }}
+                      className={`px-2.5 py-1 rounded-lg transition font-medium text-center ${
+                        statusFilter === 'READY_CHECK_IN'
+                          ? 'bg-amber-500 text-white font-bold shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'
+                      }`}
+                    >
+                      พร้อมเช็กอิน
+                    </button>
+                    <button
                       onClick={() => { setStatusFilter('ACTIVE'); setCurrentPage(1); }}
                       className={`px-2.5 py-1 rounded-lg transition font-medium text-center ${
                         statusFilter === 'ACTIVE'
@@ -1103,6 +1121,14 @@ export default function Dashboard() {
                               title="Details"
                             >
                               <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); router.push('/scan'); }}
+                              className="hover:text-emerald-600 dark:hover:text-emerald-400 transition p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg text-slate-400"
+                              title="ไปสแกน QR"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">qr_code_scanner</span>
                             </button>
                             <button
                               type="button"

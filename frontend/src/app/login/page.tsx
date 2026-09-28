@@ -109,7 +109,7 @@ export default function LoginPage() {
                 />
               </div>
               <div className="flex justify-end mt-1">
-                <a className="font-label-md text-[13px] font-semibold text-primary hover:text-primary/80 transition-colors" href="#">Forgot Password?</a>
+                <Link className="font-label-md text-[13px] font-semibold text-primary hover:text-primary/80 transition-colors" href="/forgot-password">Forgot Password?</Link>
               </div>
             </div>
 
@@ -120,7 +120,6 @@ export default function LoginPage() {
               disabled={loading}
             >
               {loading ? 'Logging in...' : 'Login'}
-              {!loading && <span className="material-symbols-outlined ml-2 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>arrow_forward</span>}
             </button>
           </form>
 

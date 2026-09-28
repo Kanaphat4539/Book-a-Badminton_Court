@@ -1,0 +1,91 @@
+{
+  "environment": {
+    "frontend": "http://localhost:3001",
+    "backend": "http://127.0.0.1:4001",
+    "commit": "581a654",
+    "caseCommit": "ed3bdca",
+    "at": "2026-09-28T04:56:06.337Z"
+  },
+  "results": [
+    {
+      "id": "TC_AUTH_010",
+      "status": "ผ่าน",
+      "actual": "admin login -> dashboard with Users menu"
+    },
+    {
+      "id": "TC_AUTH_013",
+      "status": "ผ่าน",
+      "actual": "logout clears storage and protected dashboard redirects"
+    },
+    {
+      "id": "TC_AUTH_026",
+      "status": "ผ่าน",
+      "actual": "refresh retains STUDENT and own dashboard"
+    },
+    {
+      "id": "TC_AUTH_014",
+      "status": "ผ่าน",
+      "actual": "disabled/Logging in while pending; dashboard after success"
+    },
+    {
+      "id": "TC_AUTH_006",
+      "status": "ตรวจไม่ได้",
+      "actual": "7 required inputs reject blank before POST; remaining workbook assertions not verified"
+    },
+    {
+      "id": "TC_BOOK_006",
+      "status": "ตรวจไม่ได้",
+      "actual": "today-only display, no date input; remaining workbook assertions not verified"
+    },
+    {
+      "id": "TC_BOOK_007",
+      "status": "ผ่าน",
+      "actual": "current month displayed, no select element"
+    },
+    {
+      "id": "TC_UI_003",
+      "status": "ตรวจไม่ได้",
+      "actual": "today only (UI); remaining workbook assertions not verified"
+    },
+    {
+      "id": "TC_UI_004",
+      "status": "ผ่าน",
+      "actual": "current month, no dropdown (UI)"
+    },
+    {
+      "id": "TC_UI_008",
+      "status": "ตรวจไม่ได้",
+      "actual": "Recent Bookings visible; X absence/alternate cancel action needs separate DOM proof; remaining workbook assertions not verified"
+    },
+    {
+      "id": "TC_UI_010",
+      "status": "ตรวจไม่ได้",
+      "actual": "four student menu labels; remaining workbook assertions not verified"
+    },
+    {
+      "id": "TC_ADM_013",
+      "status": "ตรวจไม่ได้",
+      "actual": "admin menu hides booking and scan; student menu tested in UI_010; remaining workbook assertions not verified"
+    },
+    {
+      "id": "TC_ADM_014",
+      "status": "ผ่าน",
+      "actual": "admin direct booking/scan -> dashboard"
+    },
+    {
+      "id": "TC_SEC_017",
+      "status": "ตรวจไม่ได้",
+      "actual": "guest four protected pages redirect to login; remaining workbook assertions not verified"
+    },
+    {
+      "id": "TC_SEC_018",
+      "status": "ผ่าน",
+      "actual": "STUDENT admin/users redirect + API 403"
+    },
+    {
+      "id": "TC_UI_013",
+      "status": "ผ่าน",
+      "actual": "news renders for both roles"
+    }
+  ]
+}

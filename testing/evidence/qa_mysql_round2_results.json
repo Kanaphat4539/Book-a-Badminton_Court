@@ -1,0 +1,68 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "branch": "feature-Docx",
+    "commit": "581a654",
+    "caseBranch": "ferture-tee-testing",
+    "caseCommit": "ed3bdca",
+    "at": "2026-09-28T05:21:26.358Z",
+    "cleanup": "QA fixtures removed"
+  },
+  "results": [
+    {
+      "id": "TC_CANC_005",
+      "status": "ผ่าน",
+      "actual": "HTTP 400, CHECKED_IN unchanged"
+    },
+    {
+      "id": "TC_CHK_012",
+      "status": "ผ่าน",
+      "actual": "HTTP 400, PENDING unchanged"
+    },
+    {
+      "id": "TC_CHK_003",
+      "status": "ตรวจไม่ได้",
+      "actual": "early check-in rejected before 14:00 (only part of workbook case exercised)"
+    },
+    {
+      "id": "TC_CHK_005",
+      "status": "ตรวจไม่ได้",
+      "actual": "API rejects mismatched court with 404; UI QR message not checked (only part of workbook case exercised)"
+    },
+    {
+      "id": "TC_BAN_011",
+      "status": "ผ่าน",
+      "actual": "HTTP 400; no new booking"
+    },
+    {
+      "id": "TC_BAN_013",
+      "status": "ผ่าน",
+      "actual": "200 isBanned=false, strikes=0, DB cleared"
+    },
+    {
+      "id": "TC_BAN_012",
+      "status": "ตรวจไม่ได้",
+      "actual": "ban cleared by ban-status, automatic cron path not exercised (only part of workbook case exercised)"
+    },
+    {
+      "id": "TC_BAN_017",
+      "status": "ผ่าน",
+      "actual": "B booked while A banned; strikes A=2/B=0"
+    },
+    {
+      "id": "TC_CANC_015",
+      "status": "ผ่าน",
+      "actual": "concurrent cancel 201/400; CANCELLED, strikes=0"
+    },
+    {
+      "id": "TC_ADM_019",
+      "status": "ไม่ผ่าน",
+      "actual": "statuses=201,201\n+ actual - expected\n\n  [\n    201,\n+   201\n-   400\n  ]\n"
+    },
+    {
+      "id": "TC_ADM_020",
+      "status": "ผ่าน",
+      "actual": "reset removed booking 40; retained students/strikes/admin/4 courts"
+    }
+  ]
+}

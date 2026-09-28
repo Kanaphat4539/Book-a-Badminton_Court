@@ -1,0 +1,129 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "branch": "feature-Docx",
+    "commit": "581a654",
+    "caseBranch": "ferture-tee-testing",
+    "caseCommit": "ed3bdca",
+    "at": "2026-09-28T05:48:19.305Z",
+    "approach": "mocked Date + real MySQL TypeORM; direct service/cron, no camera/real scheduler",
+    "cleanup": "QA fixture bookings removed"
+  },
+  "results": [
+    {
+      "id": "TC_CANC_002",
+      "status": "ตรวจไม่ได้",
+      "actual": "18:14:59 CANCELLED, strikes=0; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_CANC_003",
+      "status": "ตรวจไม่ได้",
+      "actual": "18:15:00 CANCELLED, strikes=1, no ban; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_CANC_004",
+      "status": "ตรวจไม่ได้",
+      "actual": "second late cancel: strikes=2, ban exactly +24h; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_CANC_013",
+      "status": "ตรวจไม่ได้",
+      "actual": "short round end 11:00, no strike; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_CANC_014",
+      "status": "ตรวจไม่ได้",
+      "actual": "manual late cancel before cron, strikes=1; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_CHK_004",
+      "status": "ตรวจไม่ได้",
+      "actual": "17:45:00 accepted; no camera scan; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_CHK_015",
+      "status": "ตรวจไม่ได้",
+      "actual": "400 The check-in period has ended.; remains PENDING; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_CHK_016",
+      "status": "ตรวจไม่ได้",
+      "actual": "10:14:59 CHECKED_IN; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_CHK_017",
+      "status": "ตรวจไม่ได้",
+      "actual": "10:44:59 accepted; 10:45:00 400 The check-in period has ended.; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_CHK_018",
+      "status": "ตรวจไม่ได้",
+      "actual": "10:59:59 accepted; 11:00:00 400 The check-in period has ended.; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_CHK_019",
+      "status": "ตรวจไม่ได้",
+      "actual": "legacy created_at null: 10:14:59 accepted; 10:15:00 rejected; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_CHK_027",
+      "status": "ตรวจไม่ได้",
+      "actual": "400 The check-in period has ended.; PENDING; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_BAN_004",
+      "status": "ตรวจไม่ได้",
+      "actual": "18:14:30 pending, strikes=0; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_BAN_005",
+      "status": "ตรวจไม่ได้",
+      "actual": "18:15:00 cancelled, strikes=1; only service/cron path, not physical UI"
+    },
+    {
+      "id": "TC_BAN_003",
+      "status": "ผ่าน",
+      "actual": "cron called three times, one strike and no ban"
+    },
+    {
+      "id": "TC_BAN_006",
+      "status": "ผ่าน",
+      "actual": "first strike=1, no ban"
+    },
+    {
+      "id": "TC_BAN_007",
+      "status": "ผ่าน",
+      "actual": "second strike=2, ban +24h"
+    },
+    {
+      "id": "TC_BAN_008",
+      "status": "ผ่าน",
+      "actual": "strike 1 Sep 27; strike 2 Sep 28; ban +24h"
+    },
+    {
+      "id": "TC_BAN_009",
+      "status": "ผ่าน",
+      "actual": "two rows cancelled, strikes=2, banned"
+    },
+    {
+      "id": "TC_BAN_010",
+      "status": "ผ่าน",
+      "actual": "late cancel + cron remains 1 strike"
+    },
+    {
+      "id": "TC_BAN_018",
+      "status": "ผ่าน",
+      "actual": "short round ended, no strike"
+    },
+    {
+      "id": "TC_BAN_019",
+      "status": "ผ่าน",
+      "actual": "deadline equals end, strike 1"
+    },
+    {
+      "id": "TC_BAN_020",
+      "status": "ตรวจไม่ได้",
+      "actual": "service check-in at 10:44:59; cron 10:59:59 checked-in and 11:00 completed; only service/cron path, not physical UI"
+    }
+  ]
+}

@@ -1,0 +1,260 @@
+{
+  "environment": {
+    "branch": "feature-Docx",
+    "commit": "581a654",
+    "caseBranch": "ferture-tee-testing",
+    "caseCommit": "ed3bdca",
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "date": "2026-09-28",
+    "slot": "13:00",
+    "started": "2026-09-28T04:58:14.315Z",
+    "cleanup": "QA fixtures removed; seed student/admin and 4 courts remain"
+  },
+  "results": [
+    {
+      "id": "TC_AUTH_002",
+      "status": "ผ่าน",
+      "actual": "400 domain validation"
+    },
+    {
+      "id": "TC_AUTH_003",
+      "status": "ผ่าน",
+      "actual": "400 suffix validation"
+    },
+    {
+      "id": "TC_AUTH_004",
+      "status": "ผ่าน",
+      "actual": "400 duplicate username"
+    },
+    {
+      "id": "TC_AUTH_005",
+      "status": "ไม่ผ่าน",
+      "actual": "duplicate HTTP 201; original username is OVERWRITTEN\n\n201 !== 400\n"
+    },
+    {
+      "id": "TC_AUTH_007",
+      "status": "ไม่ผ่าน",
+      "actual": "HTTP 201: \n\n201 !== 200\n"
+    },
+    {
+      "id": "TC_AUTH_008",
+      "status": "ผ่าน",
+      "actual": "401, no token"
+    },
+    {
+      "id": "TC_AUTH_009",
+      "status": "ผ่าน",
+      "actual": "401 generic message"
+    },
+    {
+      "id": "TC_AUTH_010",
+      "status": "ตรวจไม่ได้",
+      "actual": "201 ADMIN login (API portion; dashboard UI not covered); remaining UI/subcases not exercised"
+    },
+    {
+      "id": "TC_AUTH_011",
+      "status": "ผ่าน",
+      "actual": "bcrypt hash in isolated DB, never raw password"
+    },
+    {
+      "id": "TC_AUTH_015",
+      "status": "ไม่ผ่าน",
+      "actual": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   201,\n+   201,\n+   201\n-   400,\n-   400,\n-   400\n  ]\n"
+    },
+    {
+      "id": "TC_AUTH_016",
+      "status": "ไม่ผ่าน",
+      "actual": "statuses 500,500,201"
+    },
+    {
+      "id": "TC_AUTH_018",
+      "status": "ไม่ผ่าน",
+      "actual": "statuses 500,201"
+    },
+    {
+      "id": "TC_AUTH_020",
+      "status": "ไม่ผ่าน",
+      "actual": "statuses 201,201"
+    },
+    {
+      "id": "TC_AUTH_025",
+      "status": "ไม่ผ่าน",
+      "actual": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    401,\n+   500,\n+   500,\n    401,\n-   401,\n-   401\n  ]\n"
+    },
+    {
+      "id": "TC_SEC_001",
+      "status": "ผ่าน",
+      "actual": "401 guest"
+    },
+    {
+      "id": "TC_SEC_002",
+      "status": "ผ่าน",
+      "actual": "401 modified signature"
+    },
+    {
+      "id": "TC_SEC_004",
+      "status": "ผ่าน",
+      "actual": "403 role boundary"
+    },
+    {
+      "id": "TC_SEC_005",
+      "status": "ผ่าน",
+      "actual": "403, no other students"
+    },
+    {
+      "id": "TC_SEC_007",
+      "status": "ผ่าน",
+      "actual": "403, no mutation"
+    },
+    {
+      "id": "TC_SEC_010",
+      "status": "ผ่าน",
+      "actual": "login response has no password/hash"
+    },
+    {
+      "id": "TC_SEC_020",
+      "status": "ผ่าน",
+      "actual": "4 courts, no PII in public availability"
+    },
+    {
+      "id": "TC_SEC_022",
+      "status": "ผ่าน",
+      "actual": "SQL-like login stays 401"
+    },
+    {
+      "id": "TC_BOOK_005",
+      "status": "ผ่าน",
+      "actual": "400 other date"
+    },
+    {
+      "id": "TC_BOOK_022",
+      "status": "ผ่าน",
+      "actual": "statuses 400,400,400"
+    },
+    {
+      "id": "TC_BOOK_024",
+      "status": "ผ่าน",
+      "actual": "statuses 400,400"
+    },
+    {
+      "id": "TC_BOOK_029",
+      "status": "ไม่ผ่าน",
+      "actual": "statuses 201,400,400,400,400,400; booking rows 1"
+    },
+    {
+      "id": "TC_BOOK_040",
+      "status": "ไม่ผ่าน",
+      "actual": "statuses 500,500,400; booking rows 0"
+    },
+    {
+      "id": "TC_BOOK_001",
+      "status": "ตรวจไม่ได้",
+      "actual": "201 booking id=14 13:00; remaining UI/subcases not exercised"
+    },
+    {
+      "id": "TC_BOOK_008",
+      "status": "ผ่าน",
+      "actual": "400 quota"
+    },
+    {
+      "id": "TC_CANC_008",
+      "status": "ผ่าน",
+      "actual": "404 nonexistent booking"
+    },
+    {
+      "id": "TC_CANC_010",
+      "status": "ตรวจไม่ได้",
+      "actual": "cancelled booking visible in /bookings/me; remaining UI/subcases not exercised"
+    },
+    {
+      "id": "TC_CANC_006",
+      "status": "ผ่าน",
+      "actual": "400 repeated cancellation"
+    },
+    {
+      "id": "TC_CANC_009",
+      "status": "ผ่าน",
+      "actual": "201 rebook after timely cancel"
+    },
+    {
+      "id": "TC_SEC_016",
+      "status": "ไม่ผ่าน",
+      "actual": "The expression evaluated to a falsy value:\n\n  assert.ok(!/\"password\"\\s*:/.test(JSON.stringify(r.json)))\n"
+    },
+    {
+      "id": "TC_BOOK_030",
+      "status": "ตรวจไม่ได้",
+      "actual": "availability reflects pending Court 2; remaining UI/subcases not exercised"
+    },
+    {
+      "id": "TC_CONC_019",
+      "status": "ตรวจไม่ได้",
+      "actual": "404 unknown route (wrong method/id variants not covered); remaining UI/subcases not exercised"
+    },
+    {
+      "id": "TC_ADM_016",
+      "status": "ผ่าน",
+      "actual": "admin sees dated bookings"
+    },
+    {
+      "id": "TC_ADM_026",
+      "status": "ไม่ผ่าน",
+      "actual": "HTTP 201; default-password login HTTP 201"
+    },
+    {
+      "id": "TC_CONC_020",
+      "status": "ตรวจไม่ได้",
+      "actual": "extra role/status/strikes ignored for register; remaining UI/subcases not exercised"
+    },
+    {
+      "id": "TC_SEC_009",
+      "status": "ผ่าน",
+      "actual": "signed QA JWT missing sub returned [] (no all-user leak)"
+    },
+    {
+      "id": "TC_SEC_006",
+      "status": "ผ่าน",
+      "actual": "student cannot finish"
+    },
+    {
+      "id": "TC_AUTH_023",
+      "status": "ไม่ผ่าน",
+      "actual": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    201,\n+   500\n-   400\n  ]\n"
+    },
+    {
+      "id": "TC_BOOK_010",
+      "status": "ผ่าน",
+      "actual": "different user, same court/slot 400"
+    },
+    {
+      "id": "TC_CANC_007",
+      "status": "ผ่าน",
+      "actual": "other owner receives 404; booking remains PENDING"
+    },
+    {
+      "id": "TC_BOOK_013",
+      "status": "ผ่าน",
+      "actual": "different court same slot 201"
+    },
+    {
+      "id": "TC_SEC_008",
+      "status": "ผ่าน",
+      "actual": "B sees no A bookings"
+    },
+    {
+      "id": "TC_CONC_001",
+      "status": "ผ่าน",
+      "actual": "two users, statuses 201/400, one booking"
+    },
+    {
+      "id": "TC_CONC_002",
+      "status": "ผ่าน",
+      "actual": "same user, one booking 201/400"
+    },
+    {
+      "id": "TC_CONC_007",
+      "status": "ผ่าน",
+      "actual": "independent courts/users both 201"
+    }
+  ]
+}

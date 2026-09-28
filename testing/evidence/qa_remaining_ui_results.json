@@ -1,0 +1,41 @@
+{
+  "environment": {
+    "commit": "581a654",
+    "caseCommit": "ed3bdca",
+    "frontend": "http://localhost:3001",
+    "backend": "http://127.0.0.1:4001",
+    "at": "2026-09-28T06:11:01.798Z"
+  },
+  "results": [
+    {
+      "id": "TC_AUTH_030",
+      "status": "ไม่ผ่าน",
+      "actual": "/dashboard with broken JSON landed at http://localhost:3001/dashboard, body=error\nSomething went wrong!\n\nSyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)\n\nSyntaxE\n+ actual - expected\n\n+ '/dashboard'\n- '/login'\n"
+    },
+    {
+      "id": "TC_SEC_011",
+      "status": "ผ่าน",
+      "actual": "localStorage keys=token,user; user fields=id,name,role,username; no password"
+    },
+    {
+      "id": "TC_AUTH_012",
+      "status": "ผ่าน",
+      "actual": "authenticated booking GET requests with Bearer header; availability 200; paths=/api/bookings/me,/api/bookings/user-notifications,/api/bookings/user-notifications,/api/bookings/user-notifications"
+    },
+    {
+      "id": "TC_BOOK_004",
+      "status": "ไม่ผ่าน",
+      "actual": "ปุ่มดำเนินการจองต่อถูกปิดใช้งาน จึงกดเพื่อแสดงข้อความเตือนตาม Expected Result ไม่ได้\n\ntrue !== false\n"
+    },
+    {
+      "id": "TC_UI_016",
+      "status": "ตรวจไม่ได้",
+      "actual": "auto-open modal: quota/15-minute/24-hour text; close and booking page remains usable; backend policy text not independently verified"
+    },
+    {
+      "id": "TC_UI_001",
+      "status": "ตรวจไม่ได้",
+      "actual": "dashboard/booking at 1440x900,1920x1080 no horizontal overflow; overlap not visually verified"
+    }
+  ]
+}

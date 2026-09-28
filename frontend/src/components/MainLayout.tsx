@@ -8,7 +8,7 @@ import api, { isSessionExpiredError } from '@/lib/api';
 import { BanPopup } from '@/components/BanPopup';
 
 const GlobalFooter = () => (
-  <footer className="hidden md:block w-full mt-auto bg-[#24150d] text-[#ffddc2] overflow-hidden relative">
+  <footer className="hidden md:block w-full mt-auto bg-surface text-on-surface overflow-hidden relative border-t border-surface-container-high">
     <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full border-30 border-primary/10 pointer-events-none"></div>
     <div className="mx-auto max-w-7xl px-6 py-12 md:px-10">
       <div className="grid gap-12 md:grid-cols-4 lg:grid-cols-5">
@@ -22,64 +22,64 @@ const GlobalFooter = () => (
               />
             </div>
             <div>
-              <p className="font-black text-white text-lg">KMITL Badminton</p>
-              <p className="text-sm text-primary-container/80">Sports Complex System</p>
+              <p className="font-black text-on-surface text-lg">KMITL Badminton</p>
+              <p className="text-sm text-primary">Sports Complex System</p>
             </div>
           </div>
-          <p className="max-w-xs text-sm leading-relaxed text-[#ffddc2]/70 mb-8">
+          <p className="max-w-xs text-sm leading-relaxed text-on-surface-variant mb-8">
             A smarter way to manage courts, schedules, and every match that matters.
           </p>
           <div className="flex gap-3">
-            <button className="grid w-10 h-10 place-items-center rounded-xl bg-white/10 text-primary-container transition-all hover:bg-primary hover:text-white hover:scale-105">
+            <button className="grid w-10 h-10 place-items-center rounded-xl bg-surface-container-high text-primary transition-all hover:bg-primary hover:text-on-primary hover:scale-105">
               <span className="material-symbols-outlined text-[18px]">public</span>
             </button>
-            <button className="grid w-10 h-10 place-items-center rounded-xl bg-white/10 text-primary-container transition-all hover:bg-primary hover:text-white hover:scale-105">
+            <button className="grid w-10 h-10 place-items-center rounded-xl bg-surface-container-high text-primary transition-all hover:bg-primary hover:text-on-primary hover:scale-105">
               <span className="material-symbols-outlined text-[18px]">photo_camera</span>
             </button>
-            <button className="grid w-10 h-10 place-items-center rounded-xl bg-white/10 text-primary-container transition-all hover:bg-primary hover:text-white hover:scale-105">
+            <button className="grid w-10 h-10 place-items-center rounded-xl bg-surface-container-high text-primary transition-all hover:bg-primary hover:text-on-primary hover:scale-105">
               <span className="material-symbols-outlined text-[18px]">settings</span>
             </button>
           </div>
         </div>
 
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary-container mb-6">Platform</h3>
-          <div className="flex flex-col gap-4 text-sm text-[#ffddc2]/70">
-            <a className="hover:text-white transition-colors" href="/dashboard">Dashboard</a>
-            <a className="hover:text-white transition-colors" href="/booking">Bookings</a>
-            <a className="hover:text-white transition-colors" href="#">Court Schedule</a>
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-6">Platform</h3>
+          <div className="flex flex-col gap-4 text-sm text-on-surface-variant">
+            <a className="hover:text-primary transition-colors" href="/dashboard">Dashboard</a>
+            <a className="hover:text-primary transition-colors" href="/booking">Bookings</a>
+            <a className="hover:text-primary transition-colors" href="#">Court Schedule</a>
           </div>
         </div>
 
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary-container mb-6">Support</h3>
-          <div className="flex flex-col gap-4 text-sm text-[#ffddc2]/70">
-            <a className="inline-flex items-center gap-2 hover:text-white transition-colors" href="#">
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-6">Support</h3>
+          <div className="flex flex-col gap-4 text-sm text-on-surface-variant">
+            <a className="inline-flex items-center gap-2 hover:text-primary transition-colors" href="#">
               <span className="material-symbols-outlined text-[16px]">call</span> 02-329-8000
             </a>
-            <a className="inline-flex items-center gap-2 hover:text-white transition-colors" href="#">
+            <a className="inline-flex items-center gap-2 hover:text-primary transition-colors" href="#">
               <span className="material-symbols-outlined text-[16px]">open_in_new</span> Help Center
             </a>
-            <span className="text-[#ffddc2]/50">Mon – Fri, 08:00 – 18:00</span>
+            <span className="text-on-surface-variant/60">Mon – Fri, 08:00 – 18:00</span>
           </div>
         </div>
 
         <div className="md:col-span-4 lg:col-span-1">
-          <div className="rounded-2xl border border-primary-container/20 bg-primary/10 p-5 backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-sm font-bold text-white mb-2">
+          <div className="rounded-2xl border border-surface-container-high bg-surface-container-low p-5">
+            <div className="flex items-center gap-2 text-sm font-bold text-on-surface mb-2">
               <span className="material-symbols-outlined text-[18px] text-primary">bolt</span> System Status
             </div>
-            <p className="text-xs leading-relaxed text-[#ffddc2]/70 mb-4">
+            <p className="text-xs leading-relaxed text-on-surface-variant mb-4">
               All booking services are operating normally.
             </p>
-            <div className="flex items-center gap-2 text-xs font-bold text-green-400">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> Operational
+            <div className="flex items-center gap-2 text-xs font-bold text-secondary">
+              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span> Operational
             </div>
           </div>
         </div>
       </div>
 
-      <div className="mt-12 flex flex-col justify-between gap-4 border-t border-white/10 pt-8 text-xs text-[#ffddc2]/40 sm:flex-row">
+      <div className="mt-12 flex flex-col justify-between gap-4 border-t border-surface-container-high pt-8 text-xs text-on-surface-variant/70 sm:flex-row">
         <p>© 2026 KMITL Badminton. All rights reserved.</p>
         <p>Internal use only · Sports Complex</p>
       </div>

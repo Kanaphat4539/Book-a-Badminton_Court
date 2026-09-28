@@ -64,6 +64,7 @@ export default function ManageUsers() {
       setAdminUsername('');
       setAdminName('');
       setAdminPassword('');
+      fetchUsers();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to create admin');
     }
@@ -71,7 +72,7 @@ export default function ManageUsers() {
 
   const handleDeleteUser = async (id: number, username: string) => {
     if (!confirm(`Are you sure you want to delete user @${username}? This action cannot be undone.`)) return;
-    
+
     try {
       await api.delete(`/users/${id}`);
       toast.success('User deleted successfully');

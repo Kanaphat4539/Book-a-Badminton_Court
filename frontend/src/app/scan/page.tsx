@@ -6,6 +6,7 @@ import api from '@/lib/api';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { toast } from 'sonner';
 import MainLayout from '@/components/MainLayout';
+import SportBanner from '@/components/SportBanner';
 
 export default function ScanPage() {
   const router = useRouter();
@@ -126,28 +127,24 @@ export default function ScanPage() {
       <div className="w-full flex-1 flex flex-col relative z-10 pb-10">
         
         {/* Sporty Header (Edge-to-edge) */}
-        <div className="relative w-full overflow-hidden bg-gradient-to-r from-[#F26522] to-yellow-500 shadow-[0_8px_24px_rgba(242,101,34,0.3)]">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 z-0"></div>
-          <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/20 rounded-full blur-3xl pointer-events-none z-0"></div>
-          
-          <div className="mx-auto max-w-7xl px-6 md:px-10 py-10 relative z-10 flex items-center justify-between">
-            <div className="flex flex-col">
-              <h1 className="font-headline-lg text-[28px] md:text-[40px] font-black text-white flex items-center gap-2 drop-shadow-md pb-2">
-                <span className="material-symbols-outlined text-[32px] md:text-[40px]">qr_code_scanner</span>
-                Scan & Play
-              </h1>
-              <p className="text-white/90 text-[14px] md:text-[16px] mt-1 font-medium">Verify your court booking</p>
-            </div>
-            <div className="relative z-10">
-              <button 
-                className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-[14px] md:text-[16px] transition-colors border border-white/30 shadow-sm" 
-                onClick={() => router.push('/dashboard')}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+                <SportBanner
+                  contentClassName="px-6 md:px-10 py-8 md:py-10"
+                  title={
+                    <span className="flex flex-wrap items-center gap-3">
+                      <span className="material-symbols-outlined text-[32px] md:text-[40px]">qr_code_scanner</span>
+                      Scan &amp; Play
+                    </span>
+                  }
+                  subtitle={<span className="font-medium">Verify your court booking</span>}
+                  right={
+                    <button
+                      className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-[14px] md:text-[16px] transition-colors border border-white/30 shadow-sm"
+                      onClick={() => router.push('/dashboard')}
+                    >
+                      Cancel
+                    </button>
+                  }
+                />
 
         <div className="mx-auto max-w-md w-full px-4 flex-1 flex flex-col mt-10">
 

@@ -260,7 +260,7 @@ function SelectCourtContent() {
                 <div key={court.id} className={`bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm flex flex-col transition-all hover:shadow-md ${isBooked ? 'opacity-60 grayscale-[50%]' : ''}`}>
                   <div className="relative h-36 md:h-44 w-full">
                     <img className="w-full h-full object-cover" src={imageSrc} alt={`Court ${court.name}`} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-on-background/60 via-transparent to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                     <div className="absolute top-2 left-2 md:top-3 md:left-3 flex gap-1.5 items-center">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-sm text-[9px] md:text-label-sm font-bold shadow-sm backdrop-blur-md ${isBooked ? 'bg-surface-container-high/95 text-on-surface-variant' : 'bg-secondary-container/95 text-on-secondary-container'}`}>
                         {!isBooked && <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>}
@@ -270,11 +270,11 @@ function SelectCourtContent() {
                         ในร่ม (Indoor)
                       </span>
                     </div>
-                    <div className="absolute bottom-2 left-2 right-2 md:bottom-3 md:left-3 md:right-3 flex items-end justify-between text-on-primary">
-                      <div>
-                        <span className="font-label-sm text-[10px] md:text-label-sm opacity-90 block truncate max-w-[180px]">{locationText}</span>
-                        <h2 className="font-headline-sm text-base md:text-headline-sm text-on-primary font-bold drop-shadow-sm truncate">{court.name}</h2>
-                      </div>
+                    <div className="absolute bottom-2 left-2 right-2 md:bottom-3 md:left-3 md:right-3 flex items-end justify-between text-white">
+                                          <div>
+                                            <span className="font-label-sm text-[10px] md:text-label-sm text-white/85 block truncate max-w-[180px] drop-shadow-sm">{locationText}</span>
+                                            <h2 className="font-headline-sm text-base md:text-headline-sm text-white font-bold drop-shadow-sm truncate">{court.name}</h2>
+                                          </div>
                       <div className="bg-secondary-fixed/95 text-on-secondary-fixed px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg font-label-md text-[10px] md:text-label-md font-bold text-center backdrop-blur-sm shadow-sm shrink-0">
                         FREE
                       </div>
@@ -291,7 +291,11 @@ function SelectCourtContent() {
                     <button 
                       disabled={isBooked || bookingLoading || court.status === 'MAINTENANCE'}
                       onClick={() => openBookingConfirmation(court)}
-                      className={`court-select-btn w-full sm:w-auto justify-center px-4 py-2.5 rounded-lg font-label-lg text-[13px] md:text-label-lg shadow-md active:scale-95 transition-all shrink-0 flex items-center gap-1.5 ${isBooked ? 'bg-surface-container-high text-on-surface-variant cursor-not-allowed shadow-none' : (index === 0 ? 'bg-primary-container text-on-primary hover:bg-primary' : 'bg-surface-container-high text-on-surface hover:bg-primary-container hover:text-on-primary')}`} 
+                      className={`court-select-btn w-full sm:w-auto justify-center px-4 py-2.5 rounded-lg font-label-lg text-[13px] md:text-label-lg text-on-primary-container shadow-sm active:scale-95 transition-all shrink-0 flex items-center gap-1.5 ${
+                      isBooked
+                                              ? 'bg-surface-container-high text-on-surface-variant cursor-not-allowed shadow-none'
+                                              : 'bg-primary-container text-on-primary-container hover:bg-primary hover:text-on-primary hover:-translate-y-0.5 hover:shadow-lg duration-200 ease-out'
+                                          }`}
                       type="button"
                     >
                       <span>{isBooked ? 'คอร์ทไม่ว่าง' : 'จองคอร์ท'}</span>

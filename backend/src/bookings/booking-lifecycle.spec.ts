@@ -4,6 +4,7 @@ import { CronService } from '../cron/cron.service';
 import { CourtsService } from '../courts/courts.service';
 import { Booking, BookingStatus } from './entities/booking.entity';
 import { Student } from '../users/entities/student.entity';
+import { Court } from '../courts/entities/court.entity';
 import { Admin } from '../users/entities/admin.entity';
 
 describe('booking lifecycle (Bangkok time)', () => {
@@ -69,7 +70,8 @@ describe('booking lifecycle (Bangkok time)', () => {
     const first = await bookings.createBooking('00000001', 1, date, '15:00:00');
     at('15:12:00');
     await bookings.cancelBooking(first.booking_id, '00000001');
-    const courts = new CourtsService(repository);
+    const courtMock = { find: async () => [{ id: 1, name: 'Court 1', is_active: true }] };
+    const courts = new CourtsService(courtMock as unknown as Repository<Court>, repository);
     expect((await courts.getAvailability(date))[0].bookings).toEqual([]);
     expect(students[0].strikes).toBe(0);
 

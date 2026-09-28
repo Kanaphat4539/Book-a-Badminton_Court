@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { Admin } from './entities/admin.entity';
 import { Student } from './entities/student.entity';
 import * as bcrypt from 'bcrypt';
@@ -82,9 +82,23 @@ export class UsersService implements OnModuleInit {
       year: parseInt(studentData.year, 10) || 1,
       username: studentData.username,
       password: hashedPassword,
-    } as any);
+    } as any) as unknown as Student;
     
-    return this.studentRepository.save(newStudent) as unknown as Promise<Student>;
+    try {
+      // save() updates an existing primary key; registration must only insert.
+      await this.studentRepository.insert(newStudent);
+      return newStudent;
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const driverError = error.driverError as { code?: string; message?: string };
+        if (driverError.code === 'ER_DUP_ENTRY' ||
+            driverError.code === 'SQLITE_CONSTRAINT' ||
+            /UNIQUE constraint failed/i.test(driverError.message || '')) {
+          throw new BadRequestException('Account already exists');
+        }
+      }
+      throw error;
+    }
   }
 
   async findStudentById(stu_id: string): Promise<Student | null> {

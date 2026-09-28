@@ -43,10 +43,13 @@ export default function Dashboard() {
   const [user, setUser] = useState<{ id: number, name: string, username: string, role: string } | null>(null);
   const [bookings, setBookings] = useState<any[]>([]);
   const [allBookings, setAllBookings] = useState<any[]>([]);
-  const [timeLeft, setTimeLeft] = useState<string>('--:--');
+  const [timeLeft, setTimeLeft] = useState<string>('--:--:--');
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
   const selectedBooking = allBookings.find(b => b.booking_id === selectedBookingId) || null;
-  const [bookingTimeRemaining, setBookingTimeRemaining] = useState<string>('--:--');
+  const [bookingTimeRemaining, setBookingTimeRemaining] = useState<string>('--:--:--');
+  const [serverOffset, setServerOffset] = useState<number>(0);
+  const [showHistoryModal, setShowHistoryModal] = useState<boolean>(false);
+  const [historyStatusFilter, setHistoryStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED'>('ALL');
   const [mounted, setMounted] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<number | null>(null);
   const [statPeriod, setStatPeriod] = useState<'Day' | 'Week' | 'Month' | 'Year'>('Week');
@@ -55,7 +58,7 @@ export default function Dashboard() {
   // Cybercourt telemetry filters & controls
   const [chartCourtFilter, setChartCourtFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'CANCELLED' | 'ACTIVE' | 'READY_CHECK_IN'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'CANCELLED' | 'ACTIVE' | 'READY_CHECK_IN' | 'COMPLETED'>('ALL');
   const [courtFilter, setCourtFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -67,13 +70,34 @@ export default function Dashboard() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const sortBookingsList = (list: any[]) => {
+    if (!Array.isArray(list)) return [];
+    return [...list].sort((a, b) => {
+      const dateComp = (b.booking_date || '').localeCompare(a.booking_date || '');
+      if (dateComp !== 0) return dateComp;
+      const timeComp = (b.time_in || '').localeCompare(a.time_in || '');
+      if (timeComp !== 0) return timeComp;
+      return (b.booking_id || b.id || 0) - (a.booking_id || a.id || 0);
+    });
+  };
+
+  const syncServerTime = async () => {
+    try {
+      const res = await api.get('/time');
+      if (res.data?.timestamp) {
+        setServerOffset(res.data.timestamp - Date.now());
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   // Countdown timer for admin selected booking
   useEffect(() => {
     if (!selectedBooking || selectedBooking.status !== 'CHECKED_IN') return;
 
     const updateTimer = () => {
-      const now = new Date();
-      // Calculate countdown to time_out
+      const now = new Date(Date.now() + serverOffset);
       const endTimeStr = `${selectedBooking.booking_date}T${selectedBooking.time_out}+07:00`;
       const endTime = new Date(endTimeStr);
 
@@ -83,8 +107,8 @@ export default function Dashboard() {
         return;
       }
 
-      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const m = Math.floor((diff / 1000 / 60) % 60);
+      const h = Math.floor(diff / (1000 * 60 * 60));
+      const m = Math.floor((diff / (1000 * 60)) % 60);
       const s = Math.floor((diff / 1000) % 60);
       setBookingTimeRemaining(
         `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
@@ -94,7 +118,7 @@ export default function Dashboard() {
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [selectedBooking]);
+  }, [selectedBooking, serverOffset]);
 
   const handleFinishBooking = async (bookingId: number) => {
     if (!confirm('Are you sure you want to finish this booking early?')) return;
@@ -121,6 +145,7 @@ export default function Dashboard() {
 
     const parsedUser = JSON.parse(userStr);
     setUser(parsedUser);
+    syncServerTime();
 
     if (parsedUser.role === 'ADMIN') {
       fetchAllBookings();
@@ -131,13 +156,24 @@ export default function Dashboard() {
       return () => clearInterval(interval);
     } else {
       fetchBookings();
+      // Poll every 5 seconds so student dashboard reflects real-time status changes
+      const interval = setInterval(() => {
+        fetchBookings();
+      }, 5000);
+      return () => clearInterval(interval);
     }
   }, [router]);
 
   const fetchBookings = async () => {
     try {
       const response = await api.get('/bookings/me');
-      setBookings(response.data);
+      setBookings(sortBookingsList(response.data));
+      if (response.headers?.date) {
+        const serverHeaderTime = Date.parse(response.headers['date']);
+        if (!isNaN(serverHeaderTime)) {
+          setServerOffset(serverHeaderTime - Date.now());
+        }
+      }
     } catch (err) {
       if (isSessionExpiredError(err)) return;
       console.error(err);
@@ -147,9 +183,15 @@ export default function Dashboard() {
   const fetchAllBookings = async () => {
     try {
       const response = await api.get('/bookings');
-      setAllBookings(response.data);
+      setAllBookings(sortBookingsList(response.data));
       const now = new Date();
       setLastSyncTime(`Today at ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} UTC+7`);
+      if (response.headers?.date) {
+        const serverHeaderTime = Date.parse(response.headers['date']);
+        if (!isNaN(serverHeaderTime)) {
+          setServerOffset(serverHeaderTime - Date.now());
+        }
+      }
     } catch (err) {
       if (isSessionExpiredError(err)) return;
       console.error(err);
@@ -232,25 +274,31 @@ export default function Dashboard() {
   useEffect(() => {
     let interval: any;
     if (activeBooking && user?.role !== 'ADMIN') {
-      interval = setInterval(() => {
-        const now = new Date();
+      const updatePlayerTimer = () => {
+        const now = new Date(Date.now() + serverOffset);
         const endDateStr = `${activeBooking.booking_date}T${activeBooking.time_out}+07:00`;
         const endDate = new Date(endDateStr);
         const diff = endDate.getTime() - now.getTime();
 
         if (diff <= 0) {
-          setTimeLeft('00:00');
-          clearInterval(interval);
+          setTimeLeft('00:00:00');
+          if (interval) clearInterval(interval);
           fetchBookings();
         } else {
-          const m = Math.floor(diff / 60000);
-          const s = Math.floor((diff % 60000) / 1000);
-          setTimeLeft(`${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+          const h = Math.floor(diff / (1000 * 60 * 60));
+          const m = Math.floor((diff / (1000 * 60)) % 60);
+          const s = Math.floor((diff / 1000) % 60);
+          setTimeLeft(
+            `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+          );
         }
-      }, 1000);
+      };
+
+      updatePlayerTimer();
+      interval = setInterval(updatePlayerTimer, 1000);
     }
     return () => clearInterval(interval);
-  }, [activeBooking, user]);
+  }, [activeBooking, user, serverOffset]);
 
   // Cybercourt Admin calculations
   const totalBookingsCount = allBookings.length > 0 ? allBookings.length : 1428;
@@ -352,6 +400,7 @@ export default function Dashboard() {
       const diffMs = now.getTime() - startTime.getTime();
       if (diffMs < 0 || diffMs > 15 * 60 * 1000) return false;
     }
+    if (statusFilter === 'COMPLETED' && b.status !== 'COMPLETED') return false;
 
     if (courtFilter !== 'ALL' && String(b.court) !== courtFilter) return false;
 
@@ -412,14 +461,6 @@ export default function Dashboard() {
                   <p className="text-xs sm:text-sm font-semibold text-white">Admin control center</p>
                 </div>
               </div>
-            }
-            topRight={
-              <button
-                className="group inline-flex items-center justify-center h-8 sm:h-9 gap-1.5 sm:gap-2 px-3 sm:px-3.5 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/25 transition-all text-xs sm:text-sm font-medium backdrop-blur-sm"
-                onClick={() => router.push('/admin/users')}
-              >
-                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Users
-              </button>
             }
             eyebrow="Live system overview"
             title="Good morning, Admin."
@@ -924,16 +965,6 @@ export default function Dashboard() {
                       CANCELLED
                     </button>
                     <button
-                      onClick={() => { setStatusFilter('READY_CHECK_IN'); setCurrentPage(1); }}
-                      className={`px-2.5 py-1 rounded-lg transition font-medium text-center ${
-                        statusFilter === 'READY_CHECK_IN'
-                          ? 'bg-amber-500 text-white font-bold shadow-sm'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'
-                      }`}
-                    >
-                      พร้อมเช็กอิน
-                    </button>
-                    <button
                       onClick={() => { setStatusFilter('ACTIVE'); setCurrentPage(1); }}
                       className={`px-2.5 py-1 rounded-lg transition font-medium text-center ${
                         statusFilter === 'ACTIVE'
@@ -942,6 +973,16 @@ export default function Dashboard() {
                       }`}
                     >
                       ACTIVE
+                    </button>
+                    <button
+                      onClick={() => { setStatusFilter('COMPLETED'); setCurrentPage(1); }}
+                      className={`px-2.5 py-1 rounded-lg transition font-medium text-center ${
+                        statusFilter === 'COMPLETED'
+                          ? 'bg-blue-500 text-white font-bold shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400'
+                      }`}
+                    >
+                      COMPLETE
                     </button>
                   </div>
 
@@ -1436,7 +1477,7 @@ export default function Dashboard() {
                     <div>
                       <span className="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase font-semibold">Active Court</span>
                       <div className="font-headline-md text-headline-md text-secondary font-extrabold flex items-center gap-1">
-                        <span>{activeBooking.court?.name}</span>
+                        <span>{typeof activeBooking.court === 'object' ? activeBooking.court?.name : (activeBooking.court ? `Court ${activeBooking.court}` : 'Court')}</span>
                       </div>
                     </div>
                     <div className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center text-secondary shadow-sm">
@@ -1500,8 +1541,8 @@ export default function Dashboard() {
                 <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">Recent Bookings</h2>
                 <span className="font-body-sm text-body-sm text-on-surface-variant">(ประวัติการจอง)</span>
               </div>
-              {bookings.length > 3 && (
-                <button onClick={() => router.push('/booking')} className="font-label-md text-label-md text-primary font-bold hover:underline flex items-center gap-0.5">
+              {bookings.length > 0 && (
+                <button onClick={() => setShowHistoryModal(true)} className="font-label-md text-label-md text-primary font-bold hover:underline flex items-center gap-0.5 cursor-pointer">
                   <span>View all</span>
                   <span className="material-symbols-outlined text-[16px]">chevron_right</span>
                 </button>
@@ -1537,8 +1578,14 @@ export default function Dashboard() {
                   statusIcon = 'sports_tennis';
                 }
 
+                const courtName = typeof booking.court === 'object' ? booking.court?.name : (booking.court ? `Court ${booking.court}` : 'Court');
+
                 return (
-                  <div key={booking.booking_id} className="relative bg-surface-container-lowest rounded-xl p-3.5 shadow-sm flex items-center justify-between overflow-hidden">
+                  <div 
+                    key={booking.booking_id} 
+                    onClick={() => setShowHistoryModal(true)}
+                    className="relative bg-surface-container-lowest rounded-xl p-3.5 shadow-sm flex items-center justify-between overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                  >
                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${accentColor}`}></div>
                     <div className="flex items-center gap-3 pl-1 min-w-0">
                       <div className={`w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0 ${iconColor}`}>
@@ -1546,14 +1593,14 @@ export default function Dashboard() {
                       </div>
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-headline-sm text-headline-sm font-bold text-on-surface">{booking.court?.name || 'Court'}</span>
+                          <span className="font-headline-sm text-headline-sm font-bold text-on-surface">{courtName}</span>
                           <span className={`px-2 py-0.5 rounded-full font-label-sm text-label-sm font-bold ${badgeClass}`}>
                             {booking.status}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 mt-0.5 text-on-surface-variant font-body-sm text-body-sm">
                           <span className="flex items-center gap-1 font-medium">
-                            <span className="material-symbols-outlined text-[13px]">schedule</span> {booking.time_in?.slice(0, 5)}
+                            <span className="material-symbols-outlined text-[13px]">schedule</span> {(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)}
                           </span>
                           <span>•</span>
                           <span className="font-medium">{booking.booking_date}</span>
@@ -1586,6 +1633,185 @@ export default function Dashboard() {
 
         </div>
       </div>
+
+      {/* Booking History Full Detail Dialog */}
+      <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden rounded-2xl bg-surface-container-lowest border border-outline-variant/30">
+          <DialogHeader className="p-5 pb-3 border-b border-outline-variant/20 bg-surface-container-low/60 shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[24px]">history</span>
+                </div>
+                <div>
+                  <DialogTitle className="font-headline-sm text-lg font-bold text-on-surface">
+                    ประวัติการจองทั้งหมด (Booking History)
+                  </DialogTitle>
+                  <DialogDescription className="font-body-sm text-xs text-on-surface-variant">
+                    รายการประวัติการจองคอร์ทแบดมินตันทั้งหมดของคุณ ({bookings.length} รายการ)
+                  </DialogDescription>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pt-3 pb-1 no-scrollbar">
+              {(['ALL', 'ACTIVE', 'PENDING', 'COMPLETED', 'CANCELLED'] as const).map(tab => {
+                const label = tab === 'ALL' ? 'ทั้งหมด' : tab === 'ACTIVE' ? 'กำลังเล่น' : tab === 'PENDING' ? 'รอเช็คอิน' : tab === 'COMPLETED' ? 'สำเร็จ' : 'ยกเลิกแล้ว';
+                const count = tab === 'ALL' 
+                  ? bookings.length 
+                  : tab === 'ACTIVE' 
+                    ? bookings.filter(b => b.status === 'CHECKED_IN').length
+                    : bookings.filter(b => b.status === tab).length;
+                const isSelected = historyStatusFilter === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setHistoryStatusFilter(tab)}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 ${
+                      isSelected
+                        ? 'bg-primary text-on-primary shadow-sm'
+                        : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+                    }`}
+                  >
+                    <span>{label}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${isSelected ? 'bg-white/20 text-white' : 'bg-outline-variant/30 text-on-surface-variant'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </DialogHeader>
+
+          {/* Modal Body / Scrollable List */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col gap-3">
+            {(() => {
+              const filtered = bookings.filter(b => {
+                if (historyStatusFilter === 'ALL') return true;
+                if (historyStatusFilter === 'ACTIVE') return b.status === 'CHECKED_IN';
+                return b.status === historyStatusFilter;
+              });
+
+              if (filtered.length === 0) {
+                return (
+                  <div className="text-center py-12 text-on-surface-variant">
+                    <span className="material-symbols-outlined text-[44px] opacity-30 mb-2">event_busy</span>
+                    <p className="font-bold text-sm">ไม่พบประวัติการจองในหมวดนี้</p>
+                    <p className="text-xs opacity-70 mt-0.5">คุณสามารถจองคอร์ทใหม่ได้ที่เมนู "Book Court"</p>
+                  </div>
+                );
+              }
+
+              return filtered.map(booking => {
+                const isPending = booking.status === 'PENDING';
+                const isCancelled = booking.status === 'CANCELLED';
+                const isCompleted = booking.status === 'COMPLETED';
+                const isCheckedIn = booking.status === 'CHECKED_IN';
+
+                let badgeBg = 'bg-primary-fixed text-on-primary-fixed';
+                let statusThai = 'รอเช็คอิน';
+                let borderColor = 'border-primary/20';
+
+                if (isCheckedIn) {
+                  badgeBg = 'bg-secondary-container text-on-secondary-container';
+                  statusThai = 'กำลังใช้งาน (Active)';
+                  borderColor = 'border-secondary/30';
+                } else if (isCompleted) {
+                  badgeBg = 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300';
+                  statusThai = 'ใช้งานเสร็จสิ้น';
+                  borderColor = 'border-sky-300/30';
+                } else if (isCancelled) {
+                  badgeBg = 'bg-error-container text-on-error-container';
+                  statusThai = 'ยกเลิกแล้ว';
+                  borderColor = 'border-error/20';
+                }
+
+                const courtName = typeof booking.court === 'object' ? booking.court?.name : (booking.court ? `Court ${booking.court}` : 'Court');
+
+                return (
+                  <div
+                    key={booking.booking_id}
+                    className={`p-4 rounded-xl bg-surface-container-low border ${borderColor} flex flex-col gap-3 shadow-xs hover:shadow-sm transition-all`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center text-primary shadow-xs">
+                          <span className="material-symbols-outlined text-[22px]">stadium</span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-base text-on-surface">{courtName}</span>
+                            <span className="text-xs font-mono text-on-surface-variant font-semibold bg-surface-container-high px-1.5 py-0.5 rounded">
+                              #BK-{booking.booking_id}
+                            </span>
+                          </div>
+                          <span className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5">
+                            <span className="material-symbols-outlined text-[13px]">calendar_today</span> {booking.booking_date}
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${badgeBg}`}>
+                        {statusThai}
+                      </span>
+                    </div>
+
+                    {/* Details Row */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 border-t border-outline-variant/20 text-xs">
+                      <div className="flex flex-col">
+                        <span className="text-on-surface-variant text-[11px]">ช่วงเวลา</span>
+                        <span className="font-bold text-on-surface">
+                          {(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)} น.
+                        </span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-on-surface-variant text-[11px]">ระยะเวลา</span>
+                        <span className="font-bold text-on-surface">1 ชั่วโมง</span>
+                      </div>
+                      <div className="flex flex-col col-span-2 sm:col-span-1">
+                        <span className="text-on-surface-variant text-[11px]">สถานะระบบ</span>
+                        <span className="font-mono font-semibold text-on-surface">{booking.status}</span>
+                      </div>
+                    </div>
+
+                    {/* Actions if Pending */}
+                    {isPending && (
+                      <div className="flex items-center gap-2 pt-1 border-t border-outline-variant/10">
+                        <button
+                          onClick={() => {
+                            setShowHistoryModal(false);
+                            router.push('/scan');
+                          }}
+                          className="flex-1 py-2 px-3 rounded-lg bg-primary text-on-primary text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">qr_code_scanner</span>
+                          <span>สแกนเข้าสนาม</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowHistoryModal(false);
+                            setBookingToCancel(booking.booking_id);
+                          }}
+                          className="py-2 px-3 rounded-lg bg-error-container text-on-error-container text-xs font-bold hover:bg-error-container/80 transition-all cursor-pointer"
+                        >
+                          ยกเลิก
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              });
+            })()}
+          </div>
+
+          <DialogFooter className="p-3 bg-surface-container-low/60 border-t border-outline-variant/20">
+            <Button variant="outline" onClick={() => setShowHistoryModal(false)} className="w-full sm:w-auto">
+              ปิดหน้าต่าง (Close)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={bookingToCancel !== null} onOpenChange={(open) => !open && setBookingToCancel(null)}>
         <DialogContent>

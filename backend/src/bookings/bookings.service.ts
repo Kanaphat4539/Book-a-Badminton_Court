@@ -113,7 +113,7 @@ export class BookingsService {
     if (!stu_id) return [];
     const bookings = await this.bookingsRepository.find({
       where: { stu_id },
-      order: { booking_date: 'DESC', time_in: 'DESC' },
+      order: { booking_date: 'DESC', time_in: 'DESC', booking_id: 'DESC' },
     });
     // Filter strictly to avoid TypeORM dropping undefined/empty where clauses
     return bookings.filter(b => b.stu_id === stu_id).map(b => ({ ...b, id: b.booking_id }));
@@ -124,7 +124,7 @@ export class BookingsService {
     const bookings = await this.bookingsRepository.find({
       where: whereCondition,
       relations: { student: true, admin: true },
-      order: { booking_date: 'DESC', time_in: 'DESC' },
+      order: { booking_date: 'DESC', time_in: 'DESC', booking_id: 'DESC' },
     });
     return bookings.map(b => ({ ...b, id: b.booking_id }));
   }
@@ -225,7 +225,7 @@ export class BookingsService {
           throw new NotFoundException('Booking not found');
         }
 
-        if (booking.status !== BookingStatus.PENDING) {
+        if (booking.status !== BookingStatus.PENDING && booking.status !== BookingStatus.CHECKED_IN) {
           throw new BadRequestException(`Cannot cancel. Status is currently ${booking.status}`);
         }
 

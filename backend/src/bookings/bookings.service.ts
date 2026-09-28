@@ -77,6 +77,15 @@ export class BookingsService {
           throw new BadRequestException('You already have an active booking. Please complete or cancel it first.');
         }
 
+        // Check daily quota (must be > 0)
+        const studentRepo = transactionalEntityManager.getRepository(Student);
+        const studentRecord = await studentRepo.findOneBy({ stu_id });
+        if (!studentRecord || studentRecord.quota <= 0) {
+          throw new BadRequestException('ใช้โควตาประจำวันแล้ว: คุณมีรายการจองที่ยังไม่เสร็จสิ้น (จองได้ 1 ครั้ง/วัน)');
+        }
+        studentRecord.quota = studentRecord.quota - 1;
+        await studentRepo.save(studentRecord);
+
         // Check overlapping time intervals (time_in < endTime AND time_out > startTime)
         const overlappingBooking = await transactionalEntityManager.createQueryBuilder(Booking, 'booking')
           .where('booking.court = :courtId', { courtId })

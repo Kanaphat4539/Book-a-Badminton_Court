@@ -13,6 +13,7 @@ export default function ManageUsers() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [searchStuId, setSearchStuId] = useState('');
 
   const [showAddAdmin, setShowAddAdmin] = useState(false);
   const [adminUsername, setAdminUsername] = useState('');
@@ -91,14 +92,21 @@ export default function ManageUsers() {
   if (!mounted) return null;
 
   return (
-    <MainLayout>
-      <div className="max-w-5xl mx-auto space-y-6 w-full px-4 md:px-margin-screen mt-4 relative z-10">
-        <div className="flex justify-between items-center bg-surface-container-low p-6 rounded-3xl shadow-sm transition-colors duration-300">
+    <MainLayout width="wide">
+      <div className="max-w-6xl mx-auto space-y-6 w-full px-4 md:px-margin-screen mt-4 relative z-10">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-container-low p-6 rounded-3xl shadow-sm transition-colors duration-300">
           <div>
             <h1 className="font-headline-lg text-[28px] font-bold text-on-surface transition-colors duration-300">Manage Users</h1>
             <p className="font-body-md text-[15px] text-on-surface-variant font-medium transition-colors duration-300">View and manage all registered users</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
+            <input
+              type="text"
+              placeholder="Search student ID..."
+              value={searchStuId}
+              onChange={(e) => setSearchStuId(e.target.value)}
+              className="h-10 px-3 rounded-xl bg-surface-container-lowest border border-outline-variant/40 text-xs font-mono focus:outline-none focus:border-primary text-on-surface w-36 sm:w-48"
+            />
             <button
               className="bg-primary hover:opacity-90 text-on-primary px-5 py-2.5 rounded-xl font-button text-[15px] font-bold transition-all shadow-sm active:scale-95 flex items-center gap-2"
               onClick={() => setShowAddAdmin(true)}
@@ -116,7 +124,8 @@ export default function ManageUsers() {
           </div>
         </div>
 
-        <section className="bg-surface-container-lowest border border-outline-variant/20 shadow-sm rounded-3xl p-6 md:p-8 transition-colors duration-300">
+        <section className="bg-surface-container-lowest border border-outline-variant/20 shadow-sm rounded-3xl p-6 md:p-8 transition-colors duration-300 overflow-hidden">
+          <div className="mb-4 text-xs text-on-surface-variant font-mono">Search by student ID: {searchStuId || '—'}</div>
           {loading ? (
             <div className="flex justify-center items-center h-32">
               <span className="material-symbols-outlined animate-spin text-[32px] text-primary">autorenew</span>
@@ -124,28 +133,78 @@ export default function ManageUsers() {
           ) : users.length === 0 ? (
             <p className="text-on-surface-variant text-center font-medium my-8">No regular users found.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {users.map(u => (
-                <div key={u.id || u.stu_id} className="bg-surface-container-low border border-surface-container-high p-5 rounded-2xl flex flex-col gap-3 shadow-sm hover:border-primary/30 transition-colors">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-headline-md text-[18px] font-bold text-on-surface">{u.name || `${u.first_name} ${u.last_name}`}</p>
-                      <p className="text-on-surface-variant font-semibold text-[14px]">@{u.username}</p>
-                    </div>
-                    <span className="bg-surface-container-high text-on-surface px-2.5 py-1 rounded-full text-[12px] font-bold">
-                      {u.role || 'STUDENT'}
-                    </span>
-                  </div>
-                  <button
-                    className="mt-2 flex items-center justify-center gap-1.5 w-full bg-error-container text-on-error-container hover:bg-error hover:text-on-error py-2 rounded-xl font-bold transition-colors text-[14px]"
-                    onClick={() => handleDeleteUser(u.id || u.stu_id, u.username)}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                    Delete
-                  </button>
-                </div>
-              ))}
-            </div>
+            <div className="overflow-x-auto w-full rounded-2xl">
+              <table className="w-full min-w-[760px] text-sm border-collapse bg-white dark:bg-slate-900/60 rounded-2xl overflow-hidden shadow-inner table-auto">
+                <thead>
+                  <tr className="border-b border-outline-variant/40 text-left text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
+                    <th className="py-3 px-3">Name</th>
+                    <th className="py-3 px-3">Username</th>
+                    <th className="py-3 px-3">Student ID</th>
+                    <th className="py-3 px-3">Role</th>
+                    <th className="py-3 px-3">Quota</th>
+                    <th className="py-3 px-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+              <tbody>
+                {users.filter(u => {
+                  if (!searchStuId.trim()) return true;
+                  const sid = (u.stu_id || '').toString();
+                  return sid.includes(searchStuId.trim());
+                }).map(u => (
+                  <tr key={u.id || u.stu_id} className="border-b border-outline-variant/20 hover:bg-surface-container-low transition-colors">
+                    <td className="py-3 px-3 font-semibold text-on-surface">{u.name || `${u.first_name || ''} ${u.last_name || ''}`.trim() || '-'}</td>
+                    <td className="py-3 px-3 text-on-surface-variant">@{u.username}</td>
+                    <td className="py-3 px-3 text-on-surface-variant font-mono">{u.stu_id || '-'}</td>
+                    <td className="py-3 px-3"><span className="bg-surface-container-high text-on-surface px-2 py-0.5 rounded-full text-[11px] font-bold">{u.role || 'STUDENT'}</span></td>
+                    <td className="py-3 px-3"><span className="font-mono font-bold text-orange-600 dark:text-orange-400">{u.quota ?? 1}</span></td>
+                    <td className="py-3 px-3 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-colors shadow-sm"
+                          onClick={async () => {
+                            if (!confirm(`Reset strikes/quota for @${u.username}?`)) return;
+                            try {
+                              await api.post(`/users/${u.id || u.stu_id}/reset-quota`);
+                              toast.success('Quota reset successfully');
+                              fetchUsers();
+                            } catch (err: any) {
+                              toast.error(err.response?.data?.message || 'Failed to reset quota');
+                            }
+                          }}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">replay</span>
+                          Reset
+                        </button>
+                        <button
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors shadow-sm"
+                          onClick={async () => {
+                            if (!confirm(`Ban @${u.username} for 24 hours?`)) return;
+                            try {
+                              await api.post(`/users/${u.id || u.stu_id}/ban`);
+                              toast.success('User banned for 24 hours');
+                              fetchUsers();
+                            } catch (err: any) {
+                              toast.error(err.response?.data?.message || 'Failed to ban user');
+                            }
+                          }}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">block</span>
+                          Ban
+                        </button>
+                        <button
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-error-container text-on-error-container hover:bg-error hover:text-on-error text-xs font-bold transition-colors"
+                          onClick={() => handleDeleteUser(u.id || u.stu_id, u.username)}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">delete</span>
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           )}
         </section>
       </div>

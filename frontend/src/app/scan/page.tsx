@@ -11,8 +11,9 @@ import SportBanner from '@/components/SportBanner';
 export default function ScanPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [scannedResult, setScannedResult] = useState<string | null>(null);
-  const [myBookings, setMyBookings] = useState<any[]>([]);
+    const [scannedResult, setScannedResult] = useState<string | null>(null);
+    const [myBookings, setMyBookings] = useState<any[]>([]);
+    const [checkedInInfo, setCheckedInInfo] = useState<{courtId: number, date: string, end: string} | null>(null);
   const myBookingsRef = useRef<any[]>([]);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
@@ -54,7 +55,8 @@ export default function ScanPage() {
       const bookingId = pendingBooking.booking_id || pendingBooking.id;
       await api.post(`/bookings/${bookingId}/check-in`, { courtId });
       toast.success('Check-in successful! Enjoy your game.');
-      router.push('/dashboard');
+      setCheckedInInfo({ courtId, date: pendingBooking.booking_date, end: pendingBooking.time_out });
+      setLoading(false);
     } catch (err: any) {
       toast.error(err.response?.data?.message || err.message || 'Check-in failed');
       setTimeout(() => {
@@ -163,6 +165,12 @@ export default function ScanPage() {
                   <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">info</span>
                   Note: You can only scan the QR code when it is exactly time for your booking.
                 </div>
+              </div>
+            )}
+            {checkedInInfo && (
+              <div className="mt-6 p-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-400/30 text-center">
+                <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">Court {checkedInInfo.courtId}</p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">{checkedInInfo.date} • {checkedInInfo.end?.slice(0,5)} — Playing now — countdown active</p>
               </div>
             )}
           </div>

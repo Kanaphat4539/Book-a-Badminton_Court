@@ -9,4 +9,12 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  @Get('time')
+  getTime() {
+    return {
+      server_time: new Date().toISOString(),
+      timestamp: Date.now(),
+    };
+  }
 }

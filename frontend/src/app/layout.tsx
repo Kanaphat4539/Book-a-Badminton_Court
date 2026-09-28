@@ -3,6 +3,7 @@ import { Roboto_Condensed } from "next/font/google";
 import "./globals.css";
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
+import { LoadingProvider } from '@/components/loading-provider';
 import Script from 'next/script';
 import 'material-symbols/outlined.css';
 
@@ -71,7 +72,7 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
         >
-          {children}
+          <LoadingProvider>{children}</LoadingProvider>
           <Toaster position="top-center" theme="system" />
         </ThemeProvider>
       </body>

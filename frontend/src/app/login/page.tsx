@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { usePageLoading } from '@/components/loading-provider';
 
 
 export default function LoginPage() {
   const router = useRouter();
+  const pageLoading = usePageLoading();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +23,8 @@ export default function LoginPage() {
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       toast.success('Login successful!');
-      window.location.href = '/dashboard';
+      pageLoading.start('/login');
+      router.push('/dashboard');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Login failed');
     } finally {

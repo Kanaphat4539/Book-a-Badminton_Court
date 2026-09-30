@@ -1,0 +1,22 @@
+{
+  "environment": {
+    "frontend": "http://localhost:3001",
+    "backend": "http://127.0.0.1:4001",
+    "commit": "37aea29",
+    "dbVolume": "badminton_qa_20260928_mysql_data",
+    "at": "2026-09-28T14:49:53.988Z",
+    "cleanup": "fixtures seeded via SQL cleared"
+  },
+  "results": [
+    {
+      "id": "TC_UI_005",
+      "status": "ผ่าน",
+      "actual": "dialog shows actual QA fixture date=28 month=กันยายน court=Court 1 time=18:00 and booker=Test Student"
+    },
+    {
+      "id": "TC_UI_007",
+      "status": "ผ่าน",
+      "actual": "dark theme persists across reload and booking navigation"
+    }
+  ]
+}

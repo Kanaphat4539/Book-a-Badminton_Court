@@ -1,0 +1,24 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "codeCommit": "581a654",
+    "caseCommit": "ed3bdca",
+    "date": "2026-09-28",
+    "at": "2026-09-28T07:12:15.353Z",
+    "browser": "Chromium headless",
+    "cleanup": "all runner-created users/bookings removed"
+  },
+  "results": [
+    {
+      "id": "TC_BOOK_033",
+      "status": "ไม่ผ่าน",
+      "actual": "past:/booking, tomorrow:/booking, invalid-date:/booking, invalid-time:/booking/select-court"
+    },
+    {
+      "id": "TC_BOOK_036",
+      "status": "ไม่ผ่าน",
+      "actual": "HTTP 500: no retry button; visible=KMITL Badminton\nlocation_on\nMain Sports Complex\nnotifications\nmenu\nschedule\nรอบเวลาที่คุณเลือก\nจันทร์ 28 ก.ย. • 18:00 - 19:00 น.\nedit_calendar\nเปลี่ยนเวลา\nเลือกสนามที่ว่าง\n0 คอร์ทพร้อมใช้\n\nระบบสำรองคอ; buttons=notifications|menu|edit_calendarเปลี่ยนเวลา|sports_tennisอาคารยิมเนเซียม 1 (ทั้งหมด 0 คอร์ท)|public|photo_camera|settings|homeหน้าหลัก"
+    }
+  ]
+}

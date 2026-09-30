@@ -1,0 +1,50 @@
+{
+  "environment": {
+    "commit": "37aea29",
+    "dbVolume": "badminton_qa_20260928_mysql_data",
+    "clock": "mocked Date + real MySQL",
+    "at": "2026-09-28T03:40:00.000Z"
+  },
+  "results": [
+    {
+      "id": "TC_CONC_004",
+      "status": "ผ่าน",
+      "actual": "cancel vs cron concurrently: fulfilled,fulfilled, DB CANCELLED/strikes=1"
+    },
+    {
+      "id": "TC_CONC_005",
+      "status": "ผ่าน",
+      "actual": "injected booking-write failure rolled back status/strike; retry produced one CANCELLED + one strike"
+    },
+    {
+      "id": "TC_CONC_006",
+      "status": "ตรวจไม่ได้",
+      "actual": "same process: 3 concurrent cron calls on 3 bookings -> 3 CANCELLED / strikes=3; cross-process not exercised"
+    },
+    {
+      "id": "TC_CONC_009",
+      "status": "ผ่าน",
+      "actual": "check-in vs cancel: one success/one 400, final CHECKED_IN, strikes=0"
+    },
+    {
+      "id": "TC_CONC_010",
+      "status": "ผ่าน",
+      "actual": "at exact deadline: checkin rejected 'The check-in period has ended.', cron CANCELLED, strikes=1"
+    },
+    {
+      "id": "TC_CONC_011",
+      "status": "ตรวจไม่ได้",
+      "actual": "finish vs cron results=fulfilled,fulfilled; final COMPLETED/strikes0 (single-process one trial)"
+    },
+    {
+      "id": "TC_CONC_012",
+      "status": "ตรวจไม่ได้",
+      "actual": "second strike ban=24h, post-ban booking 400; simultaneous ban-vs-create not exercised"
+    },
+    {
+      "id": "TC_CONC_016",
+      "status": "ผ่าน",
+      "actual": "created_at unchanged across CHECKED_IN,CANCELLED,COMPLETED; 10:30 booking grace deadline 10:45"
+    }
+  ]
+}

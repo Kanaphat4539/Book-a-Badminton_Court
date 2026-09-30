@@ -1,0 +1,69 @@
+{
+  "environment": {
+    "commit": "37aea29",
+    "dbVolume": "badminton_qa_20260928_mysql_data",
+    "at": "2026-09-28T14:47:42.292Z"
+  },
+  "results": [
+    {
+      "id": "TC_SEC_003",
+      "status": "ผ่าน",
+      "actual": "expired signed JWT ->401, dashboard redirects /login and clears token"
+    },
+    {
+      "id": "TC_SEC_011",
+      "status": "ผ่าน",
+      "actual": "localStorage keys=token,user; user fields=id,username,name,role; no password"
+    },
+    {
+      "id": "TC_SEC_012",
+      "status": "ผ่าน",
+      "actual": "protected 401 clears token/user and redirects to login; navigation count=2"
+    },
+    {
+      "id": "TC_SEC_013",
+      "status": "ตรวจไม่ได้",
+      "actual": "login 401 shows credentials error and does not clear existing storage; register 400 not exercised"
+    },
+    {
+      "id": "TC_SEC_014",
+      "status": "ตรวจไม่ได้",
+      "actual": "403 /users + mocked 500 /bookings/me did not clear token; network failure not exercised"
+    },
+    {
+      "id": "TC_SEC_015",
+      "status": "ตรวจไม่ได้",
+      "actual": "old fetch 401 after replacing token kept new token; Axios interceptor path not exercised"
+    },
+    {
+      "id": "TC_SEC_017",
+      "status": "ผ่าน",
+      "actual": "guest direct-open 5 protected routes -> /login without student/court details"
+    },
+    {
+      "id": "TC_SEC_018",
+      "status": "ผ่าน",
+      "actual": "STUDENT /admin/users redirects dashboard; GET /users returns 403"
+    },
+    {
+      "id": "TC_SEC_019",
+      "status": "ตรวจไม่ได้",
+      "actual": "localStorage role/id forged ADMIN; backend GET /users still 403; booking owner override not exercised"
+    },
+    {
+      "id": "TC_SEC_021",
+      "status": "ตรวจไม่ได้",
+      "actual": "localStorage display-name script payload did not execute on dashboard; persisted DB name/admin users not exercised"
+    },
+    {
+      "id": "TC_SEC_025",
+      "status": "ตรวจไม่ได้",
+      "actual": "login+booking requests=94: no token in URLs; console/backend logs need secure redacted review"
+    },
+    {
+      "id": "TC_SEC_028",
+      "status": "ตรวจไม่ได้",
+      "actual": "logout clears browser session; old JWT replay HTTP 200 (revocation policy not yet confirmed)"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "environment": {
+    "commit": "37aea29",
+    "dbVolume": "badminton_qa_20260928_mysql_data",
+    "at": "2026-09-28T14:52:07.433Z"
+  },
+  "results": [
+    {
+      "id": "TC_CONC_008",
+      "status": "ตรวจไม่ได้",
+      "actual": "60 distinct court/hour slots seeded as COMPLETED; availability returns 60 occupied entries and /bookings/user-notifications returns exact full-day message. Dashboard bell rendering not verified."
+    }
+  ]
+}

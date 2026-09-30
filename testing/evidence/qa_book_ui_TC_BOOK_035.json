@@ -1,0 +1,19 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "codeCommit": "581a654",
+    "caseCommit": "ed3bdca",
+    "date": "2026-09-28",
+    "at": "2026-09-28T07:17:42.049Z",
+    "browser": "Chromium headless",
+    "cleanup": "all runner-created users/bookings removed"
+  },
+  "results": [
+    {
+      "id": "TC_BOOK_035",
+      "status": "ตรวจไม่ได้",
+      "actual": "browser LA 2026-09-27 vs Thai 2026-09-28; booking page today, dashboard booking 20:00 visible; dashboard date formatting not fully verified"
+    }
+  ]
+}

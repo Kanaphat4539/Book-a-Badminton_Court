@@ -1,0 +1,24 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "codeCommit": "581a654",
+    "caseCommit": "ed3bdca",
+    "date": "2026-09-28",
+    "at": "2026-09-28T07:15:58.592Z",
+    "browser": "Chromium headless",
+    "cleanup": "all runner-created users/bookings removed"
+  },
+  "results": [
+    {
+      "id": "TC_BOOK_027",
+      "status": "ไม่ผ่าน",
+      "actual": "direct expired select-court URL still displays 4 bookable courts"
+    },
+    {
+      "id": "TC_BOOK_028",
+      "status": "ไม่ผ่าน",
+      "actual": "no clear out-of-hours explanation; body=orts Complex System\n\nA smarter way to manage courts, schedules, and every match that matters.\n\npublic\nphoto_camera\nsettings\nPLATFORM\nDashboard\nBookings\nCourt Schedule\nSUPPORT\ncall\n02-329-8000\nopen_in_new\nHelp Center\nMon – Fri, 08:00 – 18:00\nbolt\nSystem Status\n\nAll booking services are operating normally.\n\nOperational\n\n© 2026 KMITL Badminton. All rights reserved.\n\nInternal use only · Sports Complex"
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "at": "2026-09-28T08:31:17.956Z",
+    "browser": "Chromium headless",
+    "cleanup": "only runner fixtures removed"
+  },
+  "results": [
+    {
+      "id": "TC_ADM_001",
+      "status": "ผ่าน",
+      "actual": "bell showed new-booking ID 44 and cancelled ID 45; latest cancelled item appeared first"
+    },
+    {
+      "id": "TC_ADM_002",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.waitFor: Error: strict mode violation: getByText(/การแจ้งเตือน/) resolved to 2 elements:\n    1) <h3 class=\"font-headline-sm text-on-surface\">การแจ้งเตือน (Admin)</h3> aka getByRole('heading', { name: 'การแจ้งเตือน (Admin)' })\n    2) <p>ไม่มีการแจ้งเตือน</p> aka getByText('ไม่มีการแจ้งเตือน')\n\nCall log:\n\u001b[2m  - waiting for getByText(/การแจ้งเตือน/) to be visible\u001b[22m\n"
+    },
+    {
+      "id": "TC_ADM_003",
+      "status": "ไม่ผ่าน",
+      "actual": "page.evaluate: TypeError: Failed to execute 'getComputedStyle' on 'Window': parameter 1 is not of type 'Element'.\n    at eval (eval at evaluate (:311:30), <anonymous>:1:67)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
+    },
+    {
+      "id": "TC_ADM_004",
+      "status": "ผ่าน",
+      "actual": "Admin dashboard switched Dark; admin/users inherited it; localStorage=dark and refresh retained it; switched back Light successfully"
+    },
+    {
+      "id": "TC_ADM_005",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.waitFor: Error: strict mode violation: locator('footer') resolved to 2 elements:\n    1) <footer class=\"glass-card rounded-xl p-3 sm:p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800 shadow-hud-panel\">…</footer> aka getByText('Showing 0 of 0 weekly telemetry logs1')\n    2) <footer class=\"hidden md:block w-full mt-auto bg-surface text-on-surface overflow-hidden relative border-t border-surface-container-high\">…</footer> aka getByRole('contentinfo')\n\nCall log:\n\u001b[2m  - waiting for locator('footer') to be visible\u001b[22m\n"
+    },
+    {
+      "id": "TC_ADM_006",
+      "status": "ตรวจไม่ได้",
+      "actual": "Manage Users rendered with shared CSS theme and reorganized Add Admin/Back controls; computed={\"body\":\"rgb(249, 249, 248)\",\"add\":\"rgb(171, 53, 0)\",\"grid\":\"178px 178px 178px\",\"overflow\":0}; subjective visual match to unprovided design cannot be fully certified"
+    },
+    {
+      "id": "TC_ADM_007",
+      "status": "ผ่าน",
+      "actual": "Manage Users displayed both DB students @adm7a_81088040/@adm7b_81088118; no bcrypt/password text rendered"
+    },
+    {
+      "id": "TC_ADM_008",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.fill: Timeout 18000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Username')\u001b[22m\n"
+    },
+    {
+      "id": "TC_ADM_009",
+      "status": "ผ่าน",
+      "actual": "Delete confirmed; success toast; card/DB user removed; subsequent login HTTP 401"
+    },
+    {
+      "id": "TC_ADM_010",
+      "status": "ไม่ผ่าน",
+      "actual": "Day chart peak says 68 SLOTS while QA database has 2 bookings\n\n68 !== 2\n"
+    },
+    {
+      "id": "TC_ADM_011",
+      "status": "ไม่ผ่าน",
+      "actual": "empty DB still renders hard-coded chart/78 SLOTS instead of no-data state"
+    },
+    {
+      "id": "TC_ADM_012",
+      "status": "ผ่าน",
+      "actual": "Admin card polled full lifecycle PENDING→ACTIVE(CHECKED_IN)→COMPLETED without reload and displayed completion time"
+    },
+    {
+      "id": "TC_ADM_013",
+      "status": "ผ่าน",
+      "actual": "Admin sidebar hides Booking/Scan while Student sidebar in same browser exposes both, covering regression side"
+    },
+    {
+      "id": "TC_ADM_014",
+      "status": "ผ่าน",
+      "actual": "Admin direct /booking and /scan both redirected to /dashboard"
+    },
+    {
+      "id": "TC_ADM_015",
+      "status": "ตรวจไม่ได้",
+      "actual": "Student booking and scan pages remained accessible; Admin menu excludes them and Admin booking dialog still rendered Court 2 QR; physical scan/check-in not repeated in this case"
+    },
+    {
+      "id": "TC_ADM_017",
+      "status": "ไม่ผ่าน",
+      "actual": "Admin dashboard has no Reset Database button, so required two-confirm UI flow cannot be executed"
+    },
+    {
+      "id": "TC_ADM_018",
+      "status": "ผ่าน",
+      "actual": "dialog stayed open across polling and replaced PENDING QR view with CHECKED_IN countdown/Finish Early, without reopen"
+    },
+    {
+      "id": "TC_ADM_022",
+      "status": "ไม่ผ่าน",
+      "actual": "dialog missing 2026-09-28; actual=REF: #BK-53 Booking Telemetry QA 81040005 (@adm22_81040005) Court 2 • 18:00 - 19:00 Too Early for Check-in QR Code will be available when the booking time starts. Cancel this Booking"
+    },
+    {
+      "id": "TC_ADM_023",
+      "status": "ผ่าน",
+      "actual": "dismissed native Finish Early confirm; POST count=0; DB remained CHECKED_IN and dialog state stayed active"
+    },
+    {
+      "id": "TC_ADM_025",
+      "status": "ผ่าน",
+      "actual": "dashboard polling observed 2 request(s); after navigation and 6.2s count stayed 2; interval cleanup worked"
+    },
+    {
+      "id": "TC_ADM_027",
+      "status": "ผ่าน",
+      "actual": "dismissed Delete confirm; user stayed in card/DB and login remained HTTP 201"
+    },
+    {
+      "id": "TC_ADM_030",
+      "status": "ผ่าน",
+      "actual": "first DELETE 500 showed failure only and retained user/retry button; second confirmed retry succeeded"
+    },
+    {
+      "id": "TC_ADM_031",
+      "status": "ไม่ผ่าน",
+      "actual": "Admin dashboard has no Reset Database control for either cancellation path"
+    },
+    {
+      "id": "TC_ADM_032",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.waitFor: Error: strict mode violation: getByText(/การแจ้งเตือน/) resolved to 2 elements:\n    1) <h3 class=\"font-headline-sm text-on-surface\">การแจ้งเตือน (Admin)</h3> aka getByRole('heading', { name: 'การแจ้งเตือน (Admin)' })\n    2) <p>ไม่มีการแจ้งเตือน</p> aka getByText('ไม่มีการแจ้งเตือน')\n\nCall log:\n\u001b[2m  - waiting for getByText(/การแจ้งเตือน/) to be visible\u001b[22m\n"
+    },
+    {
+      "id": "TC_ADM_034",
+      "status": "ผ่าน",
+      "actual": "A API/UI showed only A's newest 20 of 22 in descending ID order; B's 2 rows absent"
+    },
+    {
+      "id": "TC_ADM_035",
+      "status": "ผ่าน",
+      "actual": "student bell mapped PENDING/CHECKED_IN/COMPLETED/CANCELLED to four distinct correct texts/icons/colors"
+    },
+    {
+      "id": "TC_ADM_036",
+      "status": "ผ่าน",
+      "actual": "60 active/completed slots triggered SYSTEM sys-full message in API/UI; system card contained no undefined court/time"
+    },
+    {
+      "id": "TC_ADM_037",
+      "status": "ผ่าน",
+      "actual": "59 today: no sys-full; 60 yesterday: no sys-full; threshold and today-only count both held"
+    },
+    {
+      "id": "TC_ADM_038",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.waitFor: Error: strict mode violation: getByText(/การแจ้งเตือน/) resolved to 2 elements:\n    1) <h3 class=\"font-headline-sm text-on-surface\">การแจ้งเตือน </h3> aka getByRole('heading', { name: 'การแจ้งเตือน' })\n    2) <p>ไม่มีการแจ้งเตือน</p> aka getByText('ไม่มีการแจ้งเตือน')\n\nCall log:\n\u001b[2m  - waiting for getByText(/การแจ้งเตือน/) to be visible\u001b[22m\n"
+    },
+    {
+      "id": "TC_ADM_039",
+      "status": "ตรวจไม่ได้",
+      "actual": "fresh API calls and reopen kept is_read=false; no read-state endpoint/contract, confirming GAP-09"
+    },
+    {
+      "id": "TC_ADM_040",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.waitFor: Error: strict mode violation: getByText(/การแจ้งเตือน/) resolved to 2 elements:\n    1) <h3 class=\"font-headline-sm text-on-surface\">การแจ้งเตือน </h3> aka getByRole('heading', { name: 'การแจ้งเตือน' })\n    2) <p>ไม่มีการแจ้งเตือน</p> aka getByText('ไม่มีการแจ้งเตือน')\n\nCall log:\n\u001b[2m  - waiting for getByText(/การแจ้งเตือน/) to be visible\u001b[22m\n"
+    },
+    {
+      "id": "TC_ADM_041",
+      "status": "ไม่ผ่าน",
+      "actual": "no news-like cards found"
+    },
+    {
+      "id": "TC_ADM_042",
+      "status": "ตรวจไม่ได้",
+      "actual": "guest /news final path=/login; page did not crash; public-vs-login policy is not agreed, so no pass/fail oracle"
+    }
+  ]
+}

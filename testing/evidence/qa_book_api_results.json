@@ -1,0 +1,73 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "codeCommit": "581a654",
+    "caseCommit": "ed3bdca",
+    "date": "2026-09-28",
+    "at": "2026-09-28T07:06:28.967Z",
+    "cleanup": "all runner-created users/bookings removed"
+  },
+  "results": [
+    {
+      "id": "TC_BOOK_005",
+      "status": "ผ่าน",
+      "actual": "tomorrow 2026-09-29: 400 policy text; DB rows 0->0"
+    },
+    {
+      "id": "TC_BOOK_022",
+      "status": "ไม่ผ่าน",
+      "actual": "10:30:HTTP400 Invalid booking start time. | ab:cd:HTTP400 Invalid booking start time. | 24:00:HTTP400 Booking hours are 08:00 to 23:00. | 25:99:HTTP400 Invalid booking start time."
+    },
+    {
+      "id": "TC_BOOK_024",
+      "status": "ผ่าน",
+      "actual": "07:00:400, 23:00:400; expected message, no rows"
+    },
+    {
+      "id": "TC_BOOK_009",
+      "status": "ตรวจไม่ได้",
+      "actual": "COMPLETED fixture (set in QA DB, not cron), second booking 400 You already have an active booking. Please complete or cancel it first.; 1 row"
+    },
+    {
+      "id": "TC_BOOK_011",
+      "status": "ไม่ผ่าน",
+      "actual": "18:30 rejected as Invalid booking start time., not interval collision"
+    },
+    {
+      "id": "TC_BOOK_012",
+      "status": "ผ่าน",
+      "actual": "two adjacent bookings; 18:00:00-19:00:00 then 19:00:00-20:00:00"
+    },
+    {
+      "id": "TC_BOOK_015",
+      "status": "ตรวจไม่ได้",
+      "actual": "API 201 Court 4 22:00-23:00; 15 UI slots not exercised here"
+    },
+    {
+      "id": "TC_BOOK_016",
+      "status": "ผ่าน",
+      "actual": "A 18:00 CANCELLED in time; B same court/time 201; status recorded in DB"
+    },
+    {
+      "id": "TC_BOOK_020",
+      "status": "ผ่าน",
+      "actual": "row bound to authenticated QA student 76088279; court=3 2026-09-28 18:00-19:00 PENDING admin=A001"
+    },
+    {
+      "id": "TC_BOOK_023",
+      "status": "ผ่าน",
+      "actual": "20:00:00 and 20:00 normalize to same interval; same-court collision 400, separate court 201"
+    },
+    {
+      "id": "TC_BOOK_025",
+      "status": "ผ่าน",
+      "actual": "at 14:06 Thai, 10:00 -> 400 ended; no DB row"
+    },
+    {
+      "id": "TC_BOOK_039",
+      "status": "ผ่าน",
+      "actual": "yesterday COMPLETED (2026-09-27); today 18:00 Court 3 API 201"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "codeCommit": "581a654",
+    "caseCommit": "ed3bdca",
+    "date": "2026-09-28",
+    "at": "2026-09-28T07:09:47.653Z",
+    "browser": "Chromium headless",
+    "cleanup": "all runner-created users/bookings removed"
+  },
+  "results": [
+    {
+      "id": "TC_BOOK_002",
+      "status": "ผ่าน",
+      "actual": "dialog fields วันที่/เดือน/คอร์ท/เวลา/ชื่อผู้จอง; values 28 | กันยายน | Court 2 | 20:00 - 21:00 น. | Book UI 76126658"
+    },
+    {
+      "id": "TC_BOOK_003",
+      "status": "ไม่ผ่าน",
+      "actual": "actual buttons: กลับไปเลือก | ยืนยันจองคอร์ท | ปิด; expected exact จองคอร์ต"
+    },
+    {
+      "id": "TC_BOOK_038",
+      "status": "ผ่าน",
+      "actual": "close dialog: POST=0, Booking 0->0, /bookings/me=0; Court 1 still selectable"
+    },
+    {
+      "id": "TC_BOOK_006",
+      "status": "ผ่าน",
+      "actual": "today 2026-09-28 shown with วันที่; no date input/dropdown; only today selectable"
+    },
+    {
+      "id": "TC_BOOK_015",
+      "status": "ผ่าน",
+      "actual": "UI 15 slots from 08:00-09:00 to 22:00-23:00; API/DB 22:00-23:00 separately confirmed"
+    },
+    {
+      "id": "TC_BOOK_030",
+      "status": "ผ่าน",
+      "actual": "availability API 4 empty courts equals UI 4 cards/4 selectable for 18:00"
+    },
+    {
+      "id": "TC_BOOK_031",
+      "status": "ผ่าน",
+      "actual": "Court 2 PENDING disabled; UI 3/4 selectable; availability agrees; other courts enabled"
+    },
+    {
+      "id": "TC_BOOK_032",
+      "status": "ผ่าน",
+      "actual": "missing date/time both redirect to /booking; no empty-date availability"
+    },
+    {
+      "id": "TC_BOOK_033",
+      "status": "ไม่ผ่าน",
+      "actual": "page.waitForURL: Timeout 20000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation to \"**/booking\" until \"load\"\n  navigated to \"http://localhost:3001/booking/select-court?date=2026-09-28&time=10:30\"\n============================================================"
+    },
+    {
+      "id": "TC_BOOK_036",
+      "status": "ไม่ผ่าน",
+      "actual": "page.waitForResponse: Timeout 15000ms exceeded while waiting for event \"response\""
+    },
+    {
+      "id": "TC_BOOK_001",
+      "status": "ผ่าน",
+      "actual": "browser confirmation/toast success, DB id=15 18:00-19:00 PENDING"
+    },
+    {
+      "id": "TC_BOOK_021",
+      "status": "ผ่าน",
+      "actual": "Recent Bookings shows new id=15 18:00/PENDING within 5s"
+    }
+  ]
+}

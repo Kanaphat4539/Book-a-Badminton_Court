@@ -1,0 +1,33 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "codeCommit": "581a654",
+    "caseCommit": "ed3bdca",
+    "at": "2026-09-28T07:19:51.000Z",
+    "approach": "mocked Date + compiled BookingsService + real isolated MySQL",
+    "cleanup": "all created users/bookings removed"
+  },
+  "results": [
+    {
+      "id": "TC_BOOK_014",
+      "status": "ผ่าน",
+      "actual": "service/DB id=25, Court3 08:00-09:00 PENDING"
+    },
+    {
+      "id": "TC_BOOK_026",
+      "status": "ผ่าน",
+      "actual": "booked at mocked 10:30; DB interval remains 10:00:00-11:00:00"
+    },
+    {
+      "id": "TC_BOOK_034",
+      "status": "ตรวจไม่ได้",
+      "actual": "mocked page date Sep 28 then action Sep 29 00:01: backend rejects old date with day-by-day policy; no row; browser stale-page toast not exercised"
+    },
+    {
+      "id": "TC_BOOK_042",
+      "status": "ผ่าน",
+      "actual": "simulated transaction error -> DB rows 0; next create succeeds id=27; no stale lock observed"
+    }
+  ]
+}

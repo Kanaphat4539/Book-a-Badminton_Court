@@ -1,0 +1,51 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "at": "2026-09-28T08:46:21.104Z",
+    "approach": "mocked Date + real MySQL TypeORM services; backend process stopped",
+    "cleanup": "fixture removed"
+  },
+  "results": [
+    {
+      "id": "TC_BAN_004",
+      "status": "ผ่าน",
+      "actual": "real MySQL CronService at 18:14:30 kept booking PENDING and strikes=0"
+    },
+    {
+      "id": "TC_BAN_005",
+      "status": "ผ่าน",
+      "actual": "real MySQL CronService at exact 18:15:00 changed PENDING→CANCELLED and strikes 0→1"
+    },
+    {
+      "id": "TC_BAN_020",
+      "status": "ผ่าน",
+      "actual": "mid-round booking checked in at 10:44:59; remained CHECKED_IN at 10:59:59; became COMPLETED at original end 11:00:00"
+    },
+    {
+      "id": "TC_BAN_012",
+      "status": "ผ่าน",
+      "actual": "direct CronService on real MySQL at expiry cleared banned_until and reset strikes 2→0 automatically"
+    },
+    {
+      "id": "TC_BAN_022",
+      "status": "ผ่าน",
+      "actual": "at Thai 00:01, new-day booking 284 succeeded while yesterday CANCELLED history remained; dates=2026-09-27,2026-09-28"
+    },
+    {
+      "id": "TC_BAN_023",
+      "status": "ผ่าน",
+      "actual": "11:59:59 rejected 400 exact ban message; 12:00:00 booking 285 succeeded and auto-unban reset strikes=0"
+    },
+    {
+      "id": "TC_BAN_025",
+      "status": "ผ่าน",
+      "actual": "3 concurrent rounds of ban-status + CronService at expiry converged idempotently: DB/API strikes=0, banned_until=null, no reversal"
+    },
+    {
+      "id": "TC_BAN_026",
+      "status": "ผ่าน",
+      "actual": "injected failure after strike save/before booking save rolled transaction back: 2 PENDING/strikes0; next cron retry atomically produced 2 CANCELLED/strikes2/ban, no double count"
+    }
+  ]
+}

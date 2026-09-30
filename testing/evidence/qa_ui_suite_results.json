@@ -1,0 +1,177 @@
+{
+  "environment": {
+    "frontend": "http://localhost:3001",
+    "backend": "http://127.0.0.1:4001",
+    "commit": "37aea29",
+    "dbVolume": "badminton_qa_20260928_mysql_data",
+    "at": "2026-09-28T09:26:03.417Z",
+    "cleanup": "fixtures seeded via SQL cleared"
+  },
+  "results": [
+    {
+      "id": "TC_UI_001",
+      "status": "ผ่าน",
+      "actual": "dashboard/booking 1440x900 & 1920x1080: no horizontal overflow, header/footer/main do not overlap"
+    },
+    {
+      "id": "TC_UI_002",
+      "status": "ตรวจไม่ได้",
+      "actual": "Thai renders; body fontFamily=\"Roboto Condensed\", \"Roboto Condensed Fallback\", sans-serif; agreement on exact CI font not defined so theme-match unverified"
+    },
+    {
+      "id": "TC_UI_003",
+      "status": "ไม่ผ่าน",
+      "actual": "The input did not match the regular expression /เฉพาะวันนี้เท่านั้นที่จองได้/. Input:\n\n''\n"
+    },
+    {
+      "id": "TC_UI_004",
+      "status": "ไม่ผ่าน",
+      "actual": "The input did not match the regular expression /กันยายน/. Input:\n\n''\n"
+    },
+    {
+      "id": "TC_UI_005",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /Court 1/ }).first()\u001b[22m\n"
+    },
+    {
+      "id": "TC_UI_006",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /theme|ธีม|dark|light/i }).first()\u001b[22m\n"
+    },
+    {
+      "id": "TC_UI_007",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /theme|ธีม|dark|light/i }).first()\u001b[22m\n"
+    },
+    {
+      "id": "TC_UI_008",
+      "status": "ตรวจไม่ได้",
+      "actual": "Recent Bookings present; literal × buttons=0; cancel path exists (U07)"
+    },
+    {
+      "id": "TC_UI_009",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^18:00/ }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"w-full flex items-center justify-between py-2.5 px-3 rounded-xl shadow-sm transition-all bg-surface-container-lowest text-on-surface hove"
+    },
+    {
+      "id": "TC_UI_010",
+      "status": "ไม่ผ่าน",
+      "actual": "missing สแกนคิวอาร์"
+    },
+    {
+      "id": "TC_UI_011",
+      "status": "ตรวจไม่ได้",
+      "actual": "banner element present=false; scroll-driven vs CSS-animation behaviour and smoothness require visual/agreement review"
+    },
+    {
+      "id": "TC_UI_012",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /theme|ธีม|dark|light/i }).first()\u001b[22m\n"
+    },
+    {
+      "id": "TC_UI_013",
+      "status": "ไม่ผ่าน",
+      "actual": "The expression evaluated to a falsy value:\n\n  assert.ok((await p.locator('body').innerText()).length>100)\n"
+    },
+    {
+      "id": "TC_UI_014",
+      "status": "ตรวจไม่ได้",
+      "actual": "requires merged dev branch + both-role/theme regression on a real build; not executable on feature-Docx checkout"
+    },
+    {
+      "id": "TC_UI_015",
+      "status": "ผ่าน",
+      "actual": "5 viewports x 4 pages: no page-level horizontal overflow"
+    },
+    {
+      "id": "TC_UI_016",
+      "status": "ตรวจไม่ได้",
+      "actual": "rules modal auto-opens with quota/15-min/24-h text and closes to a usable page (backend parity not re-verified)"
+    },
+    {
+      "id": "TC_UI_017",
+      "status": "ไม่ผ่าน",
+      "actual": "The input did not match the regular expression /กันยายน/. Input:\n\n''\n"
+    },
+    {
+      "id": "TC_UI_018",
+      "status": "ไม่ผ่าน",
+      "actual": "no error state on 500"
+    },
+    {
+      "id": "TC_UI_019",
+      "status": "ไม่ผ่าน",
+      "actual": "no material icons found"
+    },
+    {
+      "id": "TC_UI_020",
+      "status": "ผ่าน",
+      "actual": "with external hosts blocked, login/booking flow and Thai text still work"
+    },
+    {
+      "id": "TC_UI_021",
+      "status": "ไม่ผ่าน",
+      "actual": "court missing"
+    },
+    {
+      "id": "TC_UI_022",
+      "status": "ตรวจไม่ได้",
+      "actual": "API order ids=299,300,301,302; DOM booking-id order=(no data attrs)"
+    },
+    {
+      "id": "TC_UI_023",
+      "status": "ไม่ผ่าน",
+      "actual": "status CANCELLED missing"
+    },
+    {
+      "id": "TC_UI_024",
+      "status": "ผ่าน",
+      "actual": "mid-round 10:00-11:00 countdown: no NaN/negative; time tokens=11:00,10:00,08:00,18:00"
+    },
+    {
+      "id": "TC_UI_025",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /Court 1/ }).first()\u001b[22m\n"
+    },
+    {
+      "id": "TC_UI_026",
+      "status": "ผ่าน",
+      "actual": "long Thai name + small screen: no undefined/null, no overflow"
+    },
+    {
+      "id": "TC_UI_027",
+      "status": "ผ่าน",
+      "actual": "student routes open without 404/blank: /->/, /login->/login, /register->/register, /dashboard->/dashboard, /booking->/booking, /booking/select-court->/booking, /scan->/scan, /news->/news"
+    },
+    {
+      "id": "TC_UI_028",
+      "status": "ตรวจไม่ได้",
+      "actual": "landscape 812x375 booking renders without overflow; zoom-200% + full flows need device/manual"
+    },
+    {
+      "id": "TC_UI_029",
+      "status": "ตรวจไม่ได้",
+      "actual": "keyboard: Tab moves focus (password); Enter submits login"
+    },
+    {
+      "id": "TC_UI_030",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /Court 1/ }).first()\u001b[22m\n"
+    },
+    {
+      "id": "TC_UI_031",
+      "status": "ตรวจไม่ได้",
+      "actual": "register: 7 inputs all labelled; unlabelled anonymous buttons=0"
+    },
+    {
+      "id": "TC_UI_032",
+      "status": "ไม่ผ่าน",
+      "actual": "The expression evaluated to a falsy value:\n\n  assert.ok(['PENDING','CHECKED_IN','COMPLETED','CANCELLED'].every(s=>text.includes(s)))\n"
+    },
+    {
+      "id": "TC_UI_033",
+      "status": "ตรวจไม่ได้",
+      "actual": "error.tsx present; source exposes stack/message/name=true"
+    }
+  ]
+}

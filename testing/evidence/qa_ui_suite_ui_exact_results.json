@@ -1,0 +1,17 @@
+{
+  "environment": {
+    "frontend": "http://localhost:3001",
+    "backend": "http://127.0.0.1:4001",
+    "commit": "37aea29",
+    "dbVolume": "badminton_qa_20260928_mysql_data",
+    "at": "2026-09-28T14:53:30.539Z",
+    "cleanup": "fixtures seeded via SQL cleared"
+  },
+  "results": [
+    {
+      "id": "TC_UI_021",
+      "status": "ไม่ผ่าน",
+      "actual": "court display mismatch: Recent Bookings\n(ประวัติการจอง)\nsports_tennis\nCourt\nPENDING\nschedule\n18:00\n•\n2026-09-28\npending\ninfo\nกฎการเข้าใช้คอร์ทและเช็คอิน\n\nกรุณาสแกน QR หน้าสนามเพื่อเช็คอิน หากยกเลิกช้าหรือมาสายเกิน 15 นาที ระบบจะนับว่าผิดกฎ 1 ครั้ง (สะสมความผิดครบ 2 ครั้งจะถูกแบน 24 ชั่วโมง)\n\nKMITL B"
+    }
+  ]
+}

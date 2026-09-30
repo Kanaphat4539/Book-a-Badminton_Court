@@ -1,0 +1,29 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "codeCommit": "581a654",
+    "caseCommit": "ed3bdca",
+    "date": "2026-09-28",
+    "at": "2026-09-28T07:14:20.353Z",
+    "browser": "Chromium headless",
+    "cleanup": "all runner-created users/bookings removed"
+  },
+  "results": [
+    {
+      "id": "TC_BOOK_017",
+      "status": "ผ่าน",
+      "actual": "stale availability simulated for B; POST /bookings HTTP 400; UI shows คอร์ท/เวลาชน; DB remains 1 booking"
+    },
+    {
+      "id": "TC_BOOK_018",
+      "status": "ผ่าน",
+      "actual": "existing Court1 18:00; Court2 20:00 POST 400, UI quota warning, only 1 DB row"
+    },
+    {
+      "id": "TC_BOOK_019",
+      "status": "ผ่าน",
+      "actual": "tomorrow URL redirected to /booking with Thai today-only toast; no POST/DB row"
+    }
+  ]
+}

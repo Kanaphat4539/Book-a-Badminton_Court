@@ -1,0 +1,51 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "at": "2026-09-28T08:34:09.734Z",
+    "browser": "Chromium headless",
+    "cleanup": "only runner fixtures removed"
+  },
+  "results": [
+    {
+      "id": "TC_ADM_002",
+      "status": "ไม่ผ่าน",
+      "actual": "new booking 269 did not appear after 10.5s without reload"
+    },
+    {
+      "id": "TC_ADM_003",
+      "status": "ตรวจไม่ได้",
+      "actual": "rendered shared theme tokens/colors={\"body\":\"rgb(249, 249, 248)\",\"header\":\"oklab(0.981833 -0.000328332 0.00128573 / 0.8)\",\"primary\":\"#ab3500\",\"surface\":\"#f9f9f8\"}; exact CI percentage (remaining 10%) is not defined, so visual proportion cannot be conclusively accepted"
+    },
+    {
+      "id": "TC_ADM_005",
+      "status": "ผ่าน",
+      "actual": "desktop 1440x900: footer present and no horizontal overflow on Admin dashboard/users plus User dashboard/booking/scan/news; mobile 375x812 footer hidden"
+    },
+    {
+      "id": "TC_ADM_008",
+      "status": "ผ่าน",
+      "actual": "UI created admui8_1790584430235, exact success toast shown, API login succeeded as ADMIN"
+    },
+    {
+      "id": "TC_ADM_032",
+      "status": "ผ่าน",
+      "actual": "after reset: new Admin dashboard empty, Admin bell empty, new Student dashboard no bookings, availability empty for all courts"
+    },
+    {
+      "id": "TC_ADM_038",
+      "status": "ผ่าน",
+      "actual": "new Student bell displayed readable empty state, not blank/loading"
+    },
+    {
+      "id": "TC_ADM_040",
+      "status": "ตรวจไม่ได้",
+      "actual": "new booking 271 while bell open appeared=false after 10.5s; current MainLayout has no notification polling; refresh policy remains unconfirmed (GAP-09)"
+    },
+    {
+      "id": "TC_ADM_041",
+      "status": "ไม่ผ่าน",
+      "actual": "news card looked interactive but URL stayed http://localhost:3001/news"
+    }
+  ]
+}

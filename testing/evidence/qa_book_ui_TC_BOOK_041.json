@@ -1,0 +1,19 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "codeCommit": "581a654",
+    "caseCommit": "ed3bdca",
+    "date": "2026-09-28",
+    "at": "2026-09-28T07:15:05.348Z",
+    "browser": "Chromium headless",
+    "cleanup": "all runner-created users/bookings removed"
+  },
+  "results": [
+    {
+      "id": "TC_BOOK_041",
+      "status": "ผ่าน",
+      "actual": "proxy committed POST 201 then aborted client response; UI error; /bookings/me sees 1; retry HTTP 400 quota; DB 1 (requests=1)"
+    }
+  ]
+}

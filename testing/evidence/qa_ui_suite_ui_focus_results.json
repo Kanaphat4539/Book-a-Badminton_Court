@@ -1,0 +1,22 @@
+{
+  "environment": {
+    "frontend": "http://localhost:3001",
+    "backend": "http://127.0.0.1:4001",
+    "commit": "37aea29",
+    "dbVolume": "badminton_qa_20260928_mysql_data",
+    "at": "2026-09-28T14:42:01.258Z",
+    "cleanup": "fixtures seeded via SQL cleared"
+  },
+  "results": [
+    {
+      "id": "TC_UI_007",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Menu' })\u001b[22m\n\u001b[2m    - locator resolved to <button aria-label=\"Menu\" class=\"w-10 h-10 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-sm active:scale-95 transition-transform\""
+    },
+    {
+      "id": "TC_UI_030",
+      "status": "ตรวจไม่ได้",
+      "actual": "dialog: initial focus inside=true; Escape closes=true; focus returns to opener=true"
+    }
+  ]
+}

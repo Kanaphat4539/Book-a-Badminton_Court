@@ -1,0 +1,14 @@
+{
+  "environment": {
+    "commit": "37aea29",
+    "dbVolume": "badminton_qa_20260928_mysql_data",
+    "at": "2026-09-28T14:51:18.587Z"
+  },
+  "results": [
+    {
+      "id": "TC_CONC_003",
+      "status": "ผ่าน",
+      "actual": "5 rapid button.click events: POST responses=5 statuses=201,400,400,400,400; DB one booking; UI confirmation shown"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "at": "2026-09-28T08:24:05.312Z",
+    "browser": "Chromium headless",
+    "cleanup": "only runner fixtures removed"
+  },
+  "results": [
+    {
+      "id": "TC_BOOK_037",
+      "status": "ผ่าน",
+      "actual": "query changed 18:00→20:00 while first availability request was held; latest response rendered Court 2 booked; delayed first response ignored and did not overwrite Court 1/Court 2 states"
+    },
+    {
+      "id": "TC_BAN_014",
+      "status": "ผ่าน",
+      "actual": "ban popup displayed title, two-strike reason, th-TH expiry and Acknowledge button; banned_until=2026-09-28T09:23:59.807Z"
+    },
+    {
+      "id": "TC_BAN_015",
+      "status": "ผ่าน",
+      "actual": "popup initially used server ban; after DB unban, close + page remount fetched central API and popup did not reappear; API isBanned=false/strikes=0"
+    },
+    {
+      "id": "TC_BAN_016",
+      "status": "ผ่าน",
+      "actual": "Admin ban-status={isBanned:false,bannedUntil:null,strikes:0}; Admin dashboard rendered without ban popup"
+    },
+    {
+      "id": "TC_BAN_024",
+      "status": "ผ่าน",
+      "actual": "Account A showed ban popup; local session cleared and Account B authorized in same browser; B showed no popup and API returned isBanned=false/strikes=0"
+    }
+  ]
+}

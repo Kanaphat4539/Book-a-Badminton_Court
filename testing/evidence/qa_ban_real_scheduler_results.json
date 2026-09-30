@@ -1,0 +1,21 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "at": "2026-09-28T08:35:00.679Z",
+    "approach": "real running backend scheduler; DB polled only",
+    "cleanup": "fixtures removed"
+  },
+  "results": [
+    {
+      "id": "TC_BAN_001",
+      "status": "ผ่าน",
+      "actual": "running Nest @Cron(EVERY_MINUTE) processed overdue PENDING with no browser/API call in 8037 ms: both CANCELLED, strikes=1, no ban"
+    },
+    {
+      "id": "TC_BAN_002",
+      "status": "ผ่าน",
+      "actual": "running Nest @Cron(EVERY_MINUTE) processed overdue PENDING with no browser/API call in 8037 ms: both CANCELLED, strikes=1, no ban; browser processes were not launched"
+    }
+  ]
+}

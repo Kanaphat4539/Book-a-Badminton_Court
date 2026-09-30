@@ -1,0 +1,15 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "at": "2026-09-28T08:38:01.866Z",
+    "cleanup": "fixture removed"
+  },
+  "results": [
+    {
+      "id": "TC_BAN_021",
+      "status": "ผ่าน",
+      "actual": "backend was stopped before deadline, stayed stopped across it, then first scheduler run after restart changed booking 279 to CANCELLED/strikes1 in 16109 ms"
+    }
+  ]
+}

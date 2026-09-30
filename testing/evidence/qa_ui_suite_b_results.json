@@ -1,0 +1,112 @@
+{
+  "environment": {
+    "frontend": "http://localhost:3001",
+    "backend": "http://127.0.0.1:4001",
+    "commit": "37aea29",
+    "dbVolume": "badminton_qa_20260928_mysql_data",
+    "at": "2026-09-28T14:48:51.884Z",
+    "cleanup": "fixtures seeded via SQL cleared"
+  },
+  "results": [
+    {
+      "id": "TC_UI_012",
+      "status": "ตรวจไม่ได้",
+      "actual": "dark mode low-contrast candidates=2; BUTTON:menu | DIV:edit_calenda (full-page readability needs human review)"
+    },
+    {
+      "id": "TC_UI_013",
+      "status": "ผ่าน",
+      "actual": "news renders for STUDENT and ADMIN"
+    },
+    {
+      "id": "TC_UI_014",
+      "status": "ตรวจไม่ได้",
+      "actual": "requires merged dev branch + both-role/theme regression on real build; not executable on feature-Docx checkout"
+    },
+    {
+      "id": "TC_UI_015",
+      "status": "ผ่าน",
+      "actual": "5 viewports x 4 pages: no page-level horizontal overflow"
+    },
+    {
+      "id": "TC_UI_016",
+      "status": "ตรวจไม่ได้",
+      "actual": "rules modal auto-opens with quota/15-min/24-h text and closes to usable page"
+    },
+    {
+      "id": "TC_UI_017",
+      "status": "ไม่ผ่าน",
+      "actual": "The input did not match the regular expression /กันยายน/. Input:\n\n'KMITL Badminton\\n' +\n  'location_on\\n' +\n  'Main Sports Complex\\n' +\n  'notifications\\n' +\n  'menu\\n' +\n  '✦\\n' +\n  '✦\\n' +\n  '✦\\n' +\n  'sports_tennis\\n' +\n  'sports_tennis\\n' +\n  '\\n' +\n  'KMITL BADMINTON\\n' +\n  '\\n' +\n  'Player Das"
+    },
+    {
+      "id": "TC_UI_018",
+      "status": "ไม่ผ่าน",
+      "actual": "no error state on 500"
+    },
+    {
+      "id": "TC_UI_019",
+      "status": "ตรวจไม่ได้",
+      "actual": "material icons render (22, font=\"Material Symbols Outlined\"); desktop only — Safari iOS not run"
+    },
+    {
+      "id": "TC_UI_020",
+      "status": "ผ่าน",
+      "actual": "with external hosts blocked, login/booking flow and Thai text still work"
+    },
+    {
+      "id": "TC_UI_021",
+      "status": "ผ่าน",
+      "actual": "dashboard shows today booking matching /bookings/me (1 row, court=3)"
+    },
+    {
+      "id": "TC_UI_022",
+      "status": "ตรวจไม่ได้",
+      "actual": "API /bookings/me order=334,335,336,337; DOM rendering order needs data attributes to verify programmatically"
+    },
+    {
+      "id": "TC_UI_023",
+      "status": "ตรวจไม่ได้",
+      "actual": "status labels rendered: PENDING, CHECKED_IN, COMPLETED of 4"
+    },
+    {
+      "id": "TC_UI_024",
+      "status": "ผ่าน",
+      "actual": "mid-round 10:00-11:00 countdown: no NaN/negative"
+    },
+    {
+      "id": "TC_UI_026",
+      "status": "ผ่าน",
+      "actual": "long Thai name + small screen: no undefined/null, no overflow"
+    },
+    {
+      "id": "TC_UI_027",
+      "status": "ผ่าน",
+      "actual": "student routes open without 404/blank: /->/, /login->/login, /register->/register, /dashboard->/dashboard, /booking->/booking, /booking/select-court->/booking, /scan->/scan, /news->/news"
+    },
+    {
+      "id": "TC_UI_028",
+      "status": "ตรวจไม่ได้",
+      "actual": "landscape 812x375 booking renders without overflow; zoom-200% + full flows need device/manual"
+    },
+    {
+      "id": "TC_UI_029",
+      "status": "ตรวจไม่ได้",
+      "actual": "keyboard: Tab moves focus (password); Enter submits login"
+    },
+    {
+      "id": "TC_UI_031",
+      "status": "ตรวจไม่ได้",
+      "actual": "register: 7 inputs all labelled; unlabelled anonymous buttons=0"
+    },
+    {
+      "id": "TC_UI_032",
+      "status": "ตรวจไม่ได้",
+      "actual": "status text labels rendered: PENDING, CHECKED_IN, COMPLETED of 4 (not colour-only)"
+    },
+    {
+      "id": "TC_UI_033",
+      "status": "ตรวจไม่ได้",
+      "actual": "error.tsx present; source exposes stack/message/name/digest=true (security finding if true)"
+    }
+  ]
+}

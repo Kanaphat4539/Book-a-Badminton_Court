@@ -1,0 +1,49 @@
+{
+  "environment": {
+    "commit": "37aea29",
+    "dbVolume": "badminton_qa_20260928_mysql_data",
+    "at": "2026-09-28T14:43:32.228Z"
+  },
+  "results": [
+    {
+      "id": "TC_CONC_001",
+      "status": "ผ่าน",
+      "actual": "same court simultaneous 201/400, DB 1, no 500"
+    },
+    {
+      "id": "TC_CONC_002",
+      "status": "ผ่าน",
+      "actual": "same user two courts 201/400, DB 1"
+    },
+    {
+      "id": "TC_CONC_007",
+      "status": "ผ่าน",
+      "actual": "different users/courts 201/201, DB 2"
+    },
+    {
+      "id": "TC_CONC_019",
+      "status": "ไม่ผ่าน",
+      "actual": "statuses=404,404,500,404"
+    },
+    {
+      "id": "TC_CONC_020",
+      "status": "ตรวจไม่ได้",
+      "actual": "extra status/admin_id to active-quota user rejected 400; register extras/created booking owner not retested"
+    },
+    {
+      "id": "TC_CONC_021",
+      "status": "ผ่าน",
+      "actual": "me/all id=booking_id, availability start_time=22:00:00; IDs me=319,all=319"
+    },
+    {
+      "id": "TC_CONC_022",
+      "status": "ผ่าน",
+      "actual": "negative statuses=400,401,403,404, messages safe=Invalid booking start time. | Unauthorized | Forbidden resource | Booking not found or mismatch with this court."
+    },
+    {
+      "id": "TC_CONC_023",
+      "status": "ตรวจไม่ได้",
+      "actual": "local OPTIONS from untrusted origin status=204, ACAO=*; deployed origin/policy unavailable"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "at": "2026-09-28T08:26:31.373Z",
+    "cleanup": "only QA fixtures removed"
+  },
+  "results": [
+    {
+      "id": "TC_ADM_016",
+      "status": "ผ่าน",
+      "actual": "dated Admin API returned exactly today's 35,36, both users with student relation/status; excluded yesterday"
+    },
+    {
+      "id": "TC_ADM_019",
+      "status": "ไม่ผ่าน",
+      "actual": "concurrent finish statuses=201,201\n+ actual - expected\n\n  [\n    201,\n+   201\n-   400\n  ]\n"
+    },
+    {
+      "id": "TC_ADM_020",
+      "status": "ผ่าน",
+      "actual": "reset removed booking 39 only; retained users=2, courts=4, strikes=1 and banned_until"
+    },
+    {
+      "id": "TC_ADM_021",
+      "status": "ไม่ผ่าน",
+      "actual": "duplicate username returned HTTP 500, expected 4xx"
+    },
+    {
+      "id": "TC_ADM_024",
+      "status": "ผ่าน",
+      "actual": "after Finish Early: A rebook HTTP 400 active quota; B same original slot HTTP 400 already booked; original remains COMPLETED"
+    },
+    {
+      "id": "TC_ADM_026",
+      "status": "ไม่ผ่าน",
+      "actual": "POST without password returned 201"
+    },
+    {
+      "id": "TC_ADM_028",
+      "status": "ไม่ผ่าน",
+      "actual": "delete with booking returned HTTP 500: Internal server error"
+    },
+    {
+      "id": "TC_ADM_029",
+      "status": "ผ่าน",
+      "actual": "missing/first/repeated DELETE HTTP 200/200/200; unrelated student retained"
+    },
+    {
+      "id": "TC_ADM_033",
+      "status": "ผ่าน",
+      "actual": "simultaneous reset/create/check-in statuses=201/201/404; final=[{\"booking_id\":43,\"stu_id\":\"80091253\",\"court\":2,\"status\":\"PENDING\"}]; no orphan rows; original removed when reset succeeded"
+    }
+  ]
+}

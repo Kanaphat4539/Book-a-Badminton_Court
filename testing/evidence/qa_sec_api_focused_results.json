@@ -1,0 +1,89 @@
+{
+  "environment": {
+    "commit": "37aea29",
+    "dbVolume": "badminton_qa_20260928_mysql_data",
+    "at": "2026-09-28T14:39:23.767Z"
+  },
+  "results": [
+    {
+      "id": "TC_SEC_001",
+      "status": "ผ่าน",
+      "actual": "GET /bookings/me without bearer ->401, no booking array"
+    },
+    {
+      "id": "TC_SEC_002",
+      "status": "ผ่าน",
+      "actual": "JWT payload role=ADMIN modified without re-signing; GET /users ->401"
+    },
+    {
+      "id": "TC_SEC_003",
+      "status": "ตรวจไม่ได้",
+      "actual": "expired signed QA token ->401 API; browser redirect not exercised"
+    },
+    {
+      "id": "TC_SEC_004",
+      "status": "ผ่าน",
+      "actual": "STUDENT GET /bookings ->403"
+    },
+    {
+      "id": "TC_SEC_005",
+      "status": "ผ่าน",
+      "actual": "STUDENT GET /users ->403, no user list"
+    },
+    {
+      "id": "TC_SEC_006",
+      "status": "ผ่าน",
+      "actual": "STUDENT finish ->403; booking remains PENDING"
+    },
+    {
+      "id": "TC_SEC_007",
+      "status": "ผ่าน",
+      "actual": "STUDENT reset ->403; booking count unchanged"
+    },
+    {
+      "id": "TC_SEC_008",
+      "status": "ผ่าน",
+      "actual": "B sees only own booking(s), no A IDs"
+    },
+    {
+      "id": "TC_SEC_009",
+      "status": "ผ่าน",
+      "actual": "signed missing-sub token receives [] even with A/B bookings in DB"
+    },
+    {
+      "id": "TC_SEC_010",
+      "status": "ตรวจไม่ได้",
+      "actual": "login response has no password/hash; register response was 201 but not captured for field inspection; logs not inspected"
+    },
+    {
+      "id": "TC_SEC_016",
+      "status": "ไม่ผ่าน",
+      "actual": "password key leaked via /bookings,/bookings/notifications\n+ actual - expected\n\n+ [\n+   '/bookings',\n+   '/bookings/notifications'\n+ ]\n- []\n"
+    },
+    {
+      "id": "TC_SEC_019",
+      "status": "ตรวจไม่ได้",
+      "actual": "GET /users 403; booking endpoint 400 at wall clock (owner override not exercised)"
+    },
+    {
+      "id": "TC_SEC_020",
+      "status": "ผ่าน",
+      "actual": "guest availability 200 with no identity fields"
+    },
+    {
+      "id": "TC_SEC_022",
+      "status": "ผ่าน",
+      "actual": "SQL-like login 401; query does not bypass /me ownership"
+    },
+    {
+      "id": "TC_SEC_024",
+      "status": "ตรวจไม่ได้",
+      "actual": "20 QA failed logins: status distribution={\"401\":20}; other user still served; rate-limit policy absent/unknown"
+    },
+    {
+      "id": "TC_SEC_028",
+      "status": "ตรวจไม่ได้",
+      "actual": "pre-logout token valid; logout/replay and revocation policy not exercised"
+    }
+  ]
+}

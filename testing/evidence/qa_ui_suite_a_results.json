@@ -1,0 +1,67 @@
+{
+  "environment": {
+    "frontend": "http://localhost:3001",
+    "backend": "http://127.0.0.1:4001",
+    "commit": "37aea29",
+    "dbVolume": "badminton_qa_20260928_mysql_data",
+    "at": "2026-09-28T14:37:04.911Z",
+    "cleanup": "fixtures seeded via SQL cleared"
+  },
+  "results": [
+    {
+      "id": "TC_UI_001",
+      "status": "ผ่าน",
+      "actual": "dashboard/booking 1440x900 & 1920x1080: no horizontal overflow, header/footer/main do not overlap"
+    },
+    {
+      "id": "TC_UI_002",
+      "status": "ตรวจไม่ได้",
+      "actual": "Thai renders; body fontFamily=\"Roboto Condensed\", \"Roboto Condensed Fallback\", sans-serif; exact CI font not agreed so theme-match unverified"
+    },
+    {
+      "id": "TC_UI_003",
+      "status": "ผ่าน",
+      "actual": "today-only shown, no date input"
+    },
+    {
+      "id": "TC_UI_004",
+      "status": "ผ่าน",
+      "actual": "current month shown, no month dropdown"
+    },
+    {
+      "id": "TC_UI_005",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /18:00 - 19:00/ }).first()\u001b[22m\n"
+    },
+    {
+      "id": "TC_UI_006",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.isChecked: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[role=switch][aria-label=\"Dark mode\"]')\u001b[22m\n"
+    },
+    {
+      "id": "TC_UI_007",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.isChecked: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[role=switch][aria-label=\"Dark mode\"]')\u001b[22m\n"
+    },
+    {
+      "id": "TC_UI_008",
+      "status": "ตรวจไม่ได้",
+      "actual": "Recent Bookings present; literal × buttons=0; cancel buttons=1 (U07 path exists)"
+    },
+    {
+      "id": "TC_UI_009",
+      "status": "ไม่ผ่าน",
+      "actual": "locator.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /18:00 - 19:00/ }).first()\u001b[22m\n"
+    },
+    {
+      "id": "TC_UI_010",
+      "status": "ผ่าน",
+      "actual": "mobile bottom nav shows 4 menu labels"
+    },
+    {
+      "id": "TC_UI_011",
+      "status": "ตรวจไม่ได้",
+      "actual": "banner element present=false; scroll-driven behaviour+smoothness need visual/agreement review"
+    }
+  ]
+}

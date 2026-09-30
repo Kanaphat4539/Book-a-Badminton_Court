@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  distDir: process.env.QA_DIST_DIR || '.next',
   async rewrites() {
     return [
       {

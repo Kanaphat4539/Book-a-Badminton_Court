@@ -27,6 +27,18 @@ export class UsersController {
     return this.usersService.createAdmin(adminData);
   }
 
+  @Post(':id/ban')
+  @Roles(UserRole.ADMIN)
+  async banUser(@Param('id') id: string) {
+    return this.usersService.banUser(id);
+  }
+
+  @Post(':id/reset-quota')
+  @Roles(UserRole.ADMIN)
+  async resetQuota(@Param('id') id: string) {
+    return this.usersService.resetQuota(id);
+  }
+
   @Get('me/ban-status')
   async getBanStatus(@Request() req: any) {
     if (req.user.role === UserRole.ADMIN) {

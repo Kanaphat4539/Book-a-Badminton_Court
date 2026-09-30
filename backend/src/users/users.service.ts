@@ -1,8 +1,9 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { Admin } from './entities/admin.entity';
 import { Student } from './entities/student.entity';
+import { Booking } from '../bookings/entities/booking.entity';
 import * as bcrypt from 'bcrypt';
 
 export enum UserRole {
@@ -82,9 +83,23 @@ export class UsersService implements OnModuleInit {
       year: parseInt(studentData.year, 10) || 1,
       username: studentData.username,
       password: hashedPassword,
-    } as any);
+    } as any) as unknown as Student;
     
-    return this.studentRepository.save(newStudent) as unknown as Promise<Student>;
+    try {
+      // save() updates an existing primary key; registration must only insert.
+      await this.studentRepository.insert(newStudent);
+      return newStudent;
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const driverError = error.driverError as { code?: string; message?: string };
+        if (driverError.code === 'ER_DUP_ENTRY' ||
+            driverError.code === 'SQLITE_CONSTRAINT' ||
+            /UNIQUE constraint failed/i.test(driverError.message || '')) {
+          throw new BadRequestException('Account already exists');
+        }
+      }
+      throw error;
+    }
   }
 
   async findStudentById(stu_id: string): Promise<Student | null> {
@@ -100,10 +115,44 @@ export class UsersService implements OnModuleInit {
   }
 
   async removeStudent(stu_id: string): Promise<void> {
-    const student = await this.findStudentById(stu_id);
+    // Delete related bookings first due to RESTRICT foreign key constraint
+    await this.studentRepository.manager.getRepository(Booking).delete({ student: { stu_id } as any });
+    const student = await this.findStudentById(stu_id) || await this.studentRepository.findOneBy({ id: parseInt(stu_id) || 0 } as any);
     if (student) {
       await this.studentRepository.remove(student);
     }
+  }
+
+  async resetQuota(stu_id: string): Promise<Student> {
+    const student = await this.findStudentById(stu_id);
+    if (!student) {
+      throw new BadRequestException('Student not found');
+    }
+    if (student.quota !== 0) {
+      throw new BadRequestException('ยังมีโควตาร์อยู่');
+    }
+    student.quota = 1;
+    // Also cancel today's pending/checked-in bookings so user can actually book again
+    const today = new Date().toISOString().split('T')[0];
+    const bookingRepo = this.studentRepository.manager.getRepository(Booking);
+    await bookingRepo.createQueryBuilder('b')
+      .update()
+      .set({ status: 'CANCELLED' })
+      .where('b.stu_id = :stu', { stu: stu_id })
+      .andWhere('b.booking_date = :date', { date: today })
+      .andWhere("b.status IN (:...statuses)", { statuses: ['PENDING', 'CHECKED_IN'] })
+      .execute();
+    return this.saveStudent(student);
+  }
+
+  async banUser(stu_id: string): Promise<Student> {
+    const student = await this.findStudentById(stu_id);
+    if (!student) {
+      throw new BadRequestException('Student not found');
+    }
+    student.strikes = 2;
+    student.banned_until = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    return this.saveStudent(student);
   }
 
   async createAdmin(adminData: any): Promise<Admin> {

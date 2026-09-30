@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { usePageLoading } from '@/components/loading-provider';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const pageLoading = usePageLoading();
   const [studentId, setStudentId] = useState('');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -34,6 +36,7 @@ export default function RegisterPage() {
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       toast.success('Registration successful!');
+      pageLoading.start('/register');
       router.push('/dashboard');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Registration failed');

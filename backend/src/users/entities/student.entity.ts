@@ -31,6 +31,15 @@ export class Student {
   @Column({ type: 'varchar', length: 255 })
   password: string;
 
+  @Column({ type: 'int', default: 0 })
+  strikes: number;
+
+  @Column({ type: 'datetime', nullable: true })
+  banned_until: Date | null;
+
+  @Column({ type: 'int', default: 1 })
+  quota: number;
+
   @OneToMany(() => Booking, (booking) => booking.student)
   bookings: Booking[];
 }

@@ -2,21 +2,26 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
+import { Court } from './entities/court.entity';
 
 @Injectable()
 export class CourtsService {
   constructor(
+    @InjectRepository(Court)
+    private courtsRepository: Repository<Court>,
     @InjectRepository(Booking)
     private bookingsRepository: Repository<Booking>,
   ) {}
 
   async findAll(): Promise<any[]> {
-    return [
-      { id: 1, name: 'Court 1' },
-      { id: 2, name: 'Court 2' },
-      { id: 3, name: 'Court 3' },
-      { id: 4, name: 'Court 4' },
-    ];
+    const courts = await this.courtsRepository.find({
+      order: { id: 'ASC' },
+    });
+    return courts.map(court => ({
+      id: court.id,
+      name: court.name,
+      status: court.is_active ? 'ACTIVE' : 'MAINTENANCE',
+    }));
   }
 
   async getAvailability(date: string) {

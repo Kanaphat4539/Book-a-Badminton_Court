@@ -1,11 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  distDir: process.env.QA_DIST_DIR || '.next',
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/:path*` : 'http://backend:4000/:path*',
+        // Docker supplies BACKEND_URL; local development runs Nest on port 4000.
+        destination: `${process.env.BACKEND_URL || 'http://localhost:4000'}/:path*`,
       },
     ];
   },

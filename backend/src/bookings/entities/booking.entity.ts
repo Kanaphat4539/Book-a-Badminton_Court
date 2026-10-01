@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, UpdateDateColumn } from 'typeorm';
 import { Student } from '../../users/entities/student.entity';
 import { Admin } from '../../users/entities/admin.entity';
 
@@ -42,4 +42,11 @@ export class Booking {
   @ManyToOne(() => Admin, (admin) => admin.bookings, { onUpdate: 'CASCADE', onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'admin_id' })
   admin: Admin;
+
+  @UpdateDateColumn({ nullable: true })
+  updated_at: Date;
+
+  // Nullable for pre-existing bookings; new bookings set this once on creation.
+  @Column({ type: 'datetime', nullable: true })
+  created_at: Date | null;
 }

@@ -1,3 +1,4 @@
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -5,26 +6,65 @@
 /* Enable class-based dark mode for Tailwind v4 */
 @custom-variant dark (&:is(.dark *));
 
-@layer base {
-  body {
-    @apply transition-colors duration-300 ease-in-out;
+:root {
+  --theme-transition-duration: 250ms;
+  --theme-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* One clock for theme colors, including icons, overlays and pseudo-elements.
+   These overrides only apply while the theme changes, preserving normal hover effects. */
+@media (prefers-reduced-motion: no-preference) {
+  html.theme-transitioning,
+  html.theme-transitioning *,
+  html.theme-transitioning::before,
+  html.theme-transitioning::after,
+  html.theme-transitioning *::before,
+  html.theme-transitioning *::after {
+    transition-property: background-color, color, border-color, outline-color,
+      text-decoration-color, fill, stroke, box-shadow, opacity, filter,
+      backdrop-filter, --tw-gradient-from, --tw-gradient-via,
+      --tw-gradient-to !important;
+    transition-duration: var(--theme-transition-duration) !important;
+    transition-timing-function: var(--theme-transition-easing) !important;
+    transition-delay: 0s !important;
+  }
+
+  /* Keep the sun/moon movement on the same clock as the page colors. */
+  html.theme-transitioning :is(.theme, .ui-switch) *,
+  html.theme-transitioning :is(.theme, .ui-switch) *::before,
+  html.theme-transitioning :is(.theme, .ui-switch) *::after {
+    transition-property: background-color, color, border-color, box-shadow,
+      opacity, transform, top, left !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-transitioning,
+  html.theme-transitioning *,
+  html.theme-transitioning *::before,
+  html.theme-transitioning *::after {
+    transition: none !important;
   }
 }
 
 @theme inline {
-  --font-sans: 'Plus Jakarta Sans', sans-serif;
-  --font-body-md: 'Plus Jakarta Sans', sans-serif;
-  --font-body-sm: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-md: 'Plus Jakarta Sans', sans-serif;
-  --font-body-lg: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-xl: 'Plus Jakarta Sans', sans-serif;
-  --font-label-lg: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-sm: 'Plus Jakarta Sans', sans-serif;
-  --font-label-md: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-lg: 'Plus Jakarta Sans', sans-serif;
-  --font-label-sm: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-xl-mobile: 'Plus Jakarta Sans', sans-serif;
+  --font-sans: var(--font-roboto-condensed), sans-serif;
+  --font-user: var(--font-roboto-condensed), 'Noto Sans Thai', 'Leelawadee UI', Tahoma, sans-serif;
+  --font-body-md: var(--font-roboto-condensed), sans-serif;
+  --font-body-sm: var(--font-roboto-condensed), sans-serif;
+  --font-headline-md: var(--font-roboto-condensed), sans-serif;
+  --font-body-lg: var(--font-roboto-condensed), sans-serif;
+  --font-headline-xl: var(--font-roboto-condensed), sans-serif;
+  --font-label-lg: var(--font-roboto-condensed), sans-serif;
+  --font-headline-sm: var(--font-roboto-condensed), sans-serif;
+  --font-label-md: var(--font-roboto-condensed), sans-serif;
+  --font-headline-lg: var(--font-roboto-condensed), sans-serif;
+  --font-label-sm: var(--font-roboto-condensed), sans-serif;
+  --font-headline-xl-mobile: var(--font-roboto-condensed), sans-serif;
+}
 
+/* Keep color utilities bound to variables so .dark overrides apply at runtime. */
+@theme static {
   --color-surface-container-highest: #e2e2e2;
   --color-tertiary: #565e74;
   --color-inverse-on-surface: #f1f1f0;
@@ -72,7 +112,9 @@
   --color-on-error: #ffffff;
   --color-error: #ba1a1a;
   --color-surface-container-lowest: #ffffff;
+}
 
+@theme inline {
   --spacing-margin-screen: 1.25rem;
   --spacing-gutter-xl: 1.5rem;
   --spacing-gutter-xs: 0.25rem;
@@ -139,6 +181,56 @@
   body {
     background-color: var(--color-background);
     color: var(--color-on-background);
+  }
+
+  .dark {
+    --color-surface-container-highest: #333636;
+    --color-tertiary: #a4adc9;
+    --color-inverse-on-surface: #303030;
+    --color-on-primary: #5d1700;
+    --color-on-secondary: #003825;
+    --color-surface-variant: #52443e;
+    --color-tertiary-container: #3f465c;
+    --color-surface-bright: #3c3938;
+    --color-surface-container: #201f1e;
+    --color-on-error-container: #ffdad6;
+    --color-secondary-fixed-dim: #4edea3;
+    --color-primary-fixed: #ffdbd0;
+    --color-surface-dim: #131313;
+    --color-on-surface-variant: #d7c2bc;
+    --color-on-tertiary-fixed-variant: #3f465c;
+    --color-inverse-primary: #ab3500;
+    --color-tertiary-fixed-dim: #bec6e0;
+    --color-surface-container-high: #2b2a29;
+    --color-on-secondary-fixed-variant: #005236;
+    --color-outline-variant: #52443e;
+    --color-secondary-container: #005236;
+    --color-inverse-surface: #e5e2e1;
+    --color-primary-container: #832700;
+    --color-tertiary-fixed: #dae2fd;
+    --color-primary: #ffb59d;
+    --color-secondary: #4edea3;
+    --color-surface-container-low: #1c1b1a;
+    --color-primary-fixed-dim: #ffb59d;
+    --color-on-tertiary-fixed: #131b2e;
+    --color-on-background: #e5e2e1;
+    --color-on-secondary-fixed: #002113;
+    --color-on-primary-fixed: #390c00;
+    --color-error-container: #93000a;
+    --color-background: #1a1c1c;
+    --color-surface-tint: #ffb59d;
+    --color-surface: #1a1c1c;
+    --color-on-surface: #e5e2e1;
+    --color-on-primary-container: #ffdbd0;
+    --color-outline: #9f8c86;
+    --color-on-primary-fixed-variant: #832700;
+    --color-secondary-fixed: #6ffbbe;
+    --color-on-tertiary: #131b2e;
+    --color-on-secondary-container: #6cf8bb;
+    --color-on-tertiary-container: #dae2fd;
+    --color-on-error: #690005;
+    --color-error: #ffb4ab;
+    --color-surface-container-lowest: #0e0f0f;
   }
 
   /* Custom scrollbar for webkit */
@@ -326,3 +418,162 @@
     height: 0;
   }
 }
+
+/* Fix for Material Symbols not rendering on mobile Safari (ligatures breaking) */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-style: normal;
+  font-weight: normal;
+  font-variant-ligatures: normal !important;
+  -webkit-font-feature-settings: 'liga' !important;
+  font-feature-settings: 'liga' !important;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Sport banner motion ===== */
+@keyframes sport-floatY {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50%      { transform: translateY(-14px) rotate(4deg); }
+}
+@keyframes sport-twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.7); }
+  50%      { opacity: 1; transform: scale(1.15); }
+}
+@keyframes sport-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(14px, -18px) scale(1.08); }
+}
+@keyframes sport-spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-sport-float  { animation: sport-floatY 4.5s ease-in-out infinite; }
+.animate-sport-drift  { animation: sport-drift 8s ease-in-out infinite; }
+.animate-sport-twinkle{ animation: sport-twinkle 3s ease-in-out infinite; }
+.animate-sport-spin-slow { animation: sport-spin-slow 26s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-sport-float, .animate-sport-drift,
+  .animate-sport-twinkle, .animate-sport-spin-slow { animation: none !important; }
+}
+
+/* badminton action: racket smash swing */
+@keyframes sport-smash {
+  0%, 48%  { transform: rotate(-38deg) translateY(0); }
+  56%      { transform: rotate(8deg)  translateY(-2px); }
+  64%      { transform: rotate(-14deg) translateY(0); }
+  100%     { transform: rotate(-38deg) translateY(0); }
+}
+@keyframes sport-steak {
+  0%, 50%  { opacity: 0; transform: translateX(-6px) scaleX(0.6); }
+  56%      { opacity: 0.9; transform: translateX(6px) scaleX(1); }
+  66%, 100%{ opacity: 0; transform: translateX(10px) scaleX(1.1); }
+}
+.animate-sport-smash { animation: sport-smash 4.8s ease-in-out infinite; transform-origin: 82% 96%; }
+.animate-sport-steak{ animation: sport-steak 4.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-sport-smash, .animate-sport-steak { animation: none !important; }
+  .animate-sport-smash { transform: rotate(-14deg); }
+}
+
+/* banner: moving gradient + shine sweep */
+@keyframes sport-gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@keyframes sport-shine {
+  0%                       { transform: translateX(-140%) skewX(-22deg); }
+  55%, 100%                { transform: translateX(260%) skewX(-22deg); }
+}
+@keyframes sport-ring-rise {
+  0%   { transform: translateY(0) scale(1); opacity: 0.35; }
+  50%  { transform: translateY(-26px) scale(1.12); opacity: 0.7; }
+  100% { transform: translateY(0) scale(1); opacity: 0.35; }
+}
+.animate-sport-gradient {
+  background-size: 260% 260%;
+  animation: sport-gradient 16s ease-in-out infinite;
+}
+.animate-sport-shine  { animation: sport-shine 5.5s ease-in-out infinite; }
+.animate-sport-ring   { animation: sport-ring-rise 7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-sport-gradient, .animate-sport-shine, .animate-sport-ring { animation: none !important; }
+}
+
+/* CYBERCOURT OS Telemetry & Analytics Dashboard Styles */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+}
+
+.dark .glass-card {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.85) 0%, rgba(11, 17, 30, 0.95) 100%);
+  border: 1px solid rgba(255, 122, 0, 0.18);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.08), 0 20px 35px -10px rgba(0, 0, 0, 0.7);
+}
+
+.glass-card-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-hover:hover {
+  border-color: rgba(249, 115, 22, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.08), 0 0 15px -2px rgba(249, 115, 22, 0.15);
+}
+
+.dark .glass-card-hover:hover {
+  border-color: rgba(255, 122, 0, 0.45);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -8px rgba(255, 107, 0, 0.18);
+}
+
+.shadow-cyber-glow {
+  box-shadow: 0 10px 25px -4px rgba(234, 88, 12, 0.18);
+}
+
+.dark .shadow-cyber-glow {
+  box-shadow: 0 0 25px -4px rgba(255, 107, 0, 0.35);
+}
+
+.shadow-cyber-glow-sm {
+  box-shadow: 0 4px 12px -2px rgba(234, 88, 12, 0.25);
+}
+
+.dark .shadow-cyber-glow-sm {
+  box-shadow: 0 0 12px -2px rgba(255, 107, 0, 0.3);
+}
+
+.shadow-hud-panel {
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+}
+
+.dark .shadow-hud-panel {
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.08), 0 20px 35px -10px rgba(0, 0, 0, 0.7);
+}
+
+.tech-grid-bg {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(148, 163, 184, 0.10) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.10) 1px, transparent 1px);
+}
+
+.dark .tech-grid-bg {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+

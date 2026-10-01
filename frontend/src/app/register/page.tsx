@@ -4,10 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { usePageLoading } from '@/components/loading-provider';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const pageLoading = usePageLoading();
   const [studentId, setStudentId] = useState('');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -35,6 +36,7 @@ export default function RegisterPage() {
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       toast.success('Registration successful!');
+      pageLoading.start('/register');
       router.push('/dashboard');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Registration failed');
@@ -56,10 +58,6 @@ export default function RegisterPage() {
       <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-yellow-300/40 dark:bg-yellow-600/30 rounded-full mix-blend-multiply filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
       <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-primary/20 dark:bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-80 transition-colors duration-300 z-0"></div>
 
-      {/* Floating Theme Toggle */}
-      <div className="absolute top-4 right-4 md:top-6 md:right-6 z-[100]">
-        <ThemeToggle className="flex items-center justify-center transition-colors hover:opacity-80" />
-      </div>
 
 
 

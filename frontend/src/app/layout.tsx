@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Roboto_Condensed } from "next/font/google";
 import "./globals.css";
 import { Toaster } from 'sonner';
-import { AuthSplashProvider } from '@/components/auth-splash-provider';
 import { ThemeProvider } from '@/components/theme-provider';
+import { LoadingProvider } from '@/components/loading-provider';
 import Script from 'next/script';
+import 'material-symbols/outlined.css';
 
 
-const inter = Inter({
-  variable: "--font-inter",
+const robotoCondensed = Roboto_Condensed({
+  variable: "--font-roboto-condensed",
   subsets: ["latin"],
 });
 
@@ -26,11 +27,11 @@ export default function RootLayout({
     <html
       lang="en"
       translate="no"
-      className={`${inter.variable} h-full antialiased`}
+      className={`${robotoCondensed.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
         <script
           id="storage-polyfill"
           dangerouslySetInnerHTML={{
@@ -71,7 +72,7 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
         >
-          <AuthSplashProvider>{children}</AuthSplashProvider>
+          <LoadingProvider>{children}</LoadingProvider>
           <Toaster position="top-center" theme="system" />
         </ThemeProvider>
       </body>

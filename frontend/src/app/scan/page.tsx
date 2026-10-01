@@ -6,16 +6,28 @@ import api from '@/lib/api';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { toast } from 'sonner';
 import MainLayout from '@/components/MainLayout';
+import SportBanner from '@/components/SportBanner';
 
 export default function ScanPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [scannedResult, setScannedResult] = useState<string | null>(null);
-  const [myBookings, setMyBookings] = useState<any[]>([]);
+    const [scannedResult, setScannedResult] = useState<string | null>(null);
+    const [myBookings, setMyBookings] = useState<any[]>([]);
+    const [checkedInInfo, setCheckedInInfo] = useState<{courtId: number, date: string, end: string} | null>(null);
   const myBookingsRef = useRef<any[]>([]);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const parsedUser = JSON.parse(userStr);
+        if (parsedUser.role === 'ADMIN') {
+          router.push('/dashboard');
+        }
+      } catch (e) {}
+    }
+
     const fetchBookings = async () => {
       try {
         const response = await api.get('/bookings/me');
@@ -34,15 +46,17 @@ export default function ScanPage() {
     setLoading(true);
     try {
       // Find the pending booking for this court using the ref
-      const pendingBooking = myBookingsRef.current.find(b => b.status === 'PENDING' && b.court.id === courtId);
+      const pendingBooking = myBookingsRef.current.find(b => b.status === 'PENDING' && b.court === courtId);
       
       if (!pendingBooking) {
         throw new Error('You do not have a pending booking for this court right now.');
       }
 
-      await api.post(`/bookings/${pendingBooking.id}/check-in`, { courtId });
+      const bookingId = pendingBooking.booking_id || pendingBooking.id;
+      await api.post(`/bookings/${bookingId}/check-in`, { courtId });
       toast.success('Check-in successful! Enjoy your game.');
-      router.push('/dashboard');
+      setCheckedInInfo({ courtId, date: pendingBooking.booking_date, end: pendingBooking.time_out });
+      setLoading(false);
     } catch (err: any) {
       toast.error(err.response?.data?.message || err.message || 'Check-in failed');
       setTimeout(() => {
@@ -111,47 +125,56 @@ export default function ScanPage() {
   }, []);
 
   return (
-    <MainLayout>
-      <div className="max-w-md w-full mx-auto flex-1 flex flex-col px-4 relative z-10">
+    <MainLayout width="full">
+      <div className="w-full flex-1 flex flex-col relative z-10 pb-10">
         
-        {/* Sporty Header */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#F26522] to-yellow-500 p-6 mb-8 mt-4 shadow-[0_8px_24px_rgba(242,101,34,0.3)] flex items-center justify-between">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 z-0"></div>
-          <div className="relative z-10 flex flex-col">
-            <h1 className="font-headline-lg text-[28px] font-black text-white flex items-center gap-2 drop-shadow-md">
-              <span className="material-symbols-outlined text-[32px]">qr_code_scanner</span>
-              Scan & Play
-            </h1>
-            <p className="text-white/90 text-[13px] mt-1 font-medium">Verify your court booking</p>
-          </div>
-          <div className="relative z-10">
-            <button 
-              className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 py-2 rounded-xl font-bold text-[14px] transition-colors border border-white/30 shadow-sm" 
-              onClick={() => router.push('/dashboard')}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+        {/* Sporty Header (Edge-to-edge) */}
+                <SportBanner
+                  contentClassName="px-6 md:px-10 py-8 md:py-10"
+                  title={
+                    <span className="flex flex-wrap items-center gap-3">
+                      <span className="material-symbols-outlined text-[32px] md:text-[40px]">qr_code_scanner</span>
+                      Scan &amp; Play
+                    </span>
+                  }
+                  subtitle={<span className="font-medium">Verify your court booking</span>}
+                  right={
+                    <button
+                      className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-[14px] md:text-[16px] transition-colors border border-white/30 shadow-sm"
+                      onClick={() => router.push('/dashboard')}
+                    >
+                      Cancel
+                    </button>
+                  }
+                />
+
+        <div className="mx-auto max-w-md w-full px-4 flex-1 flex flex-col mt-10">
 
         <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="bg-white/70 dark:bg-[#1a0a00]/70 backdrop-blur-md p-2 rounded-2xl w-full max-w-sm overflow-hidden shadow-[0_0_30px_rgba(255,107,0,0.2)] border border-primary/30 dark:border-[#ff6b00]/30 transition-colors duration-300">
+          <div className="bg-surface/70 backdrop-blur-md p-2 rounded-2xl w-full max-w-sm overflow-hidden shadow-lg border border-outline-variant transition-colors duration-300">
             <div id="qr-reader" className="w-full"></div>
           </div>
           
-          <div className="mt-8 text-center text-gray-600 dark:text-orange-200/70 font-body-md text-[14px] transition-colors duration-300">
+          <div className="mt-8 text-center text-on-surface-variant font-body-md text-[14px] transition-colors duration-300">
             {loading ? (
               <p className="animate-pulse text-primary font-bold">Processing Check-in...</p>
             ) : (
               <div className="flex flex-col gap-2">
                 <p>Point your camera at the QR code on the court to check in.</p>
-                <div className="bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 p-3 rounded-xl border border-orange-200 dark:border-orange-800/30 text-[13px] font-semibold mt-2">
+                <div className="bg-surface-container-high text-on-surface p-3 rounded-xl border border-outline-variant text-[13px] font-semibold mt-2">
                   <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">info</span>
                   Note: You can only scan the QR code when it is exactly time for your booking.
                 </div>
               </div>
             )}
+            {checkedInInfo && (
+              <div className="mt-6 p-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-400/30 text-center">
+                <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">Court {checkedInInfo.courtId}</p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">{checkedInInfo.date} • {checkedInInfo.end?.slice(0,5)} — Playing now — countdown active</p>
+              </div>
+            )}
           </div>
+        </div>
         </div>
       </div>
     </MainLayout>

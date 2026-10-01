@@ -3,24 +3,170 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { cn } from '@/lib/utils';
+import api, { isSessionExpiredError } from '@/lib/api';
+import { BanPopup } from '@/components/BanPopup';
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+const GlobalFooter = () => (
+  <footer className="hidden md:block w-full mt-auto bg-surface text-on-surface overflow-hidden relative border-t border-surface-container-high">
+    <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full border-30 border-primary/10 pointer-events-none"></div>
+    <div className="mx-auto max-w-7xl px-6 py-12 md:px-10">
+      <div className="grid gap-12 md:grid-cols-4 lg:grid-cols-5">
+        <div className="md:col-span-2 lg:col-span-2">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-white flex items-center justify-center shadow-lg shrink-0">
+              <img
+                alt="KMITL Badminton Logo"
+                className="w-full h-full object-cover scale-[1.3] origin-center"
+                src="https://dynamic.design.com/preview/logodraft/19a68c63-7360-49b5-81f0-76059ea64263/image/extra-large.en-us.png"
+              />
+            </div>
+            <div>
+              <p className="font-black text-on-surface text-lg">KMITL Badminton</p>
+              <p className="text-sm text-primary">Sports Complex System</p>
+            </div>
+          </div>
+          <p className="max-w-xs text-sm leading-relaxed text-on-surface-variant mb-8">
+            A smarter way to manage courts, schedules, and every match that matters.
+          </p>
+          <div className="flex gap-3">
+            <button className="grid w-10 h-10 place-items-center rounded-xl bg-surface-container-high text-primary transition-all hover:bg-primary hover:text-on-primary hover:scale-105">
+              <span className="material-symbols-outlined text-[18px]">public</span>
+            </button>
+            <button className="grid w-10 h-10 place-items-center rounded-xl bg-surface-container-high text-primary transition-all hover:bg-primary hover:text-on-primary hover:scale-105">
+              <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+            </button>
+            <button className="grid w-10 h-10 place-items-center rounded-xl bg-surface-container-high text-primary transition-all hover:bg-primary hover:text-on-primary hover:scale-105">
+              <span className="material-symbols-outlined text-[18px]">settings</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-6">Platform</h3>
+          <div className="flex flex-col gap-4 text-sm text-on-surface-variant">
+            <a className="hover:text-primary transition-colors" href="/dashboard">Dashboard</a>
+            <a className="hover:text-primary transition-colors" href="/booking">Bookings</a>
+            <a className="hover:text-primary transition-colors" href="#">Court Schedule</a>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-6">Support</h3>
+          <div className="flex flex-col gap-4 text-sm text-on-surface-variant">
+            <a className="inline-flex items-center gap-2 hover:text-primary transition-colors" href="#">
+              <span className="material-symbols-outlined text-[16px]">call</span> 02-329-8000
+            </a>
+            <a className="inline-flex items-center gap-2 hover:text-primary transition-colors" href="#">
+              <span className="material-symbols-outlined text-[16px]">open_in_new</span> Help Center
+            </a>
+            <span className="text-on-surface-variant/60">Mon – Fri, 08:00 – 18:00</span>
+          </div>
+        </div>
+
+        <div className="md:col-span-4 lg:col-span-1">
+          <div className="rounded-2xl border border-surface-container-high bg-surface-container-low p-5">
+            <div className="flex items-center gap-2 text-sm font-bold text-on-surface mb-2">
+              <span className="material-symbols-outlined text-[18px] text-primary">bolt</span> System Status
+            </div>
+            <p className="text-xs leading-relaxed text-on-surface-variant mb-4">
+              All booking services are operating normally.
+            </p>
+            <div className="flex items-center gap-2 text-xs font-bold text-secondary">
+              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span> Operational
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-12 flex flex-col justify-between gap-4 border-t border-surface-container-high pt-8 text-xs text-on-surface-variant/70 sm:flex-row">
+        <p>© 2026 KMITL Badminton. All rights reserved.</p>
+        <p>Internal use only · Sports Complex</p>
+      </div>
+    </div>
+  </footer>
+);
+
+type MainLayoutProps = {
+  children: React.ReactNode;
+  width?: 'compact' | 'wide' | 'full';
+};
+
+export default function MainLayout({ children, width = 'compact' }: MainLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/rules-of-hooks, @typescript-eslint/no-unused-vars, no-restricted-syntax, react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
+    const fetchNotifications = async () => {
       try {
-        const parsedUser = JSON.parse(userStr);
-        setUserRole(parsedUser.role);
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await api.get('/bookings/notifications', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setNotifications(res.data);
+        const unreadCount = res.data.filter((n: any) => !n.is_read).length;
+        setHasUnreadNotifications(unreadCount > 0);
+      } catch (err) {
+        if (isSessionExpiredError(err)) return;
+        console.error('Failed to fetch notifications', err);
+      }
+    };
+
+    const fetchUserNotifications = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await api.get('/bookings/user-notifications', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setNotifications(res.data);
+        const unreadCount = res.data.filter((n: any) => !n.is_read).length;
+        setHasUnreadNotifications(unreadCount > 0);
+      } catch (err) {
+        if (isSessionExpiredError(err)) return;
+        console.error('Failed to fetch user notifications', err);
+      }
+    };
+
+    const checkAuth = () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsAuthenticated(false);
+        if (typeof window !== 'undefined' && 
+            !window.location.pathname.startsWith('/login') && 
+            !window.location.pathname.startsWith('/register') && 
+            window.location.pathname !== '/') {
+          router.push('/login');
+        }
+        return;
+      }
+
+      try {
+        const parsedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        setUserRole(parsedUser.role || 'USER');
+        setIsAuthenticated(true);
+        if (parsedUser.role === 'ADMIN') {
+          fetchNotifications();
+        } else {
+          fetchUserNotifications();
+        }
       } catch (e) {}
-    }
+    };
+
+    checkAuth();
+    
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
   }, []);
 
   const handleLogout = () => {
@@ -35,13 +181,16 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return false;
   };
 
+  const containerWidth = width === 'full' ? 'w-full' : width === 'wide' ? 'max-w-6xl' : 'max-w-2xl';
+
   if (!mounted) return <div className="min-h-screen bg-surface"></div>;
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen flex flex-col font-sans">
+    <div className={cn('bg-surface text-on-surface min-h-screen flex flex-col', width === 'wide' ? 'font-user' : 'font-sans')}>
+      <BanPopup />
       {/* Header */}
       <header className="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-        <div className="h-16 px-4 md:px-margin-screen flex items-center justify-between max-w-2xl mx-auto">
+        <div className={cn('h-16 px-4 md:px-margin-screen flex items-center justify-between mx-auto', containerWidth)}>
           <div className="flex items-center gap-3 cursor-pointer min-w-0" onClick={() => router.push('/dashboard')}>
             <div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center shadow-[0_4px_12px_rgba(255,94,30,0.25)] shrink-0">
               <img
@@ -59,10 +208,73 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button aria-label="Notifications" className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface active:bg-surface-container-high transition-colors relative">
-              <span className="material-symbols-outlined text-[22px]">notifications</span>
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-primary-container ring-2 ring-surface"></span>
-            </button>
+            <div className="relative">
+              <button 
+                aria-label="Notifications" 
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface active:bg-surface-container-high transition-colors relative"
+              >
+                <span className="material-symbols-outlined text-[22px]">notifications</span>
+                {notifications.length > 0 && (
+                  <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-error ring-2 ring-surface"></span>
+                )}
+              </button>
+              
+              {/* Notifications Dropdown */}
+              {isNotificationsOpen && (
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-surface rounded-xl shadow-lg border border-surface-container-high overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-4 border-b border-surface-container-high flex justify-between items-center bg-surface-container-lowest">
+                    <h3 className="font-headline-sm text-on-surface">การแจ้งเตือน {userRole === 'ADMIN' ? '(Admin)' : ''}</h3>
+                    <button onClick={() => setIsNotificationsOpen(false)} className="text-on-surface-variant hover:text-on-surface">
+                      <span className="material-symbols-outlined text-[20px]">close</span>
+                    </button>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {notifications.length > 0 ? (
+                      notifications.map((notif: any, index: number) => {
+                        if (notif.type === 'SYSTEM') {
+                          return (
+                            <div key={`sys-${index}`} className="p-4 border-b border-surface-container-low hover:bg-surface-container-lowest transition-colors border-l-4 border-l-secondary">
+                              <div className="flex justify-between items-start">
+                                <p className="font-label-lg text-on-surface">📢 ประกาศจากระบบ</p>
+                              </div>
+                              <p className="text-body-sm text-on-surface-variant mt-1">{notif.message}</p>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div key={notif.booking_id} className={`p-4 border-b border-surface-container-low hover:bg-surface-container-lowest transition-colors ${notif.status === 'CANCELLED' ? 'border-l-4 border-l-error' : notif.status === 'CHECKED_IN' ? 'border-l-4 border-l-secondary' : 'border-l-4 border-l-primary'}`}>
+                            <div className="flex justify-between items-start">
+                              <p className="font-label-lg text-on-surface">
+                                {userRole === 'ADMIN' 
+                                  ? (notif.status === 'CANCELLED' ? '🔴 ยกเลิกการจอง' : '🟢 การจองใหม่')
+                                  : (notif.status === 'CANCELLED' ? '🔴 ยกเลิกการจอง' : notif.status === 'CHECKED_IN' ? '🟢 เช็คอินสำเร็จ' : notif.status === 'COMPLETED' ? '🟢 การจองเสร็จสิ้น' : '🟢 จองคอร์ทสำเร็จ')}
+                              </p>
+                              <span className="text-[10px] text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full">
+                                ID: {notif.booking_id}
+                              </span>
+                            </div>
+                            <p className="text-body-sm text-on-surface-variant mt-1">
+                              คอร์ท {notif.court} | วันที่ {notif.booking_date} | {notif.time_in}-{notif.time_out}
+                            </p>
+                            {userRole === 'ADMIN' && (
+                              <p className="text-label-sm text-primary mt-1">
+                                โดย รหัสนักศึกษา: {notif.stu_id} {notif.student ? `(${notif.student.first_name} ${notif.student.last_name})` : ''}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="p-8 text-center text-on-surface-variant">
+                        <span className="material-symbols-outlined text-[48px] opacity-20 mb-2">notifications_off</span>
+                        <p>ไม่มีการแจ้งเตือน</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <button aria-label="Menu" onClick={() => setIsSidebarOpen(true)} className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-sm active:scale-95 transition-transform">
               <span className="material-symbols-outlined text-on-primary text-[20px]">menu</span>
             </button>
@@ -71,27 +283,33 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 w-full pt-16 pb-24 max-w-2xl mx-auto">
-        {children}
+      <div className={cn('flex-1 w-full pt-16 pb-24 md:pb-0 mx-auto flex flex-col min-h-[calc(100vh-4rem)]', containerWidth)}>
+        <main className="flex-1">
+          {children}
+        </main>
+
       </div>
+
+      {/* Global Footer (Visible only on Desktop) */}
+      <GlobalFooter />
 
       {/* Bottom Nav */}
       {userRole !== 'ADMIN' && (
-        <nav className="fixed bottom-0 w-full z-40 pb-safe bg-surface/85 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.05)]">
-          <div className="h-20 px-gutter-sm flex items-center justify-around max-w-2xl mx-auto">
-            <button onClick={() => router.push('/dashboard')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
+        <nav className="fixed bottom-0 w-full z-40 pb-safe bg-surface/85 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.05)] md:hidden">
+          <div className={cn('h-20 px-gutter-sm flex items-center justify-around mx-auto', containerWidth)}>
+            <button onClick={() => router.push('/dashboard')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/dashboard') ? { fontVariationSettings: "'FILL' 1" } : {}}>home</span>
               <span className="font-label-sm text-[10px] md:text-label-sm">หน้าหลัก</span>
             </button>
-            <button onClick={() => router.push('/booking')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/booking') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
+            <button onClick={() => router.push('/booking')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/booking') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/booking') ? { fontVariationSettings: "'FILL' 1" } : {}}>calendar_month</span>
               <span className="font-label-sm text-[10px] md:text-label-sm">จองคอร์ท</span>
             </button>
-            <button onClick={() => router.push('/scan')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/scan') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
+            <button onClick={() => router.push('/scan')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/scan') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/scan') ? { fontVariationSettings: "'FILL' 1" } : {}}>qr_code_scanner</span>
               <span className="font-label-sm text-[10px] md:text-label-sm">สแกนเข้าสนาม</span>
             </button>
-            <button onClick={() => router.push('/news')} className={`flex flex-col items-center justify-center min-w-[56px] h-12 gap-1 transition-colors cursor-pointer ${isActive('/news') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
+            <button onClick={() => router.push('/news')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/news') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/news') ? { fontVariationSettings: "'FILL' 1" } : {}}>newspaper</span>
               <span className="font-label-sm text-[10px] md:text-label-sm">ข่าวสาร</span>
             </button>
@@ -101,9 +319,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       {/* Sidebar Overlay */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end">
+        <div className="fixed inset-0 z-100 flex justify-end">
           <div className="absolute inset-0 bg-on-background/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
-          <div className="relative w-[280px] bg-surface h-full shadow-2xl flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
+          <div className="relative w-70 bg-surface h-full shadow-2xl flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
             <div className="flex justify-between items-center mb-8">
               <span className="font-headline-sm text-on-surface font-bold">KMITL Menu</span>
               <button onClick={() => setIsSidebarOpen(false)} className="text-on-surface-variant hover:text-on-surface">
@@ -113,8 +331,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             <nav className="flex flex-col gap-6">
               <div className="flex flex-col gap-4">
                 <button onClick={() => { setIsSidebarOpen(false); router.push('/dashboard'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">หน้าหลัก (Home)</button>
-                <button onClick={() => { setIsSidebarOpen(false); router.push('/booking'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">จองคอร์ท (Book Courts)</button>
-                <button onClick={() => { setIsSidebarOpen(false); router.push('/scan'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">สแกนคิวอาร์ (Scan QR)</button>
+                {userRole !== 'ADMIN' && (
+                  <>
+                    <button onClick={() => { setIsSidebarOpen(false); router.push('/booking'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">จองคอร์ท (Book Courts)</button>
+                    <button onClick={() => { setIsSidebarOpen(false); router.push('/scan'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">สแกนคิวอาร์ (Scan QR)</button>
+                  </>
+                )}
                 <button onClick={() => { setIsSidebarOpen(false); router.push('/news'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">ข่าวสาร (News)</button>
                 {userRole === 'ADMIN' && (
                   <button onClick={() => { setIsSidebarOpen(false); router.push('/admin/users'); }} className="text-left font-label-lg text-secondary hover:text-primary border-b border-surface-container-high pb-2">จัดการผู้ใช้ (Manage Users)</button>

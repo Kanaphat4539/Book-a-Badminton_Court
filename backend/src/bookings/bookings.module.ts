@@ -5,9 +5,10 @@ import { BookingsController } from './bookings.controller';
 import { Booking } from './entities/booking.entity';
 import { Student } from '../users/entities/student.entity';
 import { Admin } from '../users/entities/admin.entity';
+import { Court } from '../courts/entities/court.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Booking, Student, Admin])],
+  imports: [TypeOrmModule.forFeature([Booking, Student, Admin, Court])],
   controllers: [BookingsController],
   providers: [BookingsService],
   exports: [BookingsService],

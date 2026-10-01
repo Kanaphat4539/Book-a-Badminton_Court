@@ -1,4 +1,6 @@
 import { Repository } from 'typeorm';
+import { BadRequestException, ParseIntPipe } from '@nestjs/common';
+import { BookingsController } from './bookings.controller';
 import { BookingsService } from './bookings.service';
 import { CronService } from '../cron/cron.service';
 import { CourtsService } from '../courts/courts.service';
@@ -43,6 +45,9 @@ describe('booking lifecycle (Bangkok time)', () => {
       transaction: async (...args: unknown[]) => (args.at(-1) as (m: unknown) => unknown)(manager),
       findOne: async (_entity: unknown, options: { where: object | object[] }) => rows.find(row =>
         (Array.isArray(options.where) ? options.where : [options.where]).some(where => matches(row, where))),
+      getRepository: (entity: unknown) => entity === Student
+        ? { findOneBy: async (where: object) => students.find(row => matches(row, where)), save }
+        : repository,
       findOneBy: async (_entity: unknown, where: object) => students.find(row => matches(row, where)),
       find: async (entity: unknown, options: { where: object }) => entity === Booking
         ? rows.filter(row => matches(row, options.where))
@@ -58,12 +63,19 @@ describe('booking lifecycle (Bangkok time)', () => {
     } as unknown as Repository<Booking>;
     const studentRepository = { findOneBy: (where: object) => manager.findOneBy(Student, where), save } as unknown as Repository<Student>;
     const adminRepository = { findOneBy: async () => ({ admin_id: 'A001' }) } as unknown as Repository<Admin>;
-    bookings = new BookingsService(repository, studentRepository, adminRepository);
+    bookings = new BookingsService(repository, studentRepository, adminRepository, { findOneBy: async () => ({ id: 1, is_active: true }) } as any);
     cron = new CronService(repository, studentRepository);
   });
 
   afterEach(async () => {
     jest.useRealTimers();
+  });
+
+  it('rejects a malformed finish ID with a client error instead of an internal error', async () => {
+    const service = { finishBooking: jest.fn() };
+        const controller = new BookingsController(service as unknown as BookingsService);
+        await expect(new ParseIntPipe().transform('not-an-id', { type: 'param', metatype: Number, data: 'id' })).rejects.toThrow(BadRequestException);
+            expect(service.finishBooking).not.toHaveBeenCalled();
   });
 
   it('releases a timely cancellation and lets another user play the remainder without an immediate strike', async () => {
@@ -161,5 +173,40 @@ describe('booking lifecycle (Bangkok time)', () => {
     await cron.handleCron();
     expect(booking.status).toBe(BookingStatus.CANCELLED);
     expect(students[0].strikes).toBe(1);
+  });
+
+  it('does not expose a student password in admin booking or notification responses', async () => {
+    const booking = await bookings.createBooking('00000001', 1, date, '15:00:00');
+    at('14:45:00');
+    const all = await bookings.getAllBookings();
+    expect(JSON.stringify(all)).not.toContain('password');
+    rows[0].status = BookingStatus.CANCELLED;
+    const notifications = await bookings.getNotifications();
+    expect(JSON.stringify(notifications)).not.toContain('password');
+    expect(notifications).toHaveLength(0);
+  });
+
+  it('allows only one concurrent finish transition', async () => {
+    const booking = await bookings.createBooking('00000001', 1, date, '15:00:00');
+    at('14:45:00');
+    await bookings.checkIn(booking.booking_id, '00000001', 1);
+    const outcomes = await Promise.allSettled([
+      bookings.finishBooking(booking.booking_id),
+      bookings.finishBooking(booking.booking_id),
+    ]);
+    expect(outcomes.filter(result => result.status === 'fulfilled')).toHaveLength(1);
+    expect(outcomes.filter(result => result.status === 'rejected')).toHaveLength(1);
+    expect(rows[0].status).toBe(BookingStatus.COMPLETED);
+  });
+
+  it('allows only one of concurrent check-in and cancel transitions', async () => {
+    const booking = await bookings.createBooking('00000001', 1, date, '15:00:00');
+    const outcomes = await Promise.allSettled([
+      bookings.checkIn(booking.booking_id, '00000001', 1),
+      bookings.cancelBooking(booking.booking_id, '00000001'),
+    ]);
+    expect(outcomes.filter(result => result.status === 'fulfilled')).toHaveLength(1);
+    expect(outcomes.filter(result => result.status === 'rejected')).toHaveLength(1);
+    expect([BookingStatus.CHECKED_IN, BookingStatus.CANCELLED]).toContain(rows[0].status);
   });
 });

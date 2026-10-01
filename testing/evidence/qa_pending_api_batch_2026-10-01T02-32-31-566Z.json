@@ -1,0 +1,113 @@
+{
+  "environment": {
+    "started": "2026-10-01T02:32:31.566Z",
+    "head": "60a23c800d56a4f012cdead21adf4ab3f38d0e82",
+    "backendImage": "sha256:0c4da5a293918daf17d484ae7ff83b34afa962e2cf84211abb1daeec2f0e0a36",
+    "sourceHashes": {
+      "auth/auth.service.ts": "e59d744a7560b1fd38bee220d82e7e743f01289e21b92512019c47ca54622828",
+      "bookings/bookings.service.ts": "2155ea52c0dd981825ba09f448d72ebc93fe04d0d01d06e70be202611a6c7ca4",
+      "users/users.service.ts": "d9f0bbedbd0a3485b4ca7221ac637af7ce780c5dda9490f1aae90162f1569588",
+      "bookings/bookings.controller.ts": "cce9e9b0ed1c08683acc87cb7b1e632fb71fc1601e6de7b6da69d93c3474ee1c"
+    },
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "api": "http://127.0.0.1:4001",
+    "fixtureStrategy": "unique per-run student IDs/usernames; exact IDs checked absent before insertion",
+    "cleanup": {
+      "remainingBookings": 0,
+      "remainingBatchStudents": 0,
+      "remainingBatchAdmins": 0
+    }
+  },
+  "summary": {
+    "cases": 17,
+    "passed": 17,
+    "failed": 0
+  },
+  "results": [
+    {
+      "id": "TC_AUTH_002",
+      "status": "PASS",
+      "actual": "wrong-domain registration HTTP 400; account absent"
+    },
+    {
+      "id": "TC_AUTH_003",
+      "status": "PASS",
+      "actual": "email ending in allowed-domain-plus-untrusted-suffix HTTP 400; account absent"
+    },
+    {
+      "id": "TC_AUTH_004",
+      "status": "PASS",
+      "actual": "duplicate username HTTP 400; attempted ID absent; original account unchanged"
+    },
+    {
+      "id": "TC_AUTH_005",
+      "status": "PASS",
+      "actual": "duplicate student ID HTTP 400; no partial second account; original unchanged"
+    },
+    {
+      "id": "TC_AUTH_008",
+      "status": "PASS",
+      "actual": "wrong password login HTTP 401; generic Invalid credentials; no access token"
+    },
+    {
+      "id": "TC_AUTH_009",
+      "status": "PASS",
+      "actual": "known-wrong/unknown-user login HTTP 401/401; identical generic error"
+    },
+    {
+      "id": "TC_AUTH_011",
+      "status": "PASS",
+      "actual": "isolated student password at rest uses bcrypt prefix $2b$; plaintext absent"
+    },
+    {
+      "id": "TC_AUTH_015",
+      "status": "PASS",
+      "actual": "three distinct invalid-email registrations HTTP 400/400/400; no accounts persisted"
+    },
+    {
+      "id": "TC_AUTH_016",
+      "status": "PASS",
+      "actual": "raw malformed ID values (empty/9 digits/alphabetic) HTTP 400/400/400; none persisted"
+    },
+    {
+      "id": "TC_AUTH_020",
+      "status": "PASS",
+      "actual": "missing/empty password rejected HTTP 400/400; no rows persisted"
+    },
+    {
+      "id": "TC_AUTH_025",
+      "status": "PASS",
+      "actual": "non-string username types HTTP 401/401/401/401; absent password HTTP 401"
+    },
+    {
+      "id": "TC_BOOK_008",
+      "status": "PASS",
+      "actual": "same isolated student first/second booking HTTP 201/400: You already have an active booking. Please complete or cancel it first."
+    },
+    {
+      "id": "TC_BOOK_010",
+      "status": "PASS",
+      "actual": "different students same court/time HTTP 201/400; exact conflict message verified"
+    },
+    {
+      "id": "TC_BOOK_013",
+      "status": "PASS",
+      "actual": "same time separate courts HTTP 201/201, IDs 223/224"
+    },
+    {
+      "id": "TC_BOOK_029",
+      "status": "PASS",
+      "actual": "courtId 999/string HTTP 404/400; no booking persisted"
+    },
+    {
+      "id": "TC_BOOK_040",
+      "status": "PASS",
+      "actual": "missing fields/wrong time type/out-of-range time HTTP 400/400/400; no booking persisted"
+    },
+    {
+      "id": "TC_ADM_007",
+      "status": "PASS",
+      "actual": "Admin users API HTTP 200; users=21; records with password field=0"
+    }
+  ]
+}

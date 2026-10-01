@@ -4,6 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Booking } from './entities/booking.entity';
 import { Student } from '../users/entities/student.entity';
 import { Admin } from '../users/entities/admin.entity';
+import { Court } from '../courts/entities/court.entity';
 
 describe('BookingsService', () => {
   let service: BookingsService;
@@ -13,7 +14,8 @@ describe('BookingsService', () => {
       providers: [ { provide: getRepositoryToken(Admin), useValue: {} }, 
         BookingsService,
         { provide: getRepositoryToken(Booking), useValue: {} },
-        { provide: getRepositoryToken(Student), useValue: {} }
+        { provide: getRepositoryToken(Student), useValue: {} },
+        { provide: getRepositoryToken(Court), useValue: {} }
       ],
     }).compile();
 

@@ -1,8 +1,8 @@
 {
   "environment": {
     "databaseVolume": "badminton_qa_20260928_mysql_data",
-    "commit": "37aea29",
-    "at": "2026-09-28T08:46:21.104Z",
+    "commit": "60a23c800d56a4f012cdead21adf4ab3f38d0e82",
+    "at": "2026-09-30T23:37:25.119Z",
     "approach": "mocked Date + real MySQL TypeORM services; backend process stopped",
     "cleanup": "fixture removed"
   },
@@ -30,12 +30,12 @@
     {
       "id": "TC_BAN_022",
       "status": "ผ่าน",
-      "actual": "at Thai 00:01, new-day booking 284 succeeded while yesterday CANCELLED history remained; dates=2026-09-27,2026-09-28"
+      "actual": "at Thai 00:01, new-day booking 68 succeeded while yesterday CANCELLED history remained; dates=2026-09-27,2026-09-28"
     },
     {
       "id": "TC_BAN_023",
       "status": "ผ่าน",
-      "actual": "11:59:59 rejected 400 exact ban message; 12:00:00 booking 285 succeeded and auto-unban reset strikes=0"
+      "actual": "11:59:59 rejected 400 exact ban message; 12:00:00 booking 1 succeeded and auto-unban reset strikes=0"
     },
     {
       "id": "TC_BAN_025",

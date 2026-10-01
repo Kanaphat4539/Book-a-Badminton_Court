@@ -1,0 +1,19 @@
+{
+  "environment": {
+    "databaseVolume": "badminton_qa_20260928_mysql_data",
+    "commit": "37aea29",
+    "codeCommit": "581a654",
+    "caseCommit": "ed3bdca",
+    "date": "2026-10-01",
+    "at": "2026-10-01T04:21:24.891Z",
+    "browser": "Chromium headless",
+    "cleanup": "all runner-created users/bookings removed"
+  },
+  "results": [
+    {
+      "id": "TC_BOOK_002",
+      "status": "ผ่าน",
+      "actual": "dialog fields วันที่/เดือน/คอร์ท/เวลา/ชื่อผู้จอง; values 1 | ตุลาคม | Court 2 | 20:00 - 21:00 น. | Book UI 76179960"
+    }
+  ]
+}

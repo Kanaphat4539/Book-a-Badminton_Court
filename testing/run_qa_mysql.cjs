@@ -38,10 +38,10 @@ async function check(caseId,fn){
 }
 async function run(){
  if(process.env.QA_ISOLATED_DB!==expectedVolume)throw Error('Missing exact QA volume guard');
- const mounts=execFileSync('docker',['inspect','--format','{{range .Mounts}}{{.Name}} {{end}}','badminton_mysql'],{encoding:'utf8'});
- if(!mounts.split(/\s+/).includes(expectedVolume))throw Error('Docker MySQL volume mismatch: refusing SQL writes');
+ const mounts=JSON.parse(execFileSync('docker',['inspect','badminton_mysql','--format','{{json .Mounts}}'],{encoding:'utf8'}));
+ if(!mounts.some(m=>m.Type==='volume'&&m.Name===expectedVolume&&m.Destination==='/var/lib/mysql'))throw Error('Docker MySQL volume mismatch: refusing SQL writes');
  if(process.env.DB_NAME!=='badminton_db' || process.env.DB_HOST!=='127.0.0.1')throw Error('QA DB target mismatch');
- db=await mysql.createPool({host:process.env.DB_HOST,port:Number(process.env.DB_PORT||3306),user:process.env.DB_USER,password:process.env.DB_PASSWORD,database:process.env.DB_NAME,waitForConnections:true,connectionLimit:4,dateStrings:true});
+ db=await mysql.createPool({host:process.env.DB_HOST,port:Number(process.env.DB_PORT||13306),user:process.env.DB_USER,password:process.env.DB_PASSWORD,database:process.env.DB_NAME,waitForConnections:true,connectionLimit:4,dateStrings:true});
  const [v]=await sql('SELECT DATABASE() AS db'); assert.equal(v.db,'badminton_db');
  await clearFixtures();
  await sql('DELETE FROM Court');

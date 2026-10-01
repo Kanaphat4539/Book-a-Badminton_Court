@@ -1,0 +1,86 @@
+{
+  "run_date": "2026-10-01",
+  "branch": "feature-Docx",
+  "target_commit": "60a23c800d56a4f012cdead21adf4ab3f38d0e82",
+  "evidence_basis": "fresh command outputs in delegated execution transcript; legacy JSON files stamped 37aea29/2026-09-30 excluded as stale.",
+  "integration_counts": {
+    "mysql_api_total": 49,
+    "pass": 26,
+    "fail": 20,
+    "blocked_or_partial": 3,
+    "registration_concurrency": {
+      "total": 1,
+      "pass": 1
+    },
+    "browser_explicit_cases": {
+        "pass": 2,
+        "fail": 0,
+        "unverified": 1,
+        "blocked_or_not_completed": "remaining attempted cases not fully evidenced; not counted"
+      }
+  },
+  "login_diagnosis": {
+    "browser_observation": "Playwright waitForURL /dashboard timed out",
+    "api_observation": "Earlier run POST registration returned HTTP 201 and STUDENT token. Current isolated reproduction POST /auth/login returned HTTP 201 with access_token,user keys; no SQL failure reproduced.",
+    "backend_observation": "Old excerpt 1064 near )) LIMIT 1 lacks full SQL and binds; not reproduced in current login request.",
+    "classification": "Historical runner timeout and partial SQL excerpt do not establish the current application root cause. Full generated SQL was not retained. Treat as unverified, not an app failure.",
+    "fix_attempt": "Inspected runner and service path; directly reproduced auth route on isolated QA database successfully. No auth code change justified."
+  },
+  "historical_artifacts_excluded": [
+    "qa_ui_suite_feature_docx_ui_auth_results.json",
+    "qa_ui_suite_feature_docx_ui_focus_results.json",
+    "qa_ui_suite_feature_docx_ui_supplement_results.json",
+    "qa_ui_suite_feature_docx_ui_supplement2_results.json (their embedded commit is 37aea29; these snapshots are not treated as fresh result records)"
+  ],
+  "checks": [
+    [
+      "RUN-CONC-REG",
+      "Registration concurrency",
+      "node backend/test/registration-concurrency.cjs",
+      "PASS",
+      "Fresh rerun after installing sql.js only in isolated .qa-deps; duplicate concurrent registration yielded one account and one HTTP 400."
+    ],
+    [
+      "RUN-MYSQL-API",
+      "MySQL/API suites",
+      "testing/run_qa_mysql*.cjs and other API runners; isolated Docker QA volume only",
+      "MIXED",
+      "Fresh execution summary from completed QA run: 49 cases total — PASS 26, FAIL 20, BLOCKED/partial 3. Failures include observed app responses and runner/fixture assumptions; individual failures are not all classified as product defects."
+    ],
+    [
+      "RUN-UI-001",
+      "Browser responsive layout",
+      "Playwright TC_UI_001; dashboard/booking at 1440x900 and 1920x1080",
+      "PASS",
+      "Observed in successful batch: no horizontal overflow; header/footer/main do not overlap. A separate retry was blocked by login, so only the successful run counts."
+    ],
+    [
+      "RUN-UI-003",
+      "Browser date constraint",
+      "Playwright TC_UI_003",
+      "PASS",
+      "Fresh execution logged today-only hint; date input absent."
+    ],
+    [
+      "RUN-UI-LOGIN",
+      "Browser authentication / dashboard navigation",
+      "Playwright login flow; QA frontend :3001 -> QA backend :4001",
+      "UNVERIFIED — REPRO NOT CONFIRMED",
+      "Earlier Playwright batch timed out waiting for /dashboard and a backend log excerpt showed MySQL 1064 near `)) LIMIT 1`, but full SQL was not preserved. Reproduced against isolated QA volume on current built checkout: direct POST /auth/login with seed user returned HTTP 201 and response keys access_token,user; no SQL error reproduced. Root cause unknown; this is not a verified application bug."
+    ],
+    [
+      "RUN-UI-OTHER",
+      "Remaining browser suite",
+      "Playwright additional UI cases",
+      "BLOCKED / MIXED",
+      "Only explicitly observed successful tests above counted. Cases depending on successful login could not complete; no extra passes inferred from a runner timeout."
+    ],
+    [
+      "RUN-QA-CLEANUP",
+      "QA fixture cleanup",
+      "Isolated volume badminton_qa_20260928_mysql_data",
+      "PASS",
+      "Container shutdown completed and volume preserved; follow-up observed zero Booking rows, one seeded student/admin, four courts. No production service/data used."
+    ]
+  ]
+}

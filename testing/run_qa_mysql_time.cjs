@@ -31,7 +31,7 @@ async function main(){
  if(process.env.QA_ISOLATED_DB!==volume||process.env.DB_NAME!=='badminton_db'||process.env.DB_HOST!=='127.0.0.1')throw Error('QA DB guard failed');
  let mounts=execFileSync('docker',['inspect','--format','{{range .Mounts}}{{.Name}} {{end}}','badminton_mysql'],{encoding:'utf8'});
  if(!mounts.split(/\s+/).includes(volume))throw Error('not isolated QA volume');
- ds=new DataSource({type:'mysql',host:'127.0.0.1',port:3306,username:process.env.DB_USER,password:process.env.DB_PASSWORD,database:process.env.DB_NAME,entities:[Booking,Student,Admin,Court],synchronize:false});
+ ds=new DataSource({type:'mysql',host:'127.0.0.1',port:Number(process.env.DB_PORT||13306),username:process.env.DB_USER,password:process.env.DB_PASSWORD,database:process.env.DB_NAME,entities:[Booking,Student,Admin,Court],synchronize:false});
  await ds.initialize();br=ds.getRepository(Booking);sr=ds.getRepository(Student);booking=new BookingsService(br,sr,ds.getRepository(Admin));cron=new CronService(br,sr);
  await reset();mock.timers.enable({apis:['Date'],now:Date.parse('2026-09-28T17:00:00+07:00')});
  await check('TC_CANC_002',async()=>{let b=await fixture();at(today,'18:14:59');await booking.cancelBooking(b.booking_id,seedUser);assert.equal((await state(b.booking_id)).status,'CANCELLED');assert.equal((await strikes()).strikes,0);return '18:14:59 CANCELLED, strikes=0'},true);

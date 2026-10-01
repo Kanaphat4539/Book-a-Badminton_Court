@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Query, ParseIntPipe } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -49,8 +49,8 @@ export class BookingsController {
 
   @Post(':id/finish')
   @Roles(UserRole.ADMIN)
-  async finishBooking(@Param('id') id: string) {
-    return this.bookingsService.finishBooking(+id);
+  async finishBooking(@Param('id', ParseIntPipe) id: number) {
+    return this.bookingsService.finishBooking(id);
   }
 
   @Post('reset')

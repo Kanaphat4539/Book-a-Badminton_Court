@@ -64,15 +64,14 @@ export class UsersService implements OnModuleInit {
   }
 
   async createStudent(studentData: any): Promise<Student> {
-    const saltOrRounds = 10;
-    const passwordToHash = studentData.password || 'password';
-    const hashedPassword = await bcrypt.hash(passwordToHash, saltOrRounds);
-    
+    if (typeof studentData?.password !== 'string' || studentData.password.trim() === '') {
+      throw new BadRequestException('Password is required');
+    }
+    const hashedPassword = await bcrypt.hash(studentData.password, 10);
     // Split "name" from frontend into first_name and last_name
     const nameParts = (studentData.name || '').trim().split(' ');
     const first_name = nameParts[0] || '';
     const last_name = nameParts.slice(1).join(' ') || '';
-    
     const newStudent = this.studentRepository.create({
       stu_id: studentData.studentId || studentData.stu_id,
       email: studentData.email,
@@ -110,13 +109,17 @@ export class UsersService implements OnModuleInit {
     return this.studentRepository.save(student);
   }
 
-  async findAllStudents(): Promise<Student[]> {
-    return this.studentRepository.find();
+  async findAllStudents(): Promise<Partial<Student>[]> {
+    const students = await this.studentRepository.find();
+    return students.map(({ password: _password, ...student }) => student);
   }
 
   async removeStudent(stu_id: string): Promise<void> {
-    // Delete related bookings first due to RESTRICT foreign key constraint
-    await this.studentRepository.manager.getRepository(Booking).delete({ student: { stu_id } as any });
+    const bookingRepository = this.studentRepository.manager.getRepository(Booking);
+    const historyCount = await bookingRepository.count({ where: { student: { stu_id } as any } });
+    if (historyCount > 0) {
+      throw new BadRequestException('Student has booking history');
+    }
     const student = await this.findStudentById(stu_id) || await this.studentRepository.findOneBy({ id: parseInt(stu_id) || 0 } as any);
     if (student) {
       await this.studentRepository.remove(student);
@@ -156,8 +159,11 @@ export class UsersService implements OnModuleInit {
   }
 
   async createAdmin(adminData: any): Promise<Admin> {
+    if (typeof adminData?.password !== 'string' || adminData.password.trim() === '') {
+      throw new BadRequestException('Password is required');
+    }
     const saltOrRounds = 10;
-    const passwordToHash = adminData.password || 'password';
+    const passwordToHash = adminData.password;
     const hashedPassword = await bcrypt.hash(passwordToHash, saltOrRounds);
     
     const newAdmin = this.adminRepository.create({

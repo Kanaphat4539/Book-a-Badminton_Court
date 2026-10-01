@@ -1,25 +1,25 @@
 {
   "environment": {
     "databaseVolume": "badminton_qa_20260928_mysql_data",
-    "commit": "37aea29",
-    "at": "2026-09-28T08:26:31.373Z",
+    "commit": "60a23c800d56a4f012cdead21adf4ab3f38d0e82",
+    "at": "2026-10-01T04:15:37.477Z",
     "cleanup": "only QA fixtures removed"
   },
   "results": [
     {
       "id": "TC_ADM_016",
       "status": "ผ่าน",
-      "actual": "dated Admin API returned exactly today's 35,36, both users with student relation/status; excluded yesterday"
+      "actual": "dated Admin API returned exactly today's 469,470, both users with student relation/status; excluded yesterday"
     },
     {
       "id": "TC_ADM_019",
-      "status": "ไม่ผ่าน",
-      "actual": "concurrent finish statuses=201,201\n+ actual - expected\n\n  [\n    201,\n+   201\n-   400\n  ]\n"
+      "status": "ผ่าน",
+      "actual": "concurrent finish statuses=201/400; final COMPLETED"
     },
     {
       "id": "TC_ADM_020",
       "status": "ผ่าน",
-      "actual": "reset removed booking 39 only; retained users=2, courts=4, strikes=1 and banned_until"
+      "actual": "reset removed booking 473 only; retained users=1, courts=4, strikes=1 and banned_until"
     },
     {
       "id": "TC_ADM_021",
@@ -33,23 +33,23 @@
     },
     {
       "id": "TC_ADM_026",
-      "status": "ไม่ผ่าน",
-      "actual": "POST without password returned 201"
+      "status": "ผ่าน",
+      "actual": "POST without password rejected HTTP 400"
     },
     {
       "id": "TC_ADM_028",
       "status": "ไม่ผ่าน",
-      "actual": "delete with booking returned HTTP 500: Internal server error"
+      "actual": "delete with booking returned HTTP 200: undefined"
     },
     {
       "id": "TC_ADM_029",
-      "status": "ผ่าน",
-      "actual": "missing/first/repeated DELETE HTTP 200/200/200; unrelated student retained"
+      "status": "ไม่ผ่าน",
+      "actual": "500/200/500"
     },
     {
       "id": "TC_ADM_033",
       "status": "ผ่าน",
-      "actual": "simultaneous reset/create/check-in statuses=201/201/404; final=[{\"booking_id\":43,\"stu_id\":\"80091253\",\"court\":2,\"status\":\"PENDING\"}]; no orphan rows; original removed when reset succeeded"
+      "actual": "simultaneous reset/create/check-in statuses=201/201/404; final=[{\"booking_id\":477,\"stu_id\":\"80037321\",\"court\":2,\"status\":\"PENDING\"}]; no orphan rows; original removed when reset succeeded"
     }
   ]
 }

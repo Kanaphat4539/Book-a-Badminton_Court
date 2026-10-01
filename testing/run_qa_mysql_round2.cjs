@@ -25,7 +25,7 @@ async function setup(){
  if(process.env.QA_ISOLATED_DB!==volume || process.env.DB_HOST!=='127.0.0.1' || process.env.DB_NAME!=='badminton_db')throw Error('QA guard mismatch');
  let mounts=execFileSync('docker',['inspect','--format','{{range .Mounts}}{{.Name}} {{end}}','badminton_mysql'],{encoding:'utf8'});
  if(!mounts.split(/\s+/).includes(volume))throw Error('QA volume mismatch');
- db=await mysql.createPool({host:process.env.DB_HOST,port:Number(process.env.DB_PORT||3306),user:process.env.DB_USER,password:process.env.DB_PASSWORD,database:process.env.DB_NAME,dateStrings:true});
+ db=await mysql.createPool({host:process.env.DB_HOST,port:Number(process.env.DB_PORT||13306),user:process.env.DB_USER,password:process.env.DB_PASSWORD,database:process.env.DB_NAME,dateStrings:true});
  assert.equal((await sql('SELECT DATABASE() AS d'))[0].d,'badminton_db');await clean();
  let a=await req('POST','/auth/login',{username:'testuser',password:'password'}),b=await req('POST','/auth/login',{username:'admin',password:'password'});status(a,201);status(b,201);student=a.data.access_token;admin=b.data.access_token;other=await freshStudent();
 }

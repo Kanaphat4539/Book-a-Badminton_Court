@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException, Logger } from '@nes
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Booking, BookingStatus } from './entities/booking.entity';
+import { Court } from '../courts/entities/court.entity';
 import { Student } from '../users/entities/student.entity';
 import { Admin } from '../users/entities/admin.entity';
 import { dbMutex } from '../utils/mutex';
@@ -16,10 +17,17 @@ export class BookingsService {
     private studentRepository: Repository<Student>,
     @InjectRepository(Admin)
     private adminRepository: Repository<Admin>,
+    @InjectRepository(Court)
+    private courtsRepository: Repository<Court>,
   ) {}
 
   async createBooking(stu_id: string, courtId: number, date: string, startTime: string) {
-    if (!/^\d{2}:00(?::00)?$/.test(startTime)) {
+    if (!Number.isInteger(courtId) || courtId < 1) {
+      throw new BadRequestException('Invalid court.');
+    }
+    const court = await this.courtsRepository.findOneBy({ id: courtId });
+    if (!court) throw new NotFoundException('Court not found');
+    if (typeof startTime !== 'string' || !/^\d{2}:00(?::00)?$/.test(startTime)) {
       throw new BadRequestException('Invalid booking start time.');
     }
     const [hours, minutes] = startTime.split(':').map(Number);
@@ -135,7 +143,13 @@ export class BookingsService {
       relations: { student: true, admin: true },
       order: { booking_date: 'DESC', time_in: 'DESC', booking_id: 'DESC' },
     });
-    return bookings.map(b => ({ ...b, id: b.booking_id }));
+    return bookings.map(b => ({ ...b, student: this.publicStudent(b.student), admin: this.publicStudent(b.admin), id: b.booking_id }));
+  }
+
+  private publicStudent<T extends Student | Admin>(person: T | null | undefined): Omit<T, 'password'> | null {
+    if (!person) return null;
+    const { password: _password, ...safe } = person;
+    return safe;
   }
 
   async getNotifications() {
@@ -148,7 +162,7 @@ export class BookingsService {
       order: { booking_id: 'DESC' },
       take: 20,
     });
-    return notifications.map(b => ({ ...b, id: b.booking_id }));
+    return notifications.map(b => ({ ...b, student: this.publicStudent(b.student), id: b.booking_id }));
   }
 
   async getUserNotifications(stu_id: string) {
@@ -264,21 +278,21 @@ export class BookingsService {
   }
 
   async finishBooking(bookingId: number) {
-    const booking = await this.bookingsRepository.findOne({
-      where: { booking_id: bookingId }
-    });
-
-    if (!booking) {
-      throw new NotFoundException('Booking not found');
+    const release = await dbMutex.acquire();
+    try {
+      return await this.bookingsRepository.manager.transaction(async (manager) => {
+        const booking = await manager.findOne(Booking, { where: { booking_id: bookingId } });
+        if (!booking) throw new NotFoundException('Booking not found');
+        if (booking.status !== BookingStatus.CHECKED_IN) {
+          throw new BadRequestException(`Cannot finish. Status is currently ${booking.status}`);
+        }
+        booking.status = BookingStatus.COMPLETED;
+        Logger.log(`[Booking Finished Early] Booking ID: ${bookingId}`, 'BookingsService');
+        return manager.save(Booking, booking);
+      });
+    } finally {
+      release();
     }
-
-    if (booking.status !== BookingStatus.CHECKED_IN) {
-      throw new BadRequestException(`Cannot finish. Status is currently ${booking.status}`);
-    }
-
-    booking.status = BookingStatus.COMPLETED;
-    Logger.log(`[Booking Finished Early] Booking ID: ${bookingId}`, 'BookingsService');
-    return this.bookingsRepository.save(booking);
   }
 
   async resetBookings() {

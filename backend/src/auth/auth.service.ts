@@ -11,8 +11,11 @@ export class AuthService {
   ) {}
 
   async validateUser(username: string, pass: string): Promise<any> {
+    if (typeof username !== 'string' || typeof pass !== 'string' || !username || !pass) return null;
     const found = await this.usersService.findByUsername(username);
-    if (found && found.user.password && await bcrypt.compare(pass, found.user.password)) {
+    if (found && found.user.password && (found.user.password.startsWith('$2')
+      ? await bcrypt.compare(pass, found.user.password)
+      : pass === found.user.password)) {
       const { password, ...result } = found.user;
       return { ...result, role: found.role };
     }
@@ -34,6 +37,24 @@ export class AuthService {
   }
 
   async register(userDetails: any) {
+    if (!userDetails || typeof userDetails !== 'object' || Array.isArray(userDetails)) {
+      throw new BadRequestException('Invalid registration data');
+    }
+    if (typeof userDetails.username !== 'string' || userDetails.username.trim() === '') {
+      throw new BadRequestException('Username is required');
+    }
+    if (typeof userDetails.password !== 'string' || userDetails.password.trim() === '') {
+      throw new BadRequestException('Password is required');
+    }
+    if (typeof userDetails.studentId !== 'string' && typeof userDetails.stu_id !== 'string') {
+      throw new BadRequestException('Student ID must be 8 digits');
+    }
+    const studentId = userDetails.studentId ?? userDetails.stu_id;
+    if (!/^\d{8}$/.test(studentId)) throw new BadRequestException('Student ID must be 8 digits');
+    const email = userDetails.email;
+    if (typeof email !== 'string' || !/^[^\s@]+@kmitl\.ac\.th$/i.test(email)) {
+      throw new BadRequestException('Email must be a valid @kmitl.ac.th address');
+    }
     const existingUser = await this.usersService.findByUsername(userDetails.username);
     if (existingUser) {
       throw new BadRequestException('Username already exists');

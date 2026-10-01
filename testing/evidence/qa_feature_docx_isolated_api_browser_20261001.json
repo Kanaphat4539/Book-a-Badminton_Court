@@ -1,0 +1,48 @@
+{
+  "run_local_date": "2026-10-01",
+  "timezone": "Asia/Bangkok",
+  "branch": "feature-Docx",
+  "head": "60a23c800d56a4f012cdead21adf4ab3f38d0e82",
+  "source_test_diff_sha256": "86491baa24daacbadd0e90379a411ad6072806064b32c0fe13dac9ec193a2bd5",
+  "source_test_diff_files": ["backend/src/auth/auth.service.spec.ts", "backend/src/bookings/booking-lifecycle.spec.ts"],
+  "database": "badminton_db on isolated Docker QA stack",
+  "volume": "badminton_qa_20260928_mysql_data (verified mount at /var/lib/mysql; declared external in testing/compose.qa.yml)",
+  "qa_stack": {
+    "project": "badminton-qa",
+    "containers": ["badminton_mysql", "badminton_qa_backend", "badminton_qa_frontend"],
+    "ports": {"frontend": 3001, "backend": 4001, "mysql": 13306},
+    "port_safety": "Initial override list merge inherited wildcard base mappings; replaced all three port lists with Compose !override, recreated the stack, verified final 127.0.0.1-only mappings.",
+    "health": {"frontend_login_http": 200, "backend_root_http": 200, "mysql": "ready for connections"}
+  },
+  "fresh_browser_login": {
+    "result": "PASS",
+    "method": "Chromium headless; page hydrated before filling; application login form submitted",
+    "api_http": 201,
+    "redirect": "/dashboard",
+    "local_storage": {"token_present": true, "role": "STUDENT"},
+    "credentials_or_token_recorded": false
+  },
+  "per_case_api_results": [
+    {"id":"TC_BOOK_005","status":"ผ่าน","observed":"Tomorrow request returned HTTP 400 with day-by-day policy message; booking row count remained 0."},
+    {"id":"TC_BOOK_022","status":"ไม่ผ่าน","observed":"All inputs HTTP 400, but 24:00 returned 'Booking hours are 08:00 to 23:00.' instead of expected 'Invalid booking start time.'; exact-message requirement not met. No production cause established."},
+    {"id":"TC_BOOK_024","status":"ผ่าน","observed":"07:00 and 23:00 both HTTP 400 with expected booking-hours message; no rows."},
+    {"id":"TC_BOOK_009","status":"ตรวจไม่ได้","observed":"Fixture was manually changed to COMPLETED (not transitioned by cron); second booking returned HTTP 400 active-booking message, one row remained. End-to-end lifecycle/cron proof incomplete."},
+    {"id":"TC_BOOK_011","status":"ไม่ผ่าน","observed":"Second user's 18:30 request was rejected HTTP 400 as Invalid booking start time, not as interval overlap. The test's half-hour case conflicts with the whole-hour-only rule; requirement/code discrepancy needs reconciliation."},
+    {"id":"TC_BOOK_012","status":"ผ่าน","observed":"Adjacent intervals 18:00-19:00 and 19:00-20:00 both persisted."},
+    {"id":"TC_BOOK_015","status":"ตรวจไม่ได้","observed":"API accepted Court 4 at 22:00 and returned 22:00-23:00; UI's 15-slot presentation was not exercised."},
+    {"id":"TC_BOOK_016","status":"ผ่าน","observed":"After A's 18:00 booking was cancelled, B booked same court/time successfully; cancellation status verified in QA MySQL."},
+    {"id":"TC_BOOK_020","status":"ผ่าน","observed":"Authenticated QA student's ID, court 3, date, 18:00-19:00, PENDING and admin_id A001 verified in QA MySQL."},
+    {"id":"TC_BOOK_023","status":"ผ่าน","observed":"20:00 and 20:00:00 normalized; same-court collision HTTP 400 and another-court booking HTTP 201."},
+    {"id":"TC_BOOK_025","status":"ตรวจไม่ได้","observed":"Runner expected an ended 10:00 round but did not freeze/mock server time. QA run time was about 04:07 Bangkok; HTTP 201 is consistent with an unexpired round at that time. Retest with mocked clock required; not counted as product defect."},
+    {"id":"TC_BOOK_039","status":"ผ่าน","observed":"Yesterday's COMPLETED fixture did not block today's Court 3 booking; API HTTP 201."}
+  ],
+  "counts": {"per_case_api_total":12,"passed":7,"failed_against_exact_test_expectation":2,"unverified_or_partial":3},
+  "ui_suite": {
+    "status": "NOT RUN",
+    "observation": "run_qa_ui_suite.cjs had one failed noninteractive invocation reporting 'stdin is not a tty'. The runner's own docker inspect uses no -i/-t, and source search found no docker exec -it invocation in the UI runner. Root cause remains undiagnosed; comprehensive UI per-case suite is not counted.",
+    "note": "A separate fresh Chromium-mediated form login passed as recorded above. Responsive, navigation and booking UI cases remain unverified."
+  },
+  "cleanup": "The API runner's fixture cleanup completed. QA containers are currently running. No docker compose down -v was used; external named QA volume remains attached. No production database was targeted.",
+  "historical_evidence": "Prior result JSONs/workbook rows carrying 37aea29 are historical and excluded from this current run count.",
+  "docx_gate": "DOCX is not finalized: comprehensive per-case API/UI QA is incomplete."
+}

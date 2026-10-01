@@ -1,6 +1,6 @@
 {
   "environment": {
-    "commit": "37aea29",
+    "commit": "60a23c800d56a4f012cdead21adf4ab3f38d0e82",
     "dbVolume": "badminton_qa_20260928_mysql_data",
     "clock": "mocked Date + real MySQL",
     "at": "2026-09-28T03:40:00.000Z"
@@ -23,8 +23,8 @@
     },
     {
       "id": "TC_CONC_009",
-      "status": "ผ่าน",
-      "actual": "check-in vs cancel: one success/one 400, final CHECKED_IN, strikes=0"
+      "status": "ไม่ผ่าน",
+      "actual": "Expected values to be strictly equal:\n\n2 !== 1\n"
     },
     {
       "id": "TC_CONC_010",

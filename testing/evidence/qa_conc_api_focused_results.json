@@ -1,8 +1,8 @@
 {
   "environment": {
-    "commit": "37aea29",
+    "commit": "60a23c800d56a4f012cdead21adf4ab3f38d0e82",
     "dbVolume": "badminton_qa_20260928_mysql_data",
-    "at": "2026-09-28T14:43:32.228Z"
+    "at": "2026-10-01T04:14:28.949Z"
   },
   "results": [
     {
@@ -12,13 +12,13 @@
     },
     {
       "id": "TC_CONC_002",
-      "status": "ผ่าน",
-      "actual": "same user two courts 201/400, DB 1"
+      "status": "ไม่ผ่าน",
+      "actual": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n-   201,\n    400,\n+   400\n  ]\n"
     },
     {
       "id": "TC_CONC_007",
-      "status": "ผ่าน",
-      "actual": "different users/courts 201/201, DB 2"
+      "status": "ไม่ผ่าน",
+      "actual": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    201,\n+   400\n-   201\n  ]\n"
     },
     {
       "id": "TC_CONC_019",
@@ -32,8 +32,8 @@
     },
     {
       "id": "TC_CONC_021",
-      "status": "ผ่าน",
-      "actual": "me/all id=booking_id, availability start_time=22:00:00; IDs me=319,all=319"
+      "status": "ไม่ผ่าน",
+      "actual": "The expression evaluated to a falsy value:\n\n  assert.ok(me.data.length&&all.data.length&&av.data.length)\n"
     },
     {
       "id": "TC_CONC_022",

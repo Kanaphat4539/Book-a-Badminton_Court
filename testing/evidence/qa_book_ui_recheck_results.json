@@ -4,12 +4,47 @@
     "commit": "37aea29",
     "codeCommit": "581a654",
     "caseCommit": "ed3bdca",
-    "date": "2026-09-28",
-    "at": "2026-09-28T07:12:15.353Z",
+    "date": "2026-10-01",
+    "at": "2026-10-01T04:13:44.708Z",
     "browser": "Chromium headless",
     "cleanup": "all runner-created users/bookings removed"
   },
   "results": [
+    {
+      "id": "TC_BOOK_002",
+      "status": "ผ่าน",
+      "actual": "dialog fields วันที่/เดือน/คอร์ท/เวลา/ชื่อผู้จอง; values 1 | ตุลาคม | Court 2 | 20:00 - 21:00 น. | Book UI 76162595"
+    },
+    {
+      "id": "TC_BOOK_003",
+      "status": "ไม่ผ่าน",
+      "actual": "actual buttons: กลับไปเลือก | ยืนยันจองคอร์ท | ปิด; expected exact จองคอร์ต"
+    },
+    {
+      "id": "TC_BOOK_038",
+      "status": "ผ่าน",
+      "actual": "close dialog: POST=0, Booking 0->0, /bookings/me=0; Court 1 still selectable"
+    },
+    {
+      "id": "TC_BOOK_006",
+      "status": "ผ่าน",
+      "actual": "today 2026-10-01 shown with วันที่; no date input/dropdown; only today selectable"
+    },
+    {
+      "id": "TC_BOOK_030",
+      "status": "ผ่าน",
+      "actual": "availability API 4 empty courts equals UI 4 cards/4 selectable for 18:00"
+    },
+    {
+      "id": "TC_BOOK_031",
+      "status": "ผ่าน",
+      "actual": "Court 2 PENDING disabled; UI 3/4 selectable; availability agrees; other courts enabled"
+    },
+    {
+      "id": "TC_BOOK_032",
+      "status": "ผ่าน",
+      "actual": "missing date/time both redirect to /booking; no empty-date availability"
+    },
     {
       "id": "TC_BOOK_033",
       "status": "ไม่ผ่าน",
@@ -18,7 +53,37 @@
     {
       "id": "TC_BOOK_036",
       "status": "ไม่ผ่าน",
-      "actual": "HTTP 500: no retry button; visible=KMITL Badminton\nlocation_on\nMain Sports Complex\nnotifications\nmenu\nschedule\nรอบเวลาที่คุณเลือก\nจันทร์ 28 ก.ย. • 18:00 - 19:00 น.\nedit_calendar\nเปลี่ยนเวลา\nเลือกสนามที่ว่าง\n0 คอร์ทพร้อมใช้\n\nระบบสำรองคอ; buttons=notifications|menu|edit_calendarเปลี่ยนเวลา|sports_tennisอาคารยิมเนเซียม 1 (ทั้งหมด 0 คอร์ท)|public|photo_camera|settings|homeหน้าหลัก"
+      "actual": "HTTP 500: no retry button; visible=KMITL Badminton\nlocation_on\nMain Sports Complex\nnotifications\nmenu\nschedule\nรอบเวลาที่คุณเลือก\nพฤหัสบดี 1 ต.ค. • 18:00 - 19:00 น.\nedit_calendar\nเปลี่ยนเวลา\nเลือกสนามที่ว่าง\n0 คอร์ทพร้อมใช้\n\nระบบสำรองค; buttons=notifications|menu|edit_calendarเปลี่ยนเวลา|sports_tennisอาคารยิมเนเซียม 1 (ทั้งหมด 0 คอร์ท)|public|photo_camera|settings|homeหน้าหลัก"
+    },
+    {
+      "id": "TC_BOOK_017",
+      "status": "ผ่าน",
+      "actual": "stale availability simulated for B; POST /bookings HTTP 400; UI shows คอร์ท/เวลาชน; DB remains 1 booking"
+    },
+    {
+      "id": "TC_BOOK_018",
+      "status": "ผ่าน",
+      "actual": "existing Court1 18:00; Court2 20:00 POST 400, UI quota warning, only 1 DB row"
+    },
+    {
+      "id": "TC_BOOK_019",
+      "status": "ผ่าน",
+      "actual": "tomorrow URL redirected to /booking with Thai today-only toast; no POST/DB row"
+    },
+    {
+      "id": "TC_BOOK_041",
+      "status": "ผ่าน",
+      "actual": "proxy committed POST 201 then aborted client response; UI error; /bookings/me sees 1; retry HTTP 400 quota; DB 1 (requests=1)"
+    },
+    {
+      "id": "TC_BOOK_027",
+      "status": "ไม่ผ่าน",
+      "actual": "direct expired select-court URL still displays 4 bookable courts"
+    },
+    {
+      "id": "TC_BOOK_028",
+      "status": "ไม่ผ่าน",
+      "actual": "no clear out-of-hours explanation; body=orts Complex System\n\nA smarter way to manage courts, schedules, and every match that matters.\n\npublic\nphoto_camera\nsettings\nPLATFORM\nDashboard\nBookings\nCourt Schedule\nSUPPORT\ncall\n02-329-8000\nopen_in_new\nHelp Center\nMon – Fri, 08:00 – 18:00\nbolt\nSystem Status\n\nAll booking services are operating normally.\n\nOperational\n\n© 2026 KMITL Badminton. All rights reserved.\n\nInternal use only · Sports Complex"
     }
   ]
 }

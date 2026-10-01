@@ -1,0 +1,34 @@
+# Isolated QA-only override. Always combine with the root compose file and -p badminton-qa.
+services:
+  mysql:
+    container_name: badminton_mysql
+    restart: "no"
+    ports: !override
+      - "127.0.0.1:13306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+  backend:
+    container_name: badminton_qa_backend
+    restart: "no"
+    ports: !override
+      - "127.0.0.1:4001:4000"
+    environment:
+      PORT: "4000"
+      DB_TYPE: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_USER: badminton_user
+      DB_PASSWORD: password
+      DB_NAME: badminton_db
+  frontend:
+    container_name: badminton_qa_frontend
+    restart: "no"
+    ports: !override
+      - "127.0.0.1:3001:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4001
+      BACKEND_URL: http://backend:4000
+volumes:
+  mysql_data:
+    external: true
+    name: badminton_qa_20260928_mysql_data

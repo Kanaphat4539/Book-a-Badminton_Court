@@ -5,9 +5,13 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { usePageLoading } from '@/components/loading-provider';
+import { useLocale } from '@/components/locale-provider';
+import { translate as authNewsText } from '@/lib/auth-news-messages.cjs';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { locale, setLocale, t } = useLocale();
+  const text = (key: string) => authNewsText(key, locale);
   const pageLoading = usePageLoading();
   const [studentId, setStudentId] = useState('');
   const [email, setEmail] = useState('');
@@ -35,11 +39,11 @@ export default function RegisterPage() {
       });
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      toast.success('Registration successful!');
+      toast.success(text('registerSuccess'));
       pageLoading.start('/register');
       router.push('/dashboard');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Registration failed');
+      toast.error(err.response?.data?.message || text('registerFailed'));
     } finally {
       setLoading(false);
     }
@@ -50,6 +54,7 @@ export default function RegisterPage() {
       className="min-h-screen flex flex-col items-center justify-center p-6 text-on-surface dark:text-orange-50 font-sans relative overflow-hidden transition-colors duration-300 bg-cover bg-center"
       style={{ backgroundImage: `url('https://images.unsplash.com/photo-1661020812032-90582fe13ca6?w=1920&auto=format&fit=crop&q=80')` }}
     >
+      <button type="button" aria-label={locale === 'th' ? 'Switch language to English' : 'เปลี่ยนภาษาเป็นไทย'} aria-pressed={locale === 'en'} onClick={() => setLocale(locale === 'th' ? 'en' : 'th')} className="absolute right-6 top-6 z-20 rounded-lg border border-primary/40 bg-black/40 px-3 py-2 text-sm font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">{locale === 'th' ? 'English' : 'ไทย'}</button>
       {/* Subtle overlay for text readability */}
       <div className="absolute inset-0 bg-white/40 dark:bg-black/60 backdrop-blur-[2px] transition-colors duration-300 z-0"></div>
 
@@ -72,7 +77,7 @@ export default function RegisterPage() {
             />
           </div>
           <h1 className="font-display-lg text-[32px] font-extrabold text-gray-900 dark:text-orange-50 tracking-tight text-center uppercase drop-shadow-sm transition-colors duration-300">KMITL <span className="text-primary">BADMINTON</span></h1>
-          <p className="font-body-md text-[15px] text-gray-600 dark:text-orange-200/70 text-center mt-1 font-medium tracking-wide uppercase transition-colors duration-300">Create your account</p>
+          <p className="font-body-md text-[15px] text-gray-600 dark:text-orange-200/70 text-center mt-1 font-medium tracking-wide uppercase transition-colors duration-300">{text('registerPrompt')}</p>
         </div>
 
         {/* Register Card */}
@@ -82,7 +87,7 @@ export default function RegisterPage() {
               
               {/* Student ID */}
               <div className="flex flex-col gap-1.5">
-                <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="studentId">รหัสนักศึกษา / Student ID</label>
+                <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="studentId">{text('studentIdLabel')}</label>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-orange-300/50 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>badge</span>
                   <input
@@ -90,7 +95,7 @@ export default function RegisterPage() {
                     id="studentId"
                     value={studentId}
                     onChange={(e) => setStudentId(e.target.value)}
-                    placeholder="6401xxxx"
+                    placeholder={text('studentIdPlaceholder')}
                     required
                     type="text"
                   />
@@ -99,7 +104,7 @@ export default function RegisterPage() {
 
               {/* Email */}
               <div className="flex flex-col gap-1.5">
-                <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="email">Email</label>
+                <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="email">{text('emailLabel')}</label>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-orange-300/50 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>mail</span>
                   <input
@@ -107,7 +112,7 @@ export default function RegisterPage() {
                     id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="athlete@example.com"
+                    placeholder={text('emailPlaceholder')}
                     required
                     type="email"
                   />
@@ -116,7 +121,7 @@ export default function RegisterPage() {
 
               {/* Name Input */}
               <div className="flex flex-col gap-1.5 md:col-span-2">
-                <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="name">ชื่อ-สกุล / Full Name</label>
+                <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="name">{text('nameLabel')}</label>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-orange-300/50 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>person</span>
                   <input
@@ -124,7 +129,7 @@ export default function RegisterPage() {
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="John Doe"
+                    placeholder={text('namePlaceholder')}
                     required
                     type="text"
                   />
@@ -133,7 +138,7 @@ export default function RegisterPage() {
 
               {/* Phone */}
               <div className="flex flex-col gap-1.5">
-                <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="phone">เบอร์ติดต่อ / Phone Number</label>
+                <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="phone">{text('phoneLabel')}</label>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-orange-300/50 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>call</span>
                   <input
@@ -141,7 +146,7 @@ export default function RegisterPage() {
                     id="phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="08X-XXX-XXXX"
+                    placeholder={text('phonePlaceholder')}
                     required
                     type="text"
                   />
@@ -150,7 +155,7 @@ export default function RegisterPage() {
 
               {/* Major */}
               <div className="flex flex-col gap-1.5">
-                <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="major">สาขา / Major</label>
+                <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="major">{text('majorLabel')}</label>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-orange-300/50 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>school</span>
                   <input
@@ -158,7 +163,7 @@ export default function RegisterPage() {
                     id="major"
                     value={major}
                     onChange={(e) => setMajor(e.target.value)}
-                    placeholder="Computer Science"
+                    placeholder={text('majorPlaceholder')}
                     required
                     type="text"
                   />
@@ -167,7 +172,7 @@ export default function RegisterPage() {
               
               {/* Year */}
               <div className="flex flex-col gap-1.5">
-                <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="year">ชั้นปี / Year</label>
+                <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider transition-colors duration-300" htmlFor="year">{text('yearLabel')}</label>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-orange-300/50 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>calendar_today</span>
                   <select
@@ -177,12 +182,12 @@ export default function RegisterPage() {
                     onChange={(e) => setYear(e.target.value)}
                     required
                   >
-                    <option value="" disabled className="text-gray-500 dark:text-gray-400">Select Year</option>
-                    <option value="1" className="text-gray-900 dark:text-white bg-white dark:bg-[#140900]">1</option>
-                    <option value="2" className="text-gray-900 dark:text-white bg-white dark:bg-[#140900]">2</option>
-                    <option value="3" className="text-gray-900 dark:text-white bg-white dark:bg-[#140900]">3</option>
-                    <option value="4" className="text-gray-900 dark:text-white bg-white dark:bg-[#140900]">4</option>
-                    <option value="5+" className="text-gray-900 dark:text-white bg-white dark:bg-[#140900]">5+</option>
+                    <option value="" disabled className="text-gray-500 dark:text-gray-400">{text('yearLabel')}</option>
+                    <option value="1" className="text-gray-900 dark:text-white bg-white dark:bg-[#140900]">{text('yearOne')}</option>
+                    <option value="2" className="text-gray-900 dark:text-white bg-white dark:bg-[#140900]">{text('yearTwo')}</option>
+                    <option value="3" className="text-gray-900 dark:text-white bg-white dark:bg-[#140900]">{text('yearThree')}</option>
+                    <option value="4" className="text-gray-900 dark:text-white bg-white dark:bg-[#140900]">{text('yearFour')}</option>
+                    <option value="5+" className="text-gray-900 dark:text-white bg-white dark:bg-[#140900]">{text('yearFive')}</option>
                   </select>
                   <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-orange-300/50 pointer-events-none">arrow_drop_down</span>
                 </div>
@@ -194,13 +199,13 @@ export default function RegisterPage() {
             <div className="mt-2 pt-6 border-t border-gray-200/50 dark:border-[#ff6b00]/20 flex flex-col gap-5">
               <h3 className="font-label-lg text-[14px] font-bold text-primary uppercase tracking-wider mb-1 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>key</span>
-                Account Credentials
+                {text('credentialHeading')}
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Username Input */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-label-md text-[13px] font-bold text-gray-800 dark:text-orange-100 uppercase tracking-wider transition-colors duration-300" htmlFor="username">Username</label>
+                  <label className="font-label-md text-[13px] font-bold text-gray-800 dark:text-orange-100 uppercase tracking-wider transition-colors duration-300" htmlFor="username">{text('usernameRegLabel')}</label>
                   <div className="relative group">
                     <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary/70 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>account_circle</span>
                     <input
@@ -208,7 +213,7 @@ export default function RegisterPage() {
                       id="username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="athlete123"
+                      placeholder={text('usernameRegPlaceholder')}
                       required
                       type="text"
                     />
@@ -217,7 +222,7 @@ export default function RegisterPage() {
 
                 {/* Password Input */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-label-md text-[13px] font-bold text-gray-800 dark:text-orange-100 uppercase tracking-wider transition-colors duration-300" htmlFor="password">Password</label>
+                  <label className="font-label-md text-[13px] font-bold text-gray-800 dark:text-orange-100 uppercase tracking-wider transition-colors duration-300" htmlFor="password">{text('passwordRegLabel')}</label>
                   <div className="relative group">
                     <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary/70 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
                     <input
@@ -225,7 +230,7 @@ export default function RegisterPage() {
                       id="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
+                      placeholder={text('passwordRegPlaceholder')}
                       required
                       type="password"
                     />
@@ -240,7 +245,7 @@ export default function RegisterPage() {
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Registering...' : 'Register'}
+              {loading ? text('registering') : text('registerSubmit')}
               {!loading && <span className="material-symbols-outlined ml-2 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>person_add</span>}
             </button>
           </form>
@@ -248,8 +253,8 @@ export default function RegisterPage() {
           {/* Login Link */}
           <div className="mt-6 pt-6 border-t border-gray-200/50 dark:border-[#ff6b00]/20 text-center transition-colors duration-300">
             <p className="font-body-md text-[15px] text-gray-600 dark:text-orange-200/70 transition-colors duration-300">
-              Already have an account?
-              <a className="font-button text-[16px] font-bold text-primary hover:text-primary/80 transition-colors ml-2" href="/login">Login</a>
+              {text('loginPrompt')}
+              <a className="font-button text-[16px] font-bold text-primary hover:text-primary/80 transition-colors ml-2" href="/login">{text('loginLink')}</a>
             </p>
           </div>
         </div>

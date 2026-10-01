@@ -1,0 +1,58 @@
+export type DashboardLocale = 'th' | 'en';
+export type DashboardPeriod = 'Day' | 'Week' | 'Month' | 'Year';
+export type DashboardGranularity = 'hour' | 'day' | 'month';
+export type DashboardBucket = { key: string; total: number; checkins: number; cancelled: number };
+export type DashboardAnalytics = {
+  period: DashboardPeriod;
+  granularity: DashboardGranularity;
+  court: string;
+  start: string;
+  end: string;
+  days: number;
+  labels: string[];
+  series: DashboardBucket[];
+  total: number;
+  cancelled: number;
+  completed: number;
+  pending: number;
+  checkedIn: number;
+  checkins: number;
+  unknownStatus: number;
+  previousTotal: number | null;
+  delta: number | null;
+  peak: DashboardBucket | null;
+  courts: Array<{ court: number; count: number }>;
+  utilization: { used: number; offered: number; percent: number };
+};
+export type DashboardLogFilters = {
+  court?: string;
+  status?: string;
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+};
+
+export const OPERATING_START_HOUR: number;
+export const OPERATING_END_HOUR: number;
+export const SLOTS_PER_DAY: number;
+export const ALL_COURTS: number[];
+export const STATUS_COLORS: Record<string, string>;
+export function bangkokDate(now?: Date): string;
+export function addDays(key: string, delta: number): string;
+export function isValidDayKey(value: unknown): boolean;
+export function aggregateBookings(bookings: unknown, options?: { period?: DashboardPeriod; court?: string; now?: Date }): DashboardAnalytics;
+export function statusDistribution(analytics?: Partial<DashboardAnalytics>): {
+  PENDING: number;
+  CHECKED_IN: number;
+  CANCELLED: number;
+  COMPLETED: number;
+  OTHER: number;
+};
+export function niceTicks(maxValue: number, targetTicks?: number): { max: number; step: number; ticks: number[] };
+export function filterBookingLogs(bookings: unknown, filters?: DashboardLogFilters, now?: Date): any[];
+export function localizedStatus(status: string, locale: DashboardLocale): string;
+export function formatDashboardDate(value: string, locale: DashboardLocale, options?: Intl.DateTimeFormatOptions): string;
+export function formatDashboardDateTime(value: Date | string | number, locale: DashboardLocale): string;
+export function formatDashboardMonth(value: string, locale: DashboardLocale): string;
+export function formatBucketLabel(key: string, granularity: DashboardGranularity, locale: DashboardLocale, year?: string): string;
+export function safeDashboardError(error: unknown, kind: 'export' | 'sync' | 'finish' | 'cancel' | 'reset', locale: DashboardLocale): string;

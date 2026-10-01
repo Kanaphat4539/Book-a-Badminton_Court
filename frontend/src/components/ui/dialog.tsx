@@ -6,6 +6,8 @@ import { XIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useOptionalLocale } from "@/components/locale-provider"
+import { playerUiCopy } from "@/lib/player-ui-copy.cjs"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
@@ -47,6 +49,8 @@ function DialogContent({
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
 }) {
+  // Falls back to the Thai default when the dialog renders outside the locale provider.
+  const closeLabel = playerUiCopy[useOptionalLocale()?.locale ?? "th"].dialogCloseLabel
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -71,7 +75,7 @@ function DialogContent({
             }
           >
             <XIcon />
-            <span className="sr-only">ปิด</span>
+            <span className="sr-only">{closeLabel}</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Popup>

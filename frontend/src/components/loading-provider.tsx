@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useLayoutEffect, useState, useSyn
 import { usePathname } from 'next/navigation';
 import type { InternalAxiosRequestConfig } from 'axios';
 import api from '@/lib/api';
+import { useOptionalLocale } from '@/components/locale-provider';
+import { playerUiCopy } from '@/lib/player-ui-copy.cjs';
 import { createLoadingController } from '@/lib/loading-controller';
 import './loading.css';
 
@@ -20,6 +22,7 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
   const [controller] = useState(createLoadingController);
   const pathname = usePathname();
   const visible = useSyncExternalStore(controller.subscribe, controller.getSnapshot, serverSnapshot);
+  const ui = playerUiCopy[useOptionalLocale()?.locale ?? 'th'];
 
   useLayoutEffect(() => {
     controller.start();
@@ -56,14 +59,14 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
     <LoadingContext.Provider value={controller}>
       <div inert={visible} aria-busy={visible}>{children}</div>
       {visible ? (
-        <div className="kmitl-loading" role="status" aria-live="polite" aria-label="กำลังเตรียมข้อมูลสนาม">
+        <div className="kmitl-loading" role="status" aria-live="polite" aria-label={ui.loadingAria}>
           <div className="kmitl-loading__card">
             <div className="kmitl-loading__eyebrow">KMITL BADMINTON</div>
             {/* Original animated GIF: preserve its animation without image optimization. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="kmitl-loading__runner" src="/images/badminton-loading.gif" width={362} height={362} alt="นักแบดถอยหลัง กระโดด และเหวี่ยงไม้ตบต่อเนื่อง" />
-            <h1 className="kmitl-loading__title">Loading<span>.</span></h1>
-            <p className="kmitl-loading__detail">กำลังเตรียมข้อมูลสนาม<br />อีกสักครู่นะ</p>
+            <img className="kmitl-loading__runner" src="/images/badminton-loading.gif" width={362} height={362} alt={ui.loadingImageAlt} />
+            <h1 className="kmitl-loading__title">{ui.loadingTitle}<span>.</span></h1>
+            <p className="kmitl-loading__detail">{ui.loadingDetail}<br />{ui.loadingDetailHint}</p>
             <div className="kmitl-loading__track" aria-hidden="true"><span /></div>
           </div>
         </div>

@@ -11,7 +11,7 @@ import { ResetMailService } from './reset-mail.service';
 import { PasswordResetRateLimiter } from './password-reset-rate-limiter';
 
 export const jwtConstants = {
-  secret: 'DO_NOT_USE_THIS_VALUE_IN_PROD', // In real app, use .env
+  secret: process.env.JWT_SECRET || 'DO_NOT_USE_THIS_VALUE_IN_PROD',
 };
 
 @Module({

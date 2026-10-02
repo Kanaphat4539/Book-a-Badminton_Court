@@ -58,8 +58,7 @@ export class BookingsService {
 
     const release = await dbMutex.acquire();
     try {
-      // Use SERIALIZABLE transaction instead of pessimistic_write for SQLite compatibility
-      return await this.bookingsRepository.manager.transaction('SERIALIZABLE', async (transactionalEntityManager) => {
+      return await this.bookingsRepository.manager.transaction(async (transactionalEntityManager) => {
         // Recheck inside the lock: a round can end while this request is waiting.
         const slotEnd = new Date(`${date}T${endTime}+07:00`);
         if (new Date() >= slotEnd) {

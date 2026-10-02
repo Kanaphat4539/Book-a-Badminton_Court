@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post, Req } from '@nestjs/common';
+import { BadRequestException, Body, Controller, HttpCode, NotFoundException, Post, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { PasswordResetService } from './password-reset.service';
 import { UsersService } from '../users/users.service';
@@ -26,10 +26,13 @@ export class PasswordResetController {
   @HttpCode(200)
   async resetDemo(@Body('email') email: unknown, @Body('password') password: unknown) {
     if (typeof email !== 'string' || typeof password !== 'string' || password.length < 8) {
-      return { message: 'Invalid email or password (min 8 chars)' };
+      throw new BadRequestException('Invalid email or password (min 8 chars)');
     }
     const updated = await this.users.updatePasswordByEmail(email.trim().toLowerCase(), password);
-    return updated ? { message: 'Password updated. You can now sign in.' } : { message: 'Email not found' };
+    if (!updated) {
+      throw new NotFoundException('Email not found in system');
+    }
+    return { message: 'Password updated. You can now sign in.' };
   }
 
   @Post('reset-password-direct')
@@ -40,15 +43,18 @@ export class PasswordResetController {
     @Body('confirmPassword') confirmPassword: unknown,
   ) {
     if (typeof email !== 'string' || typeof password !== 'string' || typeof confirmPassword !== 'string') {
-      return { message: 'Invalid input' };
+      throw new BadRequestException('Invalid input');
     }
     if (password.length < 8) {
-      return { message: 'Password must be at least 8 characters' };
+      throw new BadRequestException('Password must be at least 8 characters');
     }
     if (password !== confirmPassword) {
-      return { message: 'Passwords do not match' };
+      throw new BadRequestException('Passwords do not match');
     }
     const updated = await this.users.updatePasswordByEmail(email.trim().toLowerCase(), password);
-    return updated ? { message: 'Password updated. You can now sign in.' } : { message: 'Email not found' };
+    if (!updated) {
+      throw new NotFoundException('Email not found in system');
+    }
+    return { message: 'Password updated. You can now sign in.' };
   }
 }

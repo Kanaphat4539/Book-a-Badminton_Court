@@ -19,14 +19,35 @@ export default function ForgotPasswordPage() {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setSubmitting(true);
     setError('');
+
+    if (password !== confirmPassword) {
+      setError(text('passwordMismatch'));
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      await api.post('/auth/reset-password-direct', { email, password, confirmPassword });
+      const res = await api.post('/auth/reset-password-direct', { email, password, confirmPassword });
+      if (res.data?.message === 'Email not found' || res.data?.error === 'Not Found') {
+        setError(text('emailNotFound'));
+        return;
+      }
       setSent(true);
     } catch (cause) {
-      setError(axios.isAxiosError(cause) && typeof cause.response?.data?.message === 'string'
-        ? cause.response.data.message : text('resetLinkError'));
+      if (axios.isAxiosError(cause)) {
+        const status = cause.response?.status;
+        const msg = cause.response?.data?.message;
+        if (status === 404 || msg === 'Email not found' || msg === 'Email not found in system') {
+          setError(text('emailNotFound'));
+          return;
+        }
+        if (typeof msg === 'string') {
+          setError(msg);
+          return;
+        }
+      }
+      setError(text('resetLinkError'));
     } finally {
       setSubmitting(false);
     }

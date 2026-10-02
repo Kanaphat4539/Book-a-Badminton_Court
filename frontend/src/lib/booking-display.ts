@@ -5,6 +5,8 @@ export type BookingDate = {
   month: string;
 };
 
+export type DisplayLocale = 'th' | 'en';
+
 type BookingConfirmationInput = {
   date: string;
   time: string;
@@ -12,40 +14,46 @@ type BookingConfirmationInput = {
   bookerName: string;
 };
 
-export function createTodayBookingDate(_now: Date): BookingDate {
+const localeTag = (locale: DisplayLocale) => (locale === 'th' ? 'th-TH' : 'en-US');
+
+/** Short Thai weekday as the UI has always shown it ('พุธ', not 'วันพุธ'). */
+function weekdayLabel(dateKey: string, locale: DisplayLocale): string {
+  const label = new Intl.DateTimeFormat(localeTag(locale), { weekday: 'long', timeZone: 'Asia/Bangkok' })
+    .format(new Date(`${dateKey}T12:00:00+07:00`));
+  return locale === 'th' ? label.replace(/^วัน/, '') : label;
+}
+
+function monthLabel(dateKey: string, locale: DisplayLocale): string {
+  return new Intl.DateTimeFormat(localeTag(locale), { month: 'long', timeZone: 'Asia/Bangkok' })
+    .format(new Date(`${dateKey}T12:00:00+07:00`));
+}
+
+export function createTodayBookingDate(_now: Date, locale: DisplayLocale = 'th'): BookingDate {
   const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(_now);
   const calendarDate = new Date(`${date}T00:00:00Z`);
-  const thaiDays = [
-    'อาทิตย์',
-    'จันทร์',
-    'อังคาร',
-    'พุธ',
-    'พฤหัสบดี',
-    'ศุกร์',
-    'เสาร์',
-  ];
 
   return {
     date,
-    day: thaiDays[calendarDate.getUTCDay()],
+    day: weekdayLabel(date, locale),
     num: String(calendarDate.getUTCDate()),
-    month: _now.toLocaleDateString('th-TH', { month: 'long', timeZone: 'Asia/Bangkok' }),
+    month: monthLabel(date, locale),
   };
 }
 
 export function createBookingConfirmationDetails(
   _input: BookingConfirmationInput,
+  locale: DisplayLocale = 'th',
 ) {
   const [year, month, day] = _input.date.split('-').map(Number);
-  const bookingDate = new Date(year, month - 1, day);
   const [hour, minute] = _input.time.split(':').map(Number);
   const endHour = String(hour + 1).padStart(2, '0');
+  const clock = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')} - ${endHour}:${String(minute).padStart(2, '0')}`;
 
   return {
     date: String(day),
-    month: bookingDate.toLocaleDateString('th-TH', { month: 'long' }),
+    month: monthLabel(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`, locale),
     court: _input.courtName,
-    time: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')} - ${endHour}:${String(minute).padStart(2, '0')} น.`,
+    time: locale === 'th' ? `${clock} น.` : clock,
     booker: _input.bookerName,
   };
 }

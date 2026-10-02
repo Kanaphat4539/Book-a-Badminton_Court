@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import api, { isSessionExpiredError } from '@/lib/api';
+import { useLocale } from '@/components/locale-provider';
+import { playerUiCopy } from '@/lib/player-ui-copy.cjs';
 
 interface BanStatus {
   isBanned: boolean;
@@ -12,6 +14,8 @@ interface BanStatus {
 export function BanPopup() {
   const [banStatus, setBanStatus] = useState<BanStatus | null>(null);
   const [open, setOpen] = useState(false);
+  const { locale } = useLocale();
+  const ui = playerUiCopy[locale];
 
   useEffect(() => {
     // Check if user is logged in
@@ -47,30 +51,38 @@ export function BanPopup() {
 
   if (!banStatus || !banStatus.isBanned) return null;
 
+  const bannedUntilText = banStatus.bannedUntil
+    ? new Intl.DateTimeFormat(locale === 'th' ? 'th-TH' : 'en-US', {
+        timeZone: 'Asia/Bangkok',
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(new Date(banStatus.bannedUntil))
+    : ui.banUntilUnknown;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2 text-error mb-2">
             <span className="material-symbols-outlined text-[32px]">block</span>
-            <DialogTitle className="text-xl">บัญชีของคุณถูกระงับการใช้งาน</DialogTitle>
+            <DialogTitle className="text-xl">{ui.banTitle}</DialogTitle>
           </div>
           <DialogDescription className="text-on-surface-variant text-base space-y-3 pt-2">
             <p>
-              คุณถูกระงับการจองคอร์ทชั่วคราว เนื่องจากมีการทำผิดกฎครบ 2 ครั้ง (เช่น ไม่มาเช็คอิน หรือยกเลิกหลังเวลาที่กำหนด)
+              {ui.banBody}
             </p>
             <div className="bg-error-container text-on-error-container p-3 rounded-xl border border-error/20 font-medium">
-              ระยะเวลาพ้นแบน: <br/>
-              {banStatus.bannedUntil ? new Date(banStatus.bannedUntil).toLocaleString('th-TH') : 'ไม่ระบุ'}
+              {ui.banUntilLabel} <br/>
+              {bannedUntilText}
             </div>
             <p className="text-sm">
-              หลังจากพ้นแบน จำนวนความผิดจะถูกรีเซ็ตเป็น 0 อัตโนมัติ
+              {ui.banResetNote}
             </p>
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
-            รับทราบ (Acknowledge)
+            {ui.banAcknowledge}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -6,10 +6,14 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { usePageLoading } from '@/components/loading-provider';
+import { useLocale } from '@/components/locale-provider';
+import { translate as authNewsText } from '@/lib/auth-news-messages.cjs';
 
 
 export default function LoginPage() {
   const router = useRouter();
+  const { locale, setLocale, t } = useLocale();
+  const text = (key: string) => authNewsText(key, locale);
   const pageLoading = usePageLoading();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -22,11 +26,11 @@ export default function LoginPage() {
       const response = await api.post('/auth/login', { username, password });
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      toast.success('Login successful!');
+      toast.success(text('loginSuccess'));
       pageLoading.start('/login');
       router.push('/dashboard');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Login failed');
+      toast.error(err.response?.data?.message || text('loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -49,12 +53,13 @@ export default function LoginPage() {
       <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-[100]">
         {/* Back to Home Button */}
         <a
-          href="/"
-          className="btn flex items-center justify-center p-3"
-        >
-          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                  href="/"
+                  aria-label={text('backHome')}
+                  className="btn flex items-center justify-center p-3"
+                >
+                  <span className="material-symbols-outlined text-[20px]" aria-hidden="true">arrow_back</span>
         </a>
-
+        <button type="button" aria-label={locale === 'th' ? 'Switch language to English' : 'เปลี่ยนภาษาเป็นไทย'} aria-pressed={locale === 'en'} onClick={() => setLocale(locale === 'th' ? 'en' : 'th')} className="rounded-lg border border-primary/40 bg-black/40 px-3 py-2 text-sm font-bold text-white hover:bg-black/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">{locale === 'th' ? 'English' : 'ไทย'}</button>
       </div>
 
       <main className="w-full max-w-md relative z-10 flex flex-col items-center">
@@ -68,7 +73,7 @@ export default function LoginPage() {
             />
           </div>
           <h1 className="font-display-lg text-[32px] font-extrabold text-gray-900 dark:text-orange-50 tracking-tight text-center uppercase drop-shadow-sm">KMITL <span className="text-primary">BADMINTON</span></h1>
-          <p className="font-body-md text-[15px] text-gray-600 dark:text-orange-200/70 text-center mt-1 font-medium tracking-wide uppercase">Premium Court Booking</p>
+          <p className="font-body-md text-[15px] text-gray-600 dark:text-orange-200/70 text-center mt-1 font-medium tracking-wide uppercase">{locale === 'th' ? 'ระบบจองสนามแบดมินตัน' : 'Premium Court Booking'}</p>
         </div>
 
         {/* Login Card */}
@@ -76,7 +81,7 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="flex flex-col gap-5">
             {/* Username Input */}
             <div className="flex flex-col gap-1.5">
-              <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider" htmlFor="username">Username / Email</label>
+              <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider" htmlFor="username">{text('usernameLabel')}</label>
               <div className="relative group">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-orange-300/50 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>person</span>
                 <input
@@ -84,7 +89,7 @@ export default function LoginPage() {
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="athlete@example.com"
+                  placeholder={text('usernamePlaceholder')}
                   required
                   autoComplete="off"
                   type="text"
@@ -94,7 +99,7 @@ export default function LoginPage() {
 
             {/* Password Input */}
             <div className="flex flex-col gap-1.5">
-              <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider" htmlFor="password">Password</label>
+              <label className="font-label-md text-[13px] font-bold text-gray-700 dark:text-orange-200 uppercase tracking-wider" htmlFor="password">{text('passwordLabel')}</label>
               <div className="relative group">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-orange-300/50 group-focus-within:text-primary transition-colors text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>lock</span>
                 <input
@@ -102,14 +107,14 @@ export default function LoginPage() {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder={text('passwordPlaceholder')}
                   required
                   autoComplete="new-password"
                   type="password"
                 />
               </div>
               <div className="flex justify-end mt-1">
-                <Link className="font-label-md text-[13px] font-semibold text-primary hover:text-primary/80 transition-colors" href="/forgot-password">Forgot Password?</Link>
+                <Link className="font-label-md text-[13px] font-semibold text-primary hover:text-primary/80 transition-colors" href="/forgot-password">{text('forgotPassword')}</Link>
               </div>
             </div>
 
@@ -119,7 +124,8 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? text('loginLoading') : text('loginSubmit')}
+              {!loading && <span className="material-symbols-outlined ml-2 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>arrow_forward</span>}
             </button>
           </form>
 
@@ -128,11 +134,13 @@ export default function LoginPage() {
           {/* Sign Up Link */}
           <div className="mt-8 pt-6 border-t border-gray-200/60 text-center">
             <p className="font-body-md text-[15px] text-gray-600">
-              Don't have an account?
-              <a className="font-button text-[16px] font-bold text-primary hover:text-primary/80 transition-colors ml-2" href="/register">Sign Up</a>
+              {text('signupPrompt')}
+                            <a className="font-button text-[16px] font-bold text-primary hover:text-primary/80 transition-colors ml-2" href="/register">{text('signupLink')}</a>
             </p>
+
           </div>
-        </div>
+
+          </div>
       </main>
     </div>
   );

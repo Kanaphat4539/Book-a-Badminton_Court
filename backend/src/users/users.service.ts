@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
 import { Admin } from './entities/admin.entity';
 import { Student } from './entities/student.entity';
-import { Booking } from '../bookings/entities/booking.entity';
+import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
 import * as bcrypt from 'bcrypt';
 
 export enum UserRole {
@@ -203,12 +203,12 @@ export class UsersService implements OnModuleInit {
     // Also cancel today's pending/checked-in bookings so user can actually book again
     const today = new Date().toISOString().split('T')[0];
     const bookingRepo = this.studentRepository.manager.getRepository(Booking);
-    await bookingRepo.createQueryBuilder('b')
-      .update()
-      .set({ status: 'CANCELLED' })
-      .where('b.stu_id = :stu', { stu: stu_id })
-      .andWhere('b.booking_date = :date', { date: today })
-      .andWhere("b.status IN (:...statuses)", { statuses: ['PENDING', 'CHECKED_IN'] })
+    await bookingRepo.createQueryBuilder()
+      .update(Booking)
+      .set({ status: BookingStatus.CANCELLED })
+      .where('stu_id = :stu', { stu: stu_id })
+      .andWhere('booking_date = :date', { date: today })
+      .andWhere('status IN (:...statuses)', { statuses: [BookingStatus.PENDING, BookingStatus.CHECKED_IN] })
       .execute();
     return this.saveStudent(student);
   }

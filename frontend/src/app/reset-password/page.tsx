@@ -1,12 +1,24 @@
-import type { Metadata } from 'next';
+'use client';
+
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useLocale } from '@/components/locale-provider';
+import { translate as authNewsText } from '@/lib/auth-news-messages.cjs';
 import ResetPasswordForm from './reset-password-form';
 
-export const metadata: Metadata = { title: 'Reset password | KMITL Badminton', referrer: 'no-referrer' };
-
-export default async function ResetPasswordPage({ searchParams }: {
-  searchParams: Promise<{ token?: string | string[] }>;
-}) {
-  const value = (await searchParams).token;
-  const token = typeof value === 'string' ? value : '';
+function ResetPasswordContent() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token') || '';
   return <ResetPasswordForm token={token} />;
+}
+
+export default function ResetPasswordPage() {
+  const { locale } = useLocale();
+  const _text = (key: string) => authNewsText(key, locale);
+
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordContent />
+    </Suspense>
+  );
 }

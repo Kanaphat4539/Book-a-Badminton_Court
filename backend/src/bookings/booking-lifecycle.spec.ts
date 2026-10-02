@@ -26,7 +26,7 @@ describe('booking lifecycle (Bangkok time)', () => {
     students = ['00000001', '00000002'].map(stu_id => Object.assign(new Student(), {
         stu_id, email: `${stu_id}@kmitl.ac.th`, first_name: 'Test', last_name: 'User',
         major: 'Engineering', year: 1, username: stu_id, password: 'test', strikes: 0,
-        banned_until: null,
+        banned_until: null, quota: 1,
     }));
     const matches = (row: object, where: object) => Object.entries(where).every(([key, value]) => (row as Record<string, unknown>)[key] === value);
     const save = async (...args: unknown[]) => {
@@ -50,6 +50,7 @@ describe('booking lifecycle (Bangkok time)', () => {
       create: (_entity: unknown, values: object) => Object.assign(new Booking(), values),
       createQueryBuilder: () => query,
       save,
+      getRepository: (entity: unknown) => entity === Student ? studentRepository : repository,
     };
     repository = {
       manager, save,

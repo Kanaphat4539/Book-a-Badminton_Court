@@ -26,10 +26,12 @@ test('every page in the app reads its copy from the localization system', () => 
     'booking/page.tsx',
     'booking/select-court/page.tsx',
     'dashboard/page.tsx',
+    'forgot-password/page.tsx',
     'login/page.tsx',
     'news/page.tsx',
     'page.tsx',
     'register/page.tsx',
+    'reset-password/page.tsx',
     'scan/page.tsx',
   ]);
 

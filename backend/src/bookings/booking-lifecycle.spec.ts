@@ -117,6 +117,9 @@ describe('booking lifecycle (Bangkok time)', () => {
     await cron.handleCron();
     expect(rows.find(b => b.booking_id === booking.booking_id)!.status).toBe(BookingStatus.CANCELLED);
     expect(students[0].strikes).toBe(1);
+    expect(students[0].quota).toBe(0);
+    // Student who missed check-in cannot re-book on that day
+    await expect(bookings.createBooking('00000001', 2, date, '16:00:00')).rejects.toThrow();
   });
 
   it('rejects booking an already ended round', async () => {

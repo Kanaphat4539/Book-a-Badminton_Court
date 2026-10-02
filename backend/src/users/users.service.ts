@@ -21,6 +21,7 @@ export class UsersService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
+    await this.backfillNormalizedEmails();
     // Seed default admin if not exists
     const admin = await this.adminRepository.findOneBy({ username: 'admin' });
     if (!admin) {
@@ -41,6 +42,7 @@ export class UsersService implements OnModuleInit {
       const newStudent = this.studentRepository.create({
         stu_id: '65010000',
         email: 'testuser@kmitl.ac.th',
+        email_normalized: 'testuser@kmitl.ac.th',
         username: 'testuser',
         first_name: 'Test',
         last_name: 'Student',
@@ -63,6 +65,62 @@ export class UsersService implements OnModuleInit {
     return null;
   }
 
+  async findStudentByEmail(email: string): Promise<Student | null> {
+    const matches = await this.studentRepository.find({ where: { email_normalized: email }, take: 2 });
+    return matches.length === 1 ? matches[0] : null;
+  }
+
+  async backfillNormalizedEmails(): Promise<void> {
+    await this.studentRepository.createQueryBuilder()
+      .update(Student)
+      .set({ email_normalized: () => 'LOWER(email)' })
+      .where('email_normalized IS NULL OR email_normalized <> LOWER(email)')
+      .execute();
+  }
+
+  async setPasswordResetToken(stuId: string, hash: string, expiresAt: Date): Promise<boolean> {
+    const now = new Date();
+    const earliest = new Date(now.getTime() - 60_000);
+    const result = await this.studentRepository.createQueryBuilder()
+      .update(Student)
+      .set({ reset_token_hash: hash, reset_token_expires_at: expiresAt, reset_requested_at: now })
+      .where('stu_id = :stuId', { stuId })
+      .andWhere('(reset_requested_at IS NULL OR reset_requested_at <= :earliest)', { earliest })
+      .execute();
+    return result.affected === 1;
+  }
+
+  async clearPasswordResetToken(hash: string): Promise<void> {
+    await this.studentRepository.createQueryBuilder()
+      .update(Student)
+      .set({ reset_token_hash: null, reset_token_expires_at: null })
+      .where('reset_token_hash = :hash', { hash })
+      .execute();
+  }
+
+  async hasValidPasswordResetToken(hash: string, now: Date): Promise<boolean> {
+    const count = await this.studentRepository.createQueryBuilder('student')
+      .where('student.reset_token_hash = :hash', { hash })
+      .andWhere('student.reset_token_expires_at > :now', { now })
+      .getCount();
+    return count > 0;
+  }
+
+  async consumePasswordResetToken(hash: string, nextPasswordHash: string, now: Date): Promise<boolean> {
+    const result = await this.studentRepository.createQueryBuilder()
+      .update(Student)
+      .set({
+        password: nextPasswordHash,
+        reset_token_hash: null,
+        reset_token_expires_at: null,
+        password_version: () => 'password_version + 1',
+      })
+      .where('reset_token_hash = :hash', { hash })
+      .andWhere('reset_token_expires_at > :now', { now })
+      .execute();
+    return result.affected === 1;
+  }
+
   async createStudent(studentData: any): Promise<Student> {
     const saltOrRounds = 10;
     const passwordToHash = studentData.password || 'password';
@@ -75,7 +133,8 @@ export class UsersService implements OnModuleInit {
     
     const newStudent = this.studentRepository.create({
       stu_id: studentData.studentId || studentData.stu_id,
-      email: studentData.email,
+      email: typeof studentData.email === 'string' ? studentData.email.trim().toLowerCase() : studentData.email,
+      email_normalized: typeof studentData.email === 'string' ? studentData.email.trim().toLowerCase() : null,
       first_name: studentData.first_name || first_name,
       last_name: studentData.last_name || last_name,
       tel: studentData.phone || studentData.tel,

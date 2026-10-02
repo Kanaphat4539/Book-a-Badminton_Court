@@ -73,52 +73,78 @@ export function LanguageToggle({ className, size = 'md' }: LanguageToggleProps) 
   const itemPadding = size === 'sm' ? 'px-2 py-0.5' : 'px-3 py-1.5';
 
   return (
-    <div
-      role="group"
-      aria-label="Language selection"
-      className={cn(
-        'inline-flex items-center p-[3px] rounded-full',
-        'bg-[#18181b] border border-[#27272a] shadow-xs select-none',
-        className
-      )}
-    >
-      {/* Thai Option */}
+    <div className={cn('inline-flex items-center', className)}>
+      {/* Mobile single collapsed toggle (hidden on sm+) */}
       <button
         type="button"
-        role="radio"
-        aria-checked={isTh}
-        aria-label="เปลี่ยนภาษาเป็นไทย"
-        onClick={() => setLocale('th')}
+        aria-label={isTh ? 'Switch language to English' : 'เปลี่ยนภาษาเป็นไทย'}
+        onClick={() => setLocale(isTh ? 'en' : 'th')}
         className={cn(
-          'flex items-center gap-1.5 rounded-full transition-all duration-200 cursor-pointer',
-          itemPadding,
-          isTh
-            ? 'bg-[#27272a] border border-[#3f3f46]/90 text-white shadow-xs font-semibold'
-            : 'border border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] font-medium'
+          'sm:hidden flex items-center gap-1.5 rounded-full transition-all duration-200 cursor-pointer select-none',
+          'bg-[#18181b] border border-[#27272a] hover:bg-[#27272a] text-white shadow-xs font-semibold',
+          itemPadding
         )}
       >
-        <ThaiFlagIcon className={cn(flagSize, isTh ? 'opacity-100' : 'opacity-85')} />
-        <span className={cn('leading-none tracking-normal', textClass)}>ไทย</span>
+        {isTh ? (
+          <>
+            <ThaiFlagIcon className={flagSize} />
+            <span className={cn('leading-none tracking-normal', textClass)}>ไทย</span>
+          </>
+        ) : (
+          <>
+            <UkFlagIcon className={flagSize} />
+            <span className={cn('leading-none tracking-normal font-sans', textClass)}>EN</span>
+          </>
+        )}
       </button>
 
-      {/* English Option */}
-      <button
-        type="button"
-        role="radio"
-        aria-checked={isEn}
-        aria-label="Switch language to English"
-        onClick={() => setLocale('en')}
+      {/* Desktop dual segmented control (hidden on mobile, visible on sm+) */}
+      <div
+        role="group"
+        aria-label="Language selection"
         className={cn(
-          'flex items-center gap-1.5 rounded-full transition-all duration-200 cursor-pointer',
-          itemPadding,
-          isEn
-            ? 'bg-[#27272a] border border-[#3f3f46]/90 text-white shadow-xs font-semibold'
-            : 'border border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] font-medium'
+          'hidden sm:inline-flex items-center p-[3px] rounded-full',
+          'bg-[#18181b] border border-[#27272a] shadow-xs select-none'
         )}
       >
-        <UkFlagIcon className={cn(flagSize, isEn ? 'opacity-100' : 'opacity-85')} />
-        <span className={cn('leading-none tracking-normal font-sans', textClass)}>EN</span>
-      </button>
+        {/* Thai Option */}
+        <button
+          type="button"
+          role="radio"
+          aria-checked={isTh}
+          aria-label="เปลี่ยนภาษาเป็นไทย"
+          onClick={() => setLocale('th')}
+          className={cn(
+            'flex items-center gap-1.5 rounded-full transition-all duration-200 cursor-pointer',
+            itemPadding,
+            isTh
+              ? 'bg-[#27272a] border border-[#3f3f46]/90 text-white shadow-xs font-semibold'
+              : 'border border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] font-medium'
+          )}
+        >
+          <ThaiFlagIcon className={cn(flagSize, isTh ? 'opacity-100' : 'opacity-85')} />
+          <span className={cn('leading-none tracking-normal', textClass)}>ไทย</span>
+        </button>
+
+        {/* English Option */}
+        <button
+          type="button"
+          role="radio"
+          aria-checked={isEn}
+          aria-label="Switch language to English"
+          onClick={() => setLocale('en')}
+          className={cn(
+            'flex items-center gap-1.5 rounded-full transition-all duration-200 cursor-pointer',
+            itemPadding,
+            isEn
+              ? 'bg-[#27272a] border border-[#3f3f46]/90 text-white shadow-xs font-semibold'
+              : 'border border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] font-medium'
+          )}
+        >
+          <UkFlagIcon className={cn(flagSize, isEn ? 'opacity-100' : 'opacity-85')} />
+          <span className={cn('leading-none tracking-normal font-sans', textClass)}>EN</span>
+        </button>
+      </div>
     </div>
   );
 }

@@ -8,6 +8,14 @@ import api, { isSessionExpiredError } from '@/lib/api';
 import { BanPopup } from '@/components/BanPopup';
 import { useLocale } from '@/components/locale-provider';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+
+interface BanStatus {
+  isBanned: boolean;
+  bannedUntil?: string | null;
+  strikes: number;
+}
 
 const GlobalFooter = () => {
   const { t } = useLocale();
@@ -108,6 +116,8 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+  const [banStatus, setBanStatus] = useState<BanStatus | null>(null);
+  const [isStrikeDialogOpen, setIsStrikeDialogOpen] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -144,10 +154,25 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
       }
     };
 
+    const fetchBanStatus = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await api.get('/users/me/ban-status', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setBanStatus(res.data);
+      } catch (err) {
+        if (isSessionExpiredError(err)) return;
+        console.error('Failed to fetch ban status', err);
+      }
+    };
+
     const checkAuth = () => {
       const token = localStorage.getItem('token');
       if (!token) {
         setIsAuthenticated(false);
+        setBanStatus(null);
         if (typeof window !== 'undefined' && 
             !window.location.pathname.startsWith('/login') && 
             !window.location.pathname.startsWith('/register') && 
@@ -165,6 +190,7 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
           fetchNotifications();
         } else {
           fetchUserNotifications();
+          fetchBanStatus();
         }
       } catch (e) {}
     };
@@ -178,6 +204,9 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    setIsAuthenticated(false);
+    setUserRole(null);
+    setBanStatus(null);
     router.push('/login');
   };
 
@@ -213,7 +242,33 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Student Strike Points Badge */}
+            {isAuthenticated && userRole !== 'ADMIN' && banStatus && (
+              <button
+                type="button"
+                onClick={() => setIsStrikeDialogOpen(true)}
+                title={t('strikesBadgeLabel')}
+                aria-label={`${t('strikesBadgeLabel')}: ${banStatus.strikes}/2`}
+                className={cn(
+                  'h-8 px-2 sm:px-2.5 rounded-full flex items-center gap-1 sm:gap-1.5 transition-all duration-200 cursor-pointer text-xs font-semibold border select-none',
+                  banStatus.isBanned
+                    ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30 hover:bg-rose-500/20 shadow-xs'
+                    : banStatus.strikes === 1
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20 shadow-xs'
+                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25 hover:bg-emerald-500/20'
+                )}
+              >
+                <span className="material-symbols-outlined text-[16px] sm:text-[18px]">
+                  {banStatus.isBanned ? 'block' : banStatus.strikes === 1 ? 'warning' : 'verified_user'}
+                </span>
+                <span className="sm:hidden font-bold leading-none">{banStatus.strikes}/2</span>
+                <span className="hidden sm:inline leading-none font-medium">
+                  {banStatus.strikes}/2 {t('strikesUnit')}
+                </span>
+              </button>
+            )}
+
             <LanguageToggle />
             <div className="relative">
               <button 
@@ -336,6 +391,43 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
               </button>
             </div>
             <nav className="flex flex-col gap-6">
+              {/* Student Ban Strikes Info Card in Menu */}
+              {userRole !== 'ADMIN' && banStatus && (
+                <div
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    setIsStrikeDialogOpen(true);
+                  }}
+                  className="p-3.5 rounded-2xl bg-surface-container-low border border-surface-container-high cursor-pointer hover:bg-surface-container transition-colors select-none"
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px] text-primary">shield</span>
+                      {t('strikesBadgeLabel')}
+                    </span>
+                    <span
+                      className={cn(
+                        'text-[11px] font-bold px-2 py-0.5 rounded-full border',
+                        banStatus.isBanned
+                          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                          : banStatus.strikes === 1
+                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                          : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                      )}
+                    >
+                      {banStatus.strikes} / 2 {t('strikesUnit')}
+                    </span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-on-surface-variant">
+                    {banStatus.isBanned
+                      ? t('strikesDescBanned')
+                      : banStatus.strikes === 1
+                      ? t('strikesDescWarning')
+                      : t('strikesDescNormal')}
+                  </p>
+                </div>
+              )}
+
               <div className="flex flex-col gap-4">
                 <button onClick={() => { setIsSidebarOpen(false); router.push('/dashboard'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">{t('home')}</button>
                 {userRole !== 'ADMIN' && (
@@ -370,6 +462,112 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
           </div>
         </div>
       )}
+
+      {/* Ban Strikes Details Dialog */}
+      <Dialog open={isStrikeDialogOpen} onOpenChange={setIsStrikeDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-1">
+              <div
+                className={cn(
+                  'w-10 h-10 rounded-2xl flex items-center justify-center shrink-0',
+                  banStatus?.isBanned
+                    ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                    : banStatus?.strikes === 1
+                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                    : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                )}
+              >
+                <span className="material-symbols-outlined text-[24px]">
+                  {banStatus?.isBanned ? 'block' : banStatus?.strikes === 1 ? 'warning' : 'verified_user'}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-base sm:text-lg font-bold leading-tight">
+                  {t('strikesModalTitle')}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-on-surface-variant truncate">
+                  {t('strikesModalDesc')}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {/* Current Status Card */}
+          <div
+            className={cn(
+              'p-4 rounded-2xl border flex flex-col gap-2',
+              banStatus?.isBanned
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300'
+                : banStatus?.strikes === 1
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300'
+                : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider opacity-80">
+                {t('strikesCurrentCount')}
+              </span>
+              <span className="text-sm font-bold px-2.5 py-0.5 rounded-full bg-surface/70 border border-current/20">
+                {banStatus?.strikes ?? 0} / 2 {t('strikesUnit')}
+              </span>
+            </div>
+            <p className="text-sm font-semibold">
+              {banStatus?.isBanned
+                ? t('strikesDescBanned')
+                : banStatus?.strikes === 1
+                ? t('strikesDescWarning')
+                : t('strikesDescNormal')}
+            </p>
+            {banStatus?.isBanned && banStatus?.bannedUntil && (
+              <div className="mt-1 text-xs opacity-90 pt-2 border-t border-rose-500/20">
+                {t('strikesBannedUntil')}:{' '}
+                {new Intl.DateTimeFormat(locale === 'th' ? 'th-TH' : 'en-US', {
+                  timeZone: 'Asia/Bangkok',
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                }).format(new Date(banStatus.bannedUntil))}
+              </div>
+            )}
+          </div>
+
+          {/* Rules Breakdown */}
+          <div className="space-y-2 pt-1">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[16px] text-primary">gavel</span>
+              {t('strikesRulesTitle')}
+            </h4>
+            <div className="space-y-2 text-xs text-on-surface-variant">
+              <div className="p-2.5 rounded-xl bg-surface-container-low border border-surface-container-high flex items-start gap-2">
+                <span className="material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5">schedule</span>
+                <span>{t('strikesRuleCheckin')}</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-surface-container-low border border-surface-container-high flex items-start gap-2">
+                <span className="material-symbols-outlined text-[16px] text-emerald-500 shrink-0 mt-0.5">check_circle</span>
+                <span>{t('strikesRuleCancelEarly')}</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-surface-container-low border border-surface-container-high flex items-start gap-2">
+                <span className="material-symbols-outlined text-[16px] text-amber-500 shrink-0 mt-0.5">warning</span>
+                <span>{t('strikesRuleCancelLate')}</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-surface-container-low border border-surface-container-high flex items-start gap-2">
+                <span className="material-symbols-outlined text-[16px] text-amber-500 shrink-0 mt-0.5">timer_off</span>
+                <span>{t('strikesRuleNoShow')}</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-surface-container-low border border-surface-container-high flex items-start gap-2">
+                <span className="material-symbols-outlined text-[16px] text-rose-500 shrink-0 mt-0.5">block</span>
+                <span>{t('strikesRuleBan')}</span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="pt-2">
+            <Button variant="outline" onClick={() => setIsStrikeDialogOpen(false)} className="w-full">
+              {t('strikesCloseBtn')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

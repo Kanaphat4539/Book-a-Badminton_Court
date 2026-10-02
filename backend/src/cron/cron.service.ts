@@ -89,4 +89,17 @@ export class CronService {
       release();
     }
   }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async handleDailyQuotaReset() {
+    try {
+      await this.studentRepository.createQueryBuilder()
+        .update(Student)
+        .set({ quota: 1 })
+        .execute();
+      this.logger.log('Daily quota reset for all students completed.');
+    } catch (error) {
+      this.logger.error('Failed to reset daily quota at midnight', error);
+    }
+  }
 }

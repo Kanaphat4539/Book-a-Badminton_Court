@@ -96,9 +96,15 @@ describe('booking lifecycle (Bangkok time)', () => {
     at('13:22:00');
     const booking = await bookings.createBooking('00000001', 1, date, '13:00:00');
     expect(booking.time_out).toBe('14:00:00');
+    expect(students[0].quota).toBe(0);
     at('13:23:00');
     await bookings.cancelBooking(booking.booking_id, '00000001');
     expect(students[0].strikes).toBe(0);
+    expect(students[0].quota).toBe(1);
+    // Same student can re-book on the same day
+    const rebooking = await bookings.createBooking('00000001', 2, date, '13:00:00');
+    expect(rebooking.booking_id).toBeDefined();
+    expect(students[0].quota).toBe(0);
   });
 
   it('still penalizes an advance reservation once, at the original 15-minute deadline', async () => {

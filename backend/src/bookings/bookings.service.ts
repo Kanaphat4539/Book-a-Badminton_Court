@@ -79,7 +79,19 @@ export class BookingsService {
         // Check daily quota (must be > 0)
         const studentRepo = transactionalEntityManager.getRepository(Student);
         const studentRecord = await studentRepo.findOneBy({ stu_id });
-        if (!studentRecord || studentRecord.quota <= 0) {
+        if (!studentRecord) {
+          throw new NotFoundException('Student not found');
+        }
+
+        // If user has no bookings at all today, ensure quota starts at 1 for the new day
+        const todayBookings = await transactionalEntityManager.find(Booking, {
+          where: { stu_id, booking_date: date }
+        });
+        if (todayBookings.length === 0 && studentRecord.quota <= 0) {
+          studentRecord.quota = 1;
+        }
+
+        if (studentRecord.quota <= 0) {
           throw new BadRequestException('ใช้โควตาประจำวันแล้ว: คุณมีรายการจองที่ยังไม่เสร็จสิ้น (จองได้ 1 ครั้ง/วัน)');
         }
         studentRecord.quota = studentRecord.quota - 1;
@@ -239,10 +251,11 @@ export class BookingsService {
 
         const now = new Date();
         const { deadline, end } = getBookingTimes(booking);
+        const student = await manager.findOneBy(Student, { stu_id });
+
         // Do not penalize a shortened round that ends before its grace period.
         if (deadline <= end && now.getTime() >= deadline) {
           // Late cancellation - add a strike
-          const student = await manager.findOneBy(Student, { stu_id });
           if (student) {
             student.strikes += 1;
             if (student.strikes >= 2) {
@@ -250,6 +263,13 @@ export class BookingsService {
             }
             await manager.save(Student, student);
             Logger.log(`[Strike Added] Late cancel for Booking ID: ${bookingId}. Strikes: ${student.strikes}`, 'BookingsService');
+          }
+        } else {
+          // Timely cancellation (before 15 mins): do not consume quota, restore quota to 1
+          if (student) {
+            student.quota = 1;
+            await manager.save(Student, student);
+            Logger.log(`[Quota Restored] Timely cancel for Booking ID: ${bookingId}, Student ID: ${stu_id}. Quota restored to 1.`, 'BookingsService');
           }
         }
 

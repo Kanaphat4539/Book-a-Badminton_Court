@@ -1,0 +1,53 @@
+const selectCourtCopy = {
+  th: {
+    unknownBooker: 'ผู้ใช้งาน', courtAlt: 'สนาม',
+    selectedTime: 'เวลาที่เลือก', changeTime: 'เปลี่ยนเวลา', chooseCourt: 'เลือกคอร์ท',
+    booked: 'ถูกจองแล้ว', ready: 'พร้อมใช้งาน', indoor: 'ในร่ม', studentBenefit: 'สิทธิ์นักศึกษา',
+    dailyFree: 'จองฟรีตามสิทธิ์รายวัน', unavailable: 'ไม่ว่าง', bookCourt: 'จองคอร์ท',
+    reminder: 'โปรดทราบก่อนเข้าใช้สนาม', confirmTitle: 'ยืนยันการจองคอร์ท',
+    confirmDescription: 'ตรวจสอบรายละเอียดการจองก่อนยืนยัน', booker: 'ผู้จอง',
+    importantRules: 'ข้อกำหนดสำคัญ', backToChoose: 'กลับไปเลือกคอร์ท',
+    confirmBooking: 'ยืนยันการจอง', booking: 'กำลังจอง...', loading: 'กำลังโหลดคอร์ท...',
+    todayPolicyShort: 'ขณะนี้รองรับการจองเฉพาะวันนี้', loadError: 'ไม่สามารถโหลดข้อมูลคอร์ทได้',
+    missingParams: 'ข้อมูลการจองไม่ครบ กรุณาเลือกวันและเวลาใหม่', bookingFailed: 'ไม่สามารถจองคอร์ทได้',
+    slotExpired: 'ช่วงเวลานี้ไม่สามารถจองได้แล้ว กรุณาเลือกเวลาใหม่', bookingSuccess: 'จองคอร์ทสำเร็จ',
+    refreshFailed: 'ไม่สามารถอัปเดตข้อมูลคอร์ทได้', availableCourts: (count) => `${count} คอร์ทพร้อมใช้`,
+    totalCourts: (count) => `ระบบสำรองคอร์ท อาคารยิมเนเซียม 1 KMITL ทั้งหมด ${count} คอร์ท สำหรับรอบที่คุณเลือก`,
+    hallName: (count) => `อาคารยิมเนเซียม 1 (ทั้งหมด ${count} คอร์ท)`, studentQuota: 'โควตานักศึกษา KMITL ฟรีทุกคอร์ท',
+    reminderBody: 'กรุณาเช็คอินที่จุดสแกนหน้าคอร์ทก่อนเวลา', reminderMinutes: '15 นาที',
+    reminderTail: 'พร้อมแสดงบัตรนักศึกษาหรือ QR Code ประจำการจองเพื่อเปิดระบบไฟสนาม',
+    dateLabel: 'วันที่', monthLabel: 'เดือน', courtLabel: 'คอร์ท', timeLabel: 'เวลา',
+    ruleCheckIn: 'ต้องมาเช็คอินภายใน 15 นาทีหลังจากเวลาเริ่มจอง (หากเกินระบบจะยกเลิกอัตโนมัติ)',
+    ruleNoShow: 'หากไม่มาเช็คอินและไม่ยกเลิกตามเวลาที่กำหนด จะถูกนับเป็นความผิด (2 ครั้ง แบน 24 ชั่วโมง)',
+    ruleShoes: 'ต้องสวมรองเท้ากีฬาพื้นยางดิบ (Non-marking) ลงสนามเท่านั้น',
+    indoorLocation: 'อาคารยิมเนเซียม 1 • East', northLocation: 'อาคารยิมเนเซียม 1 • North',
+  },
+  en: {
+    unknownBooker: 'User', courtAlt: 'Court',
+    selectedTime: 'Selected time', changeTime: 'Change time', chooseCourt: 'Choose a court',
+    booked: 'Booked', ready: 'Available', indoor: 'Indoor', studentBenefit: 'Student benefit',
+    dailyFree: 'Free booking within the daily quota', unavailable: 'Unavailable', bookCourt: 'Book court',
+    reminder: 'Before you use the court', confirmTitle: 'Confirm court booking',
+    confirmDescription: 'Review the booking details before confirming.', booker: 'Booker',
+    importantRules: 'Important rules', backToChoose: 'Back to courts',
+    confirmBooking: 'Confirm booking', booking: 'Booking...', loading: 'Loading courts...',
+    todayPolicyShort: 'Bookings are currently available for today only.', loadError: 'Could not load court availability.',
+    missingParams: 'Booking details are incomplete. Please choose a date and time again.', bookingFailed: 'Could not book the court.',
+    slotExpired: 'This time slot can no longer be booked. Please choose another time.', bookingSuccess: 'Court booked successfully.',
+    refreshFailed: 'Could not refresh court availability.', availableCourts: (count) => `${count} courts available`,
+    totalCourts: (count) => `Book a court at KMITL Gymnasium 1. ${count} courts total for your selected session.`,
+    hallName: (count) => `Gymnasium 1 (${count} courts)`, studentQuota: 'KMITL student quota: all courts are free',
+    reminderBody: 'Please check in at the court scan point', reminderMinutes: '15 minutes',
+    reminderTail: 'before your session and show your student ID or booking QR code to turn on the court lights.',
+    dateLabel: 'Date', monthLabel: 'Month', courtLabel: 'Court', timeLabel: 'Time',
+    ruleCheckIn: 'Check in within 15 minutes after your booking starts, or the system will cancel it automatically.',
+    ruleNoShow: 'Missing check-in without cancelling on time counts as a violation (2 violations result in a 24-hour ban).',
+    ruleShoes: 'Only non-marking sports shoes are allowed on court.',
+    indoorLocation: 'Gymnasium 1 • East', northLocation: 'Gymnasium 1 • North',
+  },
+};
+function selectCourtText(locale, key, ...args) {
+  const value = selectCourtCopy[locale === 'th' ? 'th' : 'en'][key];
+  return typeof value === 'function' ? value(...args) : value;
+}
+module.exports = { selectCourtCopy, selectCourtText };

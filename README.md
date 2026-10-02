@@ -40,12 +40,13 @@ flowchart TB
     subgraph Third_Party_Services ["3rd-Party Services & CDNs (บริการภายนอกที่เว็บนี้ดึงมาใช้)"]
         Google_Fonts["Google Fonts & Material Symbols<br/>(CDN ฟอนต์และไอคอน)"]
         Image_CDNs["Image Providers / CDNs<br/>(Unsplash, Wikimedia, Dynamic Design)"]
+        SMTP["SMTP Server<br/>(ลิงก์ตั้งรหัสผ่านใหม่ เมื่อกำหนดค่า)"]
     end
 
     subgraph Not_Used_3rd_Party ["3rd-Party ที่ไม่มีการเชื่อมต่อในเว็บนี้ (Not Used)"]
         No_OAuth["❌ ไม่มี Third-Party OAuth<br/>(Google Sign-in, LINE Login, Auth0)"]
         No_Payment["❌ ไม่มี Payment Gateway<br/>(Stripe, Omise, 2C2P)"]
-        No_Email_SMS["❌ ไม่มี Email / SMS Provider<br/>(SendGrid, Twilio, LINE Notify)"]
+        No_SMS["❌ ไม่มี SMS Provider<br/>(Twilio, LINE Notify)"]
         No_Cloud_DB["❌ ไม่มี Cloud BaaS<br/>(Firebase, Supabase)"]
     end
 
@@ -55,6 +56,7 @@ flowchart TB
     FE_UI -->|"โหลดรูปภาพแบนเนอร์/ภาพประกอบ"| Image_CDNs
     FE_UI -->|"ยิง API Request (Axios)"| Backend_API
     Backend_API -->|"อ่านและเขียนข้อมูล"| DB
+    Backend_API -->|"ส่งลิงก์รีเซ็ตรหัสผ่าน"| SMTP
 ```
 
 ---
@@ -67,6 +69,7 @@ flowchart TB
 | **2. External Image / Media CDNs** | **Unsplash / Wikimedia / Dynamic Design** | ดึงภาพประกอบพื้นหลังและโลโก้จากภายนอกมาแสดงผลบนหน้าเว็บไซต์ เช่น ภาพคอร์ดแบดมินตัน และภาพนักกีฬา |
 | **3. Open-Source Libraries (Client-side / In-App Engine)** | **`html5-qrcode` & `react-qr-code`** | ไลบรารีภายนอกสำหรับเปิดกล้องอุปกรณ์เพื่อสแกน QR Code และสร้าง QR Code หน้าคอร์ด (ประมวลผลภายในเครื่องผู้ใช้) |
 | | **`framer-motion` & `tsparticles`** | ไลบรารีสำหรับสร้าง Animation และลูกเล่น Particle บนหน้า UI |
+| **4. Email (เมื่อกำหนดค่า)** | **SMTP Server** | ส่งลิงก์ตั้งรหัสผ่านใหม่ไปยังอีเมลนักศึกษา ผ่าน `nodemailer` |
 
 ---
 
@@ -76,14 +79,22 @@ flowchart TB
    - *เหตุผล:* ระบบออกแบบมาสำหรับการจองคอร์ดภายในองค์กร จึงไม่มีการเชื่อมต่อระบบตัดเงินหรือ API ธนาคารภายนอก
 2. **ไม่มี Third-Party Authentication / OAuth** (เช่น Google Login, Facebook Login, LINE Login, Firebase Auth, Auth0)
    - *เหตุผล:* ระบบพัฒนาการยืนยันตัวตนแบบ Self-Hosted JWT Token ร่วมกับการเข้ารหัสรหัสผ่านด้วย `bcrypt` ภายในเซิร์ฟเวอร์ NestJS เอง
-3. **ไม่มี Notification / Email / SMS Gateway ภายนอก** (เช่น SendGrid, Twilio, LINE Notify, Pusher)
-   - *เหตุผล:* การจัดการสถานะการจองหมดอายุและรีเซ็ตสถานะคอร์ดใช้ระบบ Schedule/Cron Job ภายในตัว NestJS (`@nestjs/schedule`)
+3. **ไม่มี SMS Gateway ภายนอก** (เช่น Twilio, LINE Notify)
+   - *เหตุผล:* การกู้รหัสผ่านใช้ลิงก์ทางอีเมลที่ส่งผ่าน SMTP เท่านั้น
 4. **ไม่มี Cloud Database / BaaS ภายนอก** (เช่น Firebase Firestore, Supabase, MongoDB Atlas)
    - *เหตุผล:* ข้อมูลทั้งหมดถูกจัดเก็บในฐานข้อมูล MySQL ที่รันผ่าน Docker หรือ SQLite ที่โฮสต์อยู่ภายในเครื่องเซิร์ฟเวอร์เอง
 
 ---
 
 ## 📌 วิธีการรันระบบเพื่อทดสอบในเครื่อง (Local Development)
+
+### ตั้งค่าระบบลืมรหัสผ่าน
+
+ระบบกู้รหัสผ่านรองรับบัญชีนักศึกษาที่มีอีเมล `@kmitl.ac.th` เท่านั้น บัญชี Admin ยังไม่มีอีเมลในข้อมูลบัญชี จึงต้องให้ผู้ดูแลระบบตั้งรหัสผ่าน Admin ผ่านกระบวนการจัดการระบบโดยตรง
+
+ตั้งค่า `FRONTEND_URL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` และ `SMTP_FROM` ให้กับ backend ตามตัวอย่างใน `backend/.env.example` โดย `FRONTEND_URL` ต้องเป็น origin ของเว็บที่ผู้ใช้เปิดได้จริง (เช่น `http://localhost:3000` เมื่อรันแยก หรือ `http://localhost:3001` เมื่อรันผ่าน Docker Compose) โปรดใช้ HTTPS สำหรับเว็บที่เปิดใช้งานจริง หากไม่ตั้งค่า SMTP API จะแจ้งว่าไม่พร้อมใช้งาน และจะไม่มีการส่งอีเมล
+
+เมื่อขอรีเซ็ต ระบบส่งลิงก์ไปยังอีเมลที่ลงทะเบียนไว้ ลิงก์มีอายุ 15 นาที ใช้ได้ครั้งเดียว จำกัดการขอซ้ำแต่ละบัญชีอย่างน้อย 60 วินาที และจำกัดคำขอจากแต่ละ IP ที่ 30 ครั้งต่อ 10 นาทีต่อ backend instance หลังตั้งรหัสใหม่ session เดิมของบัญชีนักศึกษาจะหมดสิทธิ์ใช้ API หากวาง backend หลัง reverse proxy ที่เชื่อถือได้และปิดการเข้าถึง backend โดยตรง ให้ตั้ง `TRUST_PROXY_HOPS` ตามจำนวน proxy hops เพื่อให้ระบบเห็น IP ผู้ใช้จริง และจำกัดคำขอที่ proxy เพิ่มสำหรับระบบที่เปิดใช้งานสาธารณะ
 
 สามารถเลือกรันระบบได้ 2 วิธี คือผ่าน Docker Compose (แนะนำ) หรือรันแยกส่วนด้วยตนเอง
 

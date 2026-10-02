@@ -1,17 +1,32 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Booking, BookingStatus } from '../bookings/entities/booking.entity';
 import { Court } from './entities/court.entity';
 
 @Injectable()
-export class CourtsService {
+export class CourtsService implements OnModuleInit {
   constructor(
     @InjectRepository(Court)
     private courtsRepository: Repository<Court>,
     @InjectRepository(Booking)
     private bookingsRepository: Repository<Booking>,
   ) {}
+
+  async onModuleInit() {
+    if (this.courtsRepository && typeof this.courtsRepository.count === 'function') {
+      const count = await this.courtsRepository.count();
+      if (count === 0) {
+        const initialCourts = [
+          { name: 'Court 1', is_active: true },
+          { name: 'Court 2', is_active: true },
+          { name: 'Court 3', is_active: true },
+          { name: 'Court 4', is_active: true },
+        ];
+        await this.courtsRepository.save(initialCourts);
+      }
+    }
+  }
 
   async findAll(): Promise<any[]> {
     const courts = await this.courtsRepository.find({

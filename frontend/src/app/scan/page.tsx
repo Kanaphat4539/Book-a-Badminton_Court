@@ -7,9 +7,12 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import { toast } from 'sonner';
 import MainLayout from '@/components/MainLayout';
 import SportBanner from '@/components/SportBanner';
+import { useLocale } from '@/components/locale-provider';
+import { localizeBackendError } from '@/lib/backend-error-messages.cjs';
 
 export default function ScanPage() {
   const router = useRouter();
+  const { t, locale } = useLocale();
   const [loading, setLoading] = useState(false);
     const [scannedResult, setScannedResult] = useState<string | null>(null);
     const [myBookings, setMyBookings] = useState<any[]>([]);
@@ -34,7 +37,7 @@ export default function ScanPage() {
         setMyBookings(response.data);
         myBookingsRef.current = response.data;
       } catch (err) {
-        toast.error('Failed to load your bookings');
+        toast.error(t('loadBookingsFailed'));
       }
     };
     fetchBookings();
@@ -49,16 +52,16 @@ export default function ScanPage() {
       const pendingBooking = myBookingsRef.current.find(b => b.status === 'PENDING' && b.court === courtId);
       
       if (!pendingBooking) {
-        throw new Error('You do not have a pending booking for this court right now.');
+        throw new Error(t('pendingCourtError'));
       }
 
       const bookingId = pendingBooking.booking_id || pendingBooking.id;
       await api.post(`/bookings/${bookingId}/check-in`, { courtId });
-      toast.success('Check-in successful! Enjoy your game.');
+      toast.success(t('checkinSuccessToast'));
       setCheckedInInfo({ courtId, date: pendingBooking.booking_date, end: pendingBooking.time_out });
       setLoading(false);
     } catch (err: any) {
-      toast.error(err.response?.data?.message || err.message || 'Check-in failed');
+      toast.error(err.message === t('pendingCourtError') ? t('pendingCourtError') : localizeBackendError(err.response?.data?.message, locale));
       setTimeout(() => {
         setScannedResult(null);
         setLoading(false);
@@ -82,7 +85,7 @@ export default function ScanPage() {
     const courtId = parseInt(decodedText, 10);
     
     if (isNaN(courtId)) {
-      toast.error('Invalid QR Code. Please scan a valid court QR.');
+      toast.error(t('invalidQr'));
       setScannedResult(null);
       isProcessingRef.current = false;
       return;
@@ -134,16 +137,16 @@ export default function ScanPage() {
                   title={
                     <span className="flex flex-wrap items-center gap-3">
                       <span className="material-symbols-outlined text-[32px] md:text-[40px]">qr_code_scanner</span>
-                      Scan &amp; Play
+                      {t('scanTitle')}
                     </span>
                   }
-                  subtitle={<span className="font-medium">Verify your court booking</span>}
+                  subtitle={<span className="font-medium">{t('verifyBooking')}</span>}
                   right={
                     <button
                       className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-[14px] md:text-[16px] transition-colors border border-white/30 shadow-sm"
                       onClick={() => router.push('/dashboard')}
                     >
-                      Cancel
+                      {t('cancelAction')}
                     </button>
                   }
                 />
@@ -157,20 +160,20 @@ export default function ScanPage() {
           
           <div className="mt-8 text-center text-on-surface-variant font-body-md text-[14px] transition-colors duration-300">
             {loading ? (
-              <p className="animate-pulse text-primary font-bold">Processing Check-in...</p>
+              <p className="animate-pulse text-primary font-bold">{t('processingCheckin')}</p>
             ) : (
               <div className="flex flex-col gap-2">
-                <p>Point your camera at the QR code on the court to check in.</p>
+                <p>{t('scanCameraHint')}</p>
                 <div className="bg-surface-container-high text-on-surface p-3 rounded-xl border border-outline-variant text-[13px] font-semibold mt-2">
                   <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">info</span>
-                  Note: You can only scan the QR code when it is exactly time for your booking.
+                  {t('scanTimeNote')}
                 </div>
               </div>
             )}
             {checkedInInfo && (
               <div className="mt-6 p-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-400/30 text-center">
                 <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">Court {checkedInInfo.courtId}</p>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400">{checkedInInfo.date} • {checkedInInfo.end?.slice(0,5)} — Playing now — countdown active</p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">{checkedInInfo.date} • {checkedInInfo.end?.slice(0,5)} — {t('courtPlaying')}</p>
               </div>
             )}
           </div>

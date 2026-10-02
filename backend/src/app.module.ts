@@ -18,13 +18,17 @@ import { Court } from './courts/entities/court.entity';
   imports: [
     TypeOrmModule.forRoot({
       type: (process.env.DB_TYPE as any) || 'mysql',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '3306'),
-      username: process.env.DB_USER || 'badminton_user',
-      password: process.env.DB_PASSWORD || 'password',
-      database: process.env.DB_NAME || 'badminton_db',
+      ...(process.env.DATABASE_URL || process.env.MYSQL_URL
+        ? { url: process.env.DATABASE_URL || process.env.MYSQL_URL }
+        : {
+            host: process.env.DB_HOST || process.env.MYSQLHOST || 'localhost',
+            port: parseInt(process.env.DB_PORT || process.env.MYSQLPORT || '3306', 10),
+            username: process.env.DB_USER || process.env.MYSQLUSER || 'badminton_user',
+            password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || 'password',
+            database: process.env.DB_NAME || process.env.MYSQLDATABASE || 'badminton_db',
+          }),
       entities: [Admin, Student, Booking, Court],
-      synchronize: true, // Use only in dev, not in production
+      synchronize: process.env.DB_SYNCHRONIZE === 'false' ? false : true,
       ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
     }),
     ScheduleModule.forRoot(),

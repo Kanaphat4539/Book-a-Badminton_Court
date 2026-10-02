@@ -5,9 +5,13 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './jwt.strategy';
+import { PasswordResetController } from './password-reset.controller';
+import { PasswordResetService } from './password-reset.service';
+import { ResetMailService } from './reset-mail.service';
+import { PasswordResetRateLimiter } from './password-reset-rate-limiter';
 
 export const jwtConstants = {
-  secret: 'DO_NOT_USE_THIS_VALUE_IN_PROD', // In real app, use .env
+  secret: process.env.JWT_SECRET || 'DO_NOT_USE_THIS_VALUE_IN_PROD',
 };
 
 @Module({
@@ -19,8 +23,8 @@ export const jwtConstants = {
       signOptions: { expiresIn: '1d' },
     }),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  controllers: [AuthController, PasswordResetController],
+  providers: [AuthService, JwtStrategy, PasswordResetService, ResetMailService, PasswordResetRateLimiter],
   exports: [AuthService],
 })
 export class AuthModule {}

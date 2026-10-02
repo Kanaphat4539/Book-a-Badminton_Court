@@ -1,0 +1,41 @@
+const landingMessages = {
+  th: {
+    menuNews:'ข่าวสาร', loginToConsole:'เข้าสู่ระบบคอนโซล', openMenu:'เปิดเมนู', heroConnect:'จองคอร์ทสำหรับประสบการณ์ที่สุดยอด', heroCta:'เริ่มใช้งาน', slideLabel:'ไปยังสไลด์',
+    serviceBookingBody:'จองและจัดการสนามแบบเรียลไทม์สำหรับนักศึกษาและบุคลากรของ KMITL', serviceMembershipBody:'เข้าสู่ระบบและเชื่อมต่อบัญชีแบดมินตัน KMITL ได้อย่างสะดวก', serviceCheckinBody:'เชื่อมโยงการจองกับสนามด้วยการสแกน QR Code',
+    newsTermsBody:'ข้อกำหนดการใช้งานสำหรับนักกีฬา KMITL จะปรับปรุงในวันที่ 27 กรกฎาคม 2569 กำหนดการอาจเปลี่ยนแปลงได้ โดยมีรายละเอียดเกี่ยวกับนโยบายการยกเลิกการจองสนาม', newsStatsBody:'เพิ่มแผงสถิติในแดชบอร์ดผู้ใช้ เพื่อดูชั่วโมงการเล่น สนามที่เข้าใช้บ่อย และข้อมูลอื่น ๆ', newsCourtCategory:'การจองสนาม', newsDashboardCategory:'อัปเดตแดชบอร์ด',
+    guideTitle:'วิธีใช้งาน', guideIntro:'คู่มือฉบับย่อสำหรับระบบจองสนามแบดมินตัน KMITL PCC',
+    guideStep1Title:'เข้าสู่ระบบ / สมัครสมาชิก', guideStep1Body:'จากหน้าแรก กด “เริ่มจอง” หรือ “เข้าสู่ระบบคอนโซล” จากเมนู แล้วเข้าสู่ระบบ หากยังไม่มีบัญชี ให้กด “สมัครสมาชิก” เพื่อลงทะเบียนก่อน',
+    guideStep2Title:'จองสนาม', guideStep2Body:'กดปุ่ม “จองสนาม” ในหน้าหลัก แล้วเลือกช่วงเวลาที่ต้องการ: ✅ จองได้ = ว่าง · ❌ จองไม่ได้ = มีผู้จองเต็มแล้ว',
+    guideStep3Title:'ยืนยันการจอง', guideStep3Body:'เมื่อเลือกช่วงเวลาแล้ว ระบบจะกลับไปยังหน้าหลัก ซึ่งจะแสดงสนามและเวลาที่จอง พร้อมปุ่ม “เช็กอิน”',
+    guideStep4Title:'เช็กอิน', guideStep4Body:'เมื่อถึงเวลาเล่น ให้ไปที่เคาน์เตอร์ กด “เช็กอิน” บนหน้าหลักและสแกน QR Code เพื่อยืนยันตัวตน จากนั้นก็พร้อมลงสนาม',
+    tipsTitle:'เคล็ดลับสำหรับผู้เล่น', tipsIntro:'อ่านเคล็ดลับล่าสุดเพื่อพัฒนาการเล่นของคุณ', tipsViewAll:'ดูทั้งหมด',
+    tipsWarmTitle:'วอร์มอัพให้พร้อมก่อนลงสนาม', tipsWarmBody:'การวอร์มอัพอย่างเหมาะสมช่วยลดความเสี่ยงการบาดเจ็บ บทความนี้แนะนำท่าง่าย ๆ 10 นาที เน้นการเคลื่อนไหวข้อเท้าและหัวไหล่ก่อนเริ่มตีลูก', tipsWarmCategory:'สุขภาพและความปลอดภัย',
+    tipsStringTitle:'เลือกความตึงเอ็นให้เหมาะสม', tipsStringBody:'ผู้เริ่มต้นหลายคนมักเลือกความตึงสูงเกินไป เรียนรู้ว่าทำไมความตึงต่ำลง (22–24 ปอนด์) อาจช่วยเพิ่มแรงตีและขยายจุดหวานสำหรับลูกเคลียร์และลูกตบ', tipsStringCategory:'อุปกรณ์',
+    rulesTitle:'กฎและข้อกำหนด', rulesIntro:'โปรดอ่านและปฏิบัติตามนโยบายการใช้สนาม เพื่อให้ทุกคนได้รับประสบการณ์ที่ดีและเป็นธรรม',
+    rulesBookingTitle:'สิทธิ์และระยะเวลาการจอง', rulesBookingLimit:'จำกัดการจอง: บัญชีผู้ใช้แต่ละบัญชีจองได้สูงสุดวันละ 1 ครั้ง ครั้งละ 1 ชั่วโมง', rulesAdvance:'การจองล่วงหน้า: จองได้ล่วงหน้าสูงสุด 1 วัน (หมายเหตุ: แนะนำให้จองล่วงหน้า 1–3 วันเพื่อป้องกันการจองแล้วไม่มาใช้)',
+    rulesAccessTitle:'การเข้าใช้และเช็กอิน', rulesIdentity:'ยืนยันตัวตน: ก่อนใช้สนาม ผู้ใช้ต้องกดปุ่ม “เช็กอิน” ในระบบและสแกน QR Code ที่เคาน์เตอร์', rulesLate:'มาสาย: ต้องเช็กอินภายใน 15 นาทีหลังเวลาเริ่มที่จองไว้ หากไม่เช็กอิน ระบบจะยกเลิกการจองโดยอัตโนมัติ และเปิดช่วงเวลาให้ผู้ใช้แบบ walk-in',
+    rulesCancelTitle:'การยกเลิกและบทลงโทษ', rulesCancellation:'นโยบายการยกเลิก: หากไม่สามารถมาใช้สนามได้ ต้องยกเลิกการจองผ่านระบบล่วงหน้าอย่างน้อย 1 ชั่วโมง', rulesPenalty:'บทลงโทษ (บัญชีดำ): หากไม่มาตามนัด 2 ครั้ง หรือไม่ยกเลิกภายในเวลาที่กำหนด จะถูกระงับสิทธิ์การจอง 7 วัน เพื่อให้ผู้ใช้ทุกคนเข้าถึงสนามได้อย่างเป็นธรรม',
+    rulesCourtTitle:'ข้อกำหนดการใช้สนาม', rulesFootwear:'ข้อกำหนดรองเท้า: ต้องสวมรองเท้ากีฬาแบดมินตันพื้น non-marking อย่างเคร่งครัด เพื่อป้องกันความเสียหายต่อพื้นสนาม',
+    footerDescription:'ระบบจองสนามแบดมินตันสำหรับสถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง เล่นเต็มที่ เล่นอย่างมีน้ำใจ', footerRules:'กฎและคู่มือ', footerBooking:'พื้นฐานการจอง', footerCancellation:'นโยบายการยกเลิก', footerEtiquette:'มารยาทการใช้สนาม', footerFees:'ค่าสมาชิก', footerContact:'ติดต่อเรา', footerSupport:'ศูนย์ช่วยเหลือ', footerIssue:'แจ้งปัญหา', footerTerms:'ข้อกำหนดและนโยบาย', footerTrademarks:'เกี่ยวกับเครื่องหมายการค้า'
+  },
+  en: {
+    menuNews:'News', loginToConsole:'Log in to Console', openMenu:'Open menu', heroConnect:'Book a court for an ultimate experience.', heroCta:"Let's Go", slideLabel:'Go to slide',
+    serviceBookingBody:'Enable real-time court reservations and management for KMITL students and staff.', serviceMembershipBody:'Let athletes easily log in and connect with their KMITL Badminton ID.', serviceCheckinBody:'Link your booking with the court via QR code scanning.',
+    newsTermsBody:'The Terms of Use (for KMITL Athletes) will be revised on July 27, 2026. The scheduled date and content may change. Details include court cancellation policies...', newsStatsBody:"We have added a new statistics panel to the user dashboard where you can see how many hours you've played, your most frequently visited courts, and more...", newsCourtCategory:'Court Booking', newsDashboardCategory:'Dashboard Update',
+    guideTitle:'How to Use', guideIntro:'Your quick guide to the KMITL PCC Badminton Booking System',
+    guideStep1Title:'Log In / Sign Up', guideStep1Body:'On the homepage, click “Start Booking” or “Log in to Console” from the menu. Log in with your account. If you do not have one, click “Sign up” to register first.',
+    guideStep2Title:'Book a Court', guideStep2Body:'Click “Book Court” on the Home page and select your preferred time slot: ✅ Available = open · ❌ Unavailable = fully booked',
+    guideStep3Title:'Confirm Booking', guideStep3Body:'After you select a slot, the system returns you to the Home page, where your booked court and time appear with a “Check-in” button.',
+    guideStep4Title:'Check-in', guideStep4Body:'When your session begins, go to the counter. Click “Check-in” on your Home page and scan the QR Code to verify your identity. You are ready to play!',
+    tipsTitle:'Tips for Players', tipsIntro:'Check the latest tips to improve your game', tipsViewAll:'View all',
+    tipsWarmTitle:'Proper warm-up routine before entering the court', tipsWarmBody:'A proper warm-up can reduce injury risk. This article introduces a handy 10-minute routine focused on ankle and shoulder mobility before you start playing.', tipsWarmCategory:'Health & Safety',
+    tipsStringTitle:'Choosing the right string tension', tipsStringBody:'Many beginners make the mistake of using too high a tension. Learn why lower tension (22–24 lbs) might give you more power and a larger sweet spot for clears and smashes.', tipsStringCategory:'Equipment',
+    rulesTitle:'Rules & Regulations', rulesIntro:'Please read and follow our court policies to ensure a fair and great experience for everyone.',
+    rulesBookingTitle:'Booking Privileges & Time Limits', rulesBookingLimit:'Booking Limits: Each user account is allowed a maximum of 1 booking per day, limited to 1 hour per session.', rulesAdvance:'Advance Booking: Bookings can be made up to 1 day in advance (Note: 1–3 days recommended to prevent abandoned bookings).',
+    rulesAccessTitle:'Access & Check-In', rulesIdentity:'Identity Verification: Users must click the “Check-in” button in the system and scan the QR Code at the counter before using the court.', rulesLate:'Late Arrival: Users must check in within 15 minutes of the scheduled start time. Failure to do so will result in an automatic cancellation (forfeiture), and the slot will be given to walk-in customers.',
+    rulesCancelTitle:'Cancellations & Penalties', rulesCancellation:'Cancellation Policy: If you are unable to attend, you must cancel your booking via the system at least 1 hour in advance.', rulesPenalty:'Penalties (Blacklist): Accumulating 2 “No-shows” or failing to cancel within the required timeframe will result in a 7-day suspension of your booking privileges (to ensure fair access for all users).',
+    rulesCourtTitle:'Court Regulations', rulesFootwear:'Footwear Requirement: Users must strictly wear non-marking sports shoes designed for badminton to prevent damage to the court surface.',
+    footerDescription:"The premier badminton facility booking system for King Mongkut's Institute of Technology Ladkrabang. Play hard, play fair.", footerRules:'Rules & Guides', footerBooking:'Booking Basics', footerCancellation:'Cancellation Policy', footerEtiquette:'Court Etiquette', footerFees:'Membership Fees', footerContact:'Contact', footerSupport:'Support Center', footerIssue:'Report an Issue', footerTerms:'Terms and Policies', footerTrademarks:'About trademarks'
+  }
+};
+module.exports = { landingMessages };

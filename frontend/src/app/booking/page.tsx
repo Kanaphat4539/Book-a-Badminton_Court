@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import MainLayout from '@/components/MainLayout';
+import { useLocale } from '@/components/locale-provider';
 import SportBanner from '@/components/SportBanner';
+import { overviewCopy } from '@/lib/booking-overview-copy.cjs';
 import { createTodayBookingDate, isBookingSlotSelectable, type BookingDate } from '@/lib/booking-display';
 
 type CourtBooking = {
@@ -23,11 +25,14 @@ type Court = {
 };
 
 export default function BookingPage() {
+  const { locale } = useLocale();
+  const c = overviewCopy[locale];
   const router = useRouter();
 
   // States
   const [showRulesModal, setShowRulesModal] = useState(true);
-  const [bookingDate] = useState<BookingDate>(() => createTodayBookingDate(new Date()));
+  // Recomputed on language change so the weekday/month names follow the selected locale.
+  const bookingDate = useMemo<BookingDate>(() => createTodayBookingDate(new Date(), locale), [locale]);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [courts, setCourts] = useState<Court[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,7 +78,7 @@ export default function BookingPage() {
         setCourts(sortedCourts);
       })
       .catch(() => {
-        if (!ignoreResponse) toast.error('Failed to load courts');
+        if (!ignoreResponse) toast.error(c.loadError);
       })
       .finally(() => {
         if (!ignoreResponse) setLoading(false);
@@ -99,18 +104,18 @@ export default function BookingPage() {
 
   const handleNext = () => {
     if (!selectedTime) {
-      toast.error('กรุณาเลือกรอบเวลาก่อนทำรายการ');
+      toast.error(c.selectTimeError);
       return;
     }
     if (isTimeInPast(selectedTime)) {
-      toast.error('รอบนี้หมดเวลาแล้ว กรุณาเลือกรอบใหม่');
+      toast.error(c.slotExpired);
       return;
     }
     router.push(`/booking/select-court?date=${selectedDate}&time=${selectedTime}`);
   };
 
   const displayDateStr = bookingDate && selectedTime
-    ? `${bookingDate.day} ${bookingDate.num} ${bookingDate.month} • ${selectedTime} - ${String(parseInt(selectedTime.split(':')[0]) + 1).padStart(2, '0')}:00 น.`
+    ? `${bookingDate.day} ${bookingDate.num} ${bookingDate.month} • ${selectedTime} - ${String(parseInt(selectedTime.split(':')[0]) + 1).padStart(2, '0')}:00${locale === 'th' ? c.timeUnit : ''}`
     : '';
 
   // Calculate available courts for selected time
@@ -133,14 +138,11 @@ export default function BookingPage() {
 
   // Thai month names
   const thaiMonths = [
-    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    '', '', '', '', '', '', '', '', '', '', '', ''
   ];
-  const thaiWeekdays = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
-  const thaiWeekdaysFull = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
   // Buddhist year
-  const buddhistYear = currentYear + 543;
+  const buddhistYear = currentYear + (locale === 'th' ? 543 : 0);
 
   // Format time slot display
   const formatTimeSlot = (time: string) => {
@@ -170,12 +172,12 @@ export default function BookingPage() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/30 bg-surface-container-lowest">
               <h2 className="font-headline-sm text-on-surface text-lg md:text-xl font-bold flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-[24px]">gavel</span>
-                กฎและกติกาการใช้สนาม
+                {c.rulesTitle}
               </h2>
               <button
                 onClick={handleCloseRules}
                 className="w-8 h-8 rounded-full flex items-center justify-center bg-surface-container hover:bg-surface-container-highest text-on-surface-variant transition-colors"
-                title="ปิดหน้าต่างเพื่อดำเนินการจอง"
+                title={c.closeRules}
               >
                 <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
@@ -184,30 +186,30 @@ export default function BookingPage() {
             {/* Content */}
             <div className="p-6 overflow-y-auto flex-1 font-body-md text-on-surface-variant text-sm md:text-base space-y-4">
               <div className="space-y-2">
-                <h3 className="font-bold text-on-surface">1. การแต่งกาย</h3>
+                <h3 className="font-bold text-on-surface">1. {c.attire}</h3>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li>ต้องสวมรองเท้าแบดมินตันพื้นยางดิบ (Non-marking) เท่านั้น</li>
-                  <li>สวมใส่ชุดกีฬาที่เหมาะสมสำหรับการออกกำลังกาย</li>
+                  <li>{c.shoes}</li>
+                  <li>{c.sportswear}</li>
                 </ul>
               </div>
               <div className="space-y-2">
-                <h3 className="font-bold text-on-surface">2. การจองและเช็คอิน</h3>
+                <h3 className="font-bold text-on-surface">2. {c.bookingCheckin}</h3>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li>โควตา 1 ครั้ง/วัน แบบวันต่อวัน (ไม่มีจองข้ามวัน)</li>
-                  <li>สแกน QR Code หน้าสนามเพื่อเช็คอิน</li>
-                  <li>หากยกเลิกทันเวลา (ก่อน 15 นาทีของเวลาที่จอง) จะสามารถจองใหม่ในวันเดิมได้</li>
+                  <li>{c.quotaRule}</li>
+                  <li>{c.qrCheckin}</li>
+                  <li>{c.cancelRule}</li>
                 </ul>
               </div>
               <div className="space-y-2">
-                <h3 className="font-bold text-on-surface">3. กฎและบทลงโทษ</h3>
+                <h3 className="font-bold text-on-surface">3. {c.penalties}</h3>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li>มาสายเกิน 15 นาที ระบบจะยกเลิกอัตโนมัติและนับความผิด 1 ครั้ง</li>
-                  <li>ยกเลิกด้วยตนเองหลังเวลาผ่านไป 15 นาที จะถูกถือว่าผิดกฎ 1 ครั้ง</li>
-                  <li>หากสะสมความผิดครบ 2 ครั้ง ระบบจะระงับการจอง (แบน) 24 ชั่วโมง</li>
+                  <li>{c.lateRule}</li>
+                  <li>{c.cancelLateRule}</li>
+                  <li>{c.banRule}</li>
                 </ul>
               </div>
               <p className="text-primary text-xs mt-4 p-3 bg-primary-container/30 rounded-xl">
-                * กรุณากดเครื่องหมายกากบาท (X) ด้านบนขวาเพื่อยอมรับเงื่อนไขและดำเนินการจอง
+                {c.acceptRules}
               </p>
             </div>
           </div>
@@ -218,21 +220,21 @@ export default function BookingPage() {
         <div className="flex flex-col w-full pb-8">
           {/* Campus Sports Arena Context Card (Edge-to-edge banner) */}
           <SportBanner
-            eyebrow="เปิดให้บริการปกติ"
-            title="จองคอร์ทแบดมินตัน"
+            eyebrow={c.operational}
+                        title={c.bookTitle}
             subtitle={
               <>
                 <span className="material-symbols-outlined text-[18px] text-white shrink-0 drop-shadow-sm">stadium</span>
-                <span className="truncate font-medium">อาคารยิมเนเซียม 1 (Gymnasium 1) • วิทยาเขตลาดกระบัง</span>
+                <span className="truncate font-medium">{c.venue}</span>
               </>
             }
             right={
               <div className="flex flex-col items-start gap-2">
                 <div className="px-4 py-2.5 rounded-xl bg-white shadow-lg flex items-center gap-2">
                   <span className="material-symbols-outlined text-[18px] text-[#F26522]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-                  <span className="font-label-sm text-[12px] md:text-label-sm text-[#F26522] font-black uppercase tracking-wider">โควตา นศ.</span>
+                  <span className="font-label-sm text-[12px] md:text-label-sm text-[#F26522] font-black uppercase tracking-wider">{c.studentQuota}</span>
                 </div>
-                <span className="font-label-sm text-[12px] md:text-label-sm text-white font-bold bg-black/25 px-3 py-1 rounded-lg backdrop-blur-sm">คงเหลือ 1 ชม./วัน</span>
+                <span className="font-label-sm text-[12px] md:text-label-sm text-white font-bold bg-black/25 px-3 py-1 rounded-lg backdrop-blur-sm">{c.remaining}</span>
               </div>
             }
           />
@@ -247,11 +249,11 @@ export default function BookingPage() {
                     <div className="flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
                       <h2 className="font-headline-sm text-base md:text-headline-sm text-on-surface">
-                        ปฏิทินการจอง <span className="font-body-sm text-[13px] text-on-surface-variant font-medium">(Calendar)</span>
+                        {c.calendar} <span className="font-body-sm text-[13px] text-on-surface-variant font-medium">({c.calendarEnglish})</span>
                       </h2>
                     </div>
                     <span className="ml-auto rounded-full bg-surface-container-high px-2.5 py-1 font-label-sm text-[10px] text-on-surface md:font-label-md md:text-label-sm">
-                      เฉพาะวันนี้เท่านั้นที่จองได้
+                      {c.todayOnly}
                     </span>
                   </div>
 
@@ -262,11 +264,11 @@ export default function BookingPage() {
                       <div className="absolute inset-0 [background:radial-gradient(circle_at_top_right,rgba(255,255,255,0.22),transparent_55%),radial-gradient(circle_at_bottom_left,rgba(0,0,0,0.18),transparent_45%)] pointer-events-none"></div>
                       <div className="relative flex flex-col items-center text-center select-none px-4 py-4 sm:py-5">
                         <span className="text-[22px] sm:text-[34px] font-extrabold text-white leading-none drop-shadow-sm tracking-tight">
-                          {thaiMonths[currentMonth]}
+                          {new Intl.DateTimeFormat(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', timeZone: 'Asia/Bangkok' }).format(new Date(currentYear, currentMonth, 1))}
                         </span>
                         <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1 text-[11px] font-bold text-white/90 uppercase tracking-widest backdrop-blur-sm">
                           <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-                          พ.ศ. {buddhistYear}
+                          {c.yearPrefix} {buddhistYear}
                         </span>
                       </div>
                     </div>
@@ -274,7 +276,7 @@ export default function BookingPage() {
                     {/* Day headers */}
                     <div className="pt-3 sm:pt-4 pb-1.5 px-2.5 sm:px-4">
                       <div className="grid grid-cols-7 text-center">
-                        {thaiWeekdays.map((day, i) => (
+                        {Array.from({ length: 7 }, (_, i) => new Intl.DateTimeFormat(locale === 'th' ? 'th-TH' : 'en-US', { weekday: 'short', timeZone: 'Asia/Bangkok' }).format(new Date(Date.UTC(2024, 0, 7 + i)))).map((day, i) => (
                           <div key={day} className={`font-label-md text-[12px] sm:text-[13px] font-bold ${i === 0 || i === 6 ? 'text-primary' : 'text-on-surface-variant'}`}>
                             {day}
                           </div>
@@ -303,12 +305,12 @@ export default function BookingPage() {
                               <button
                                 key={day}
                                 type="button"
-                                aria-label={`วันที่ ${day} วันนี้`}
+                                aria-label={`${c.todayAria} ${day} ${c.today}`}
                                 className="relative flex flex-col items-center justify-center rounded-xl sm:rounded-2xl py-2 sm:py-3 bg-gradient-to-b from-primary to-[#8A2B00] text-white shadow-[0_8px_20px_-6px_rgba(171,53,0,0.65)] ring-2 ring-primary/40 scale-[1.04] z-10 cursor-pointer transition-transform hover:scale-[1.07]"
                               >
                                 <span className="text-[15px] sm:text-[17px] font-extrabold leading-none select-none">{day}</span>
                                 <span className="mt-1 text-[8px] sm:text-[10px] font-bold text-white/95 uppercase tracking-wide select-none">
-                                  วันนี้ {thaiWeekdaysFull[dow]}
+                                  {c.today} {new Intl.DateTimeFormat(locale === 'th' ? 'th-TH' : 'en-US', { weekday: 'long' }).format(cellDate)}
                                 </span>
                               </button>
                             );
@@ -319,7 +321,7 @@ export default function BookingPage() {
                               key={day}
                               type="button"
                               disabled
-                              aria-label={`วันที่ ${day}`}
+                              aria-label={`${c.todayAria} ${day}`}
                               className={`relative flex flex-col items-center justify-center rounded-xl sm:rounded-2xl py-2 sm:py-3 select-none cursor-not-allowed transition-colors ${
                                 isPast
                                   ? 'bg-surface-container-low text-on-surface-variant'
@@ -339,15 +341,15 @@ export default function BookingPage() {
                     <div className="px-4 py-3 border-t border-outline-variant/30 bg-surface-container-low/50 flex flex-wrap items-center justify-center gap-3 md:gap-4 text-xs md:text-sm">
                       <div className="flex items-center gap-1.5">
                         <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-b from-primary to-[#8A2B00] shadow-sm"></div>
-                        <span className="font-label-sm text-on-surface-variant">วันที่เลือกปัจจุบัน</span>
+                        <span className="font-label-sm text-on-surface-variant">{c.selectedDay}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <div className="w-2.5 h-2.5 rounded-full bg-surface-container-high opacity-60"></div>
-                        <span className="font-label-sm text-on-surface-variant">ไม่สามารถเลือกได้</span>
+                        <span className="font-label-sm text-on-surface-variant">{c.unselectable}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <div className="w-1.5 h-1.5 rounded-full bg-primary/40"></div>
-                        <span className="font-label-sm text-on-surface-variant">วันหยุดสุดสัปดาห์</span>
+                        <span className="font-label-sm text-on-surface-variant">{c.weekend}</span>
                       </div>
                     </div>
                   </div>
@@ -362,7 +364,7 @@ export default function BookingPage() {
                     <div className="bg-gradient-to-r from-primary-container to-primary px-6 py-4">
                       <div className="flex items-center gap-2 text-white font-bold text-sm md:text-base">
                         <span className="material-symbols-outlined text-[20px]">event_note</span>
-                        รอบที่เลือก
+                        {c.selectedRound}
                       </div>
                     </div>
 
@@ -375,10 +377,10 @@ export default function BookingPage() {
                           </div>
                           <div>
                             <div className="font-headline-sm text-on-surface text-base md:text-lg font-bold">
-                              {bookingDate.day}ที่ {bookingDate.num} {bookingDate.month} พ.ศ. {buddhistYear}
+                              {new Intl.DateTimeFormat(locale === 'th' ? 'th-TH-u-ca-buddhist' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Bangkok' }).format(new Date(`${selectedDate}T12:00:00+07:00`))}
                             </div>
                             <div className="text-on-surface-variant text-sm mt-0.5">
-                              เปิดให้บริการ {timeSlots.length} ช่วงเวลา
+                              {c.slotsAvailable.replace('{count}', String(timeSlots.length))}
                             </div>
                           </div>
                         </div>
@@ -392,7 +394,7 @@ export default function BookingPage() {
                     <div className="p-5">
                       <h3 className="font-headline-sm text-on-surface text-sm md:text-base font-bold mb-3 flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-primary text-[18px]">schedule</span>
-                        เลือกรอบเวลาการจอง
+                        {c.chooseTime}
                       </h3>
 
                       {loading ? (
@@ -413,7 +415,7 @@ export default function BookingPage() {
                               return (
                                 <div key={time} className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-surface-container-high/60 text-on-surface-variant/40 line-through cursor-not-allowed select-none">
                                   <span className="font-label-md text-sm md:text-base">{formatTimeSlot(time)}</span>
-                                  <span className="font-label-sm text-xs text-on-surface-variant/60">จองเต็มแล้ว</span>
+                                  <span className="font-label-sm text-xs text-on-surface-variant/60">{c.full}</span>
                                 </div>
                               );
                             }
@@ -435,7 +437,7 @@ export default function BookingPage() {
                                 <span className="flex items-center gap-1.5 shrink-0">
                                   <span className="w-2 h-2 rounded-full bg-secondary"></span>
                                   <span className="font-label-sm text-xs md:text-sm font-medium">
-                                    {availableCount > 0 ? `ว่าง ${availableCount} คอร์ท` : 'จองเต็ม'}
+                                    {availableCount > 0 ? c.available.replace('{count}', String(availableCount)) : c.fullyBooked}
                                   </span>
                                 </span>
                               </button>
@@ -449,12 +451,12 @@ export default function BookingPage() {
                     <div className="px-5 pb-5 pt-0 border-t border-outline-variant/30">
                       <div className="space-y-3 pt-4">
                         <div className="flex items-center justify-between py-2">
-                          <span className="font-body-sm text-on-surface-variant">ประเภทการเข้ารับบริการ</span>
-                          <span className="font-label-md text-on-surface font-semibold">สนามแบดมินตัน</span>
+                          <span className="font-body-sm text-on-surface-variant">{c.serviceType}</span>
+                          <span className="font-label-md text-on-surface font-semibold">{c.badminton}</span>
                         </div>
                         <div className="flex items-center justify-between py-2">
-                          <span className="font-body-sm text-on-surface-variant">ระยะเวลา</span>
-                          <span className="font-label-md text-on-surface font-semibold">60 นาที / รอบ</span>
+                          <span className="font-body-sm text-on-surface-variant">{c.duration}</span>
+                          <span className="font-label-md text-on-surface font-semibold">{c.durationValue}</span>
                         </div>
                       </div>
 
@@ -465,13 +467,13 @@ export default function BookingPage() {
                         disabled={!selectedTime}
                         className="w-full mt-4 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-primary-container to-primary text-on-primary font-label-lg text-label-lg shadow-[0_6px_20px_rgba(255,94,30,0.35)] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                       >
-                        <span>ดำเนินการจองต่อ</span>
+                        <span>{c.continue}</span>
                         <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
                       </button>
 
                       {/* Note */}
                       <p className="text-center text-[11px] text-on-surface-variant/70 mt-3">
-                        ระบบจะจองสล็อตเวลาที่คุณเลือกเป็นเวลา 10 นาทีเพื่อช่วยจองให้สำเร็จ
+                        {c.holdNote}
                       </p>
 
                       {/* Info Box */}
@@ -480,8 +482,8 @@ export default function BookingPage() {
                           <span className="material-symbols-outlined text-warning text-[20px]">info</span>
                         </div>
                         <div className="flex-1 text-[12px] text-warning-container leading-relaxed">
-                          <div className="font-bold text-warning-container mb-1">เงื่อนไขการจอง</div>
-                          โควตา 1 สิทธิ์/วัน • เช็คอินหน้าสนามด้วย QR Code • ยกเลิกสาย/ขาด ครบ 2 ครั้ง แบน 24 ชม. • จองได้เฉพาะวันทำการปกติ
+                          <div className="font-bold text-warning-container mb-1">{c.conditions}</div>
+                          {c.conditionsText}
                         </div>
                       </div>
                     </div>

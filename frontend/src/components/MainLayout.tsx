@@ -6,8 +6,12 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { cn } from '@/lib/utils';
 import api, { isSessionExpiredError } from '@/lib/api';
 import { BanPopup } from '@/components/BanPopup';
+import { useLocale } from '@/components/locale-provider';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
-const GlobalFooter = () => (
+const GlobalFooter = () => {
+  const { t } = useLocale();
+  return (
   <footer className="hidden md:block w-full mt-auto bg-surface text-on-surface overflow-hidden relative border-t border-surface-container-high">
     <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full border-30 border-primary/10 pointer-events-none"></div>
     <div className="mx-auto max-w-7xl px-6 py-12 md:px-10">
@@ -27,7 +31,7 @@ const GlobalFooter = () => (
             </div>
           </div>
           <p className="max-w-xs text-sm leading-relaxed text-on-surface-variant mb-8">
-            A smarter way to manage courts, schedules, and every match that matters.
+            {t('footerDescription')}
           </p>
           <div className="flex gap-3">
             <button className="grid w-10 h-10 place-items-center rounded-xl bg-surface-container-high text-primary transition-all hover:bg-primary hover:text-on-primary hover:scale-105">
@@ -43,37 +47,37 @@ const GlobalFooter = () => (
         </div>
 
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-6">Platform</h3>
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-6">{t('footerPlatform')}</h3>
           <div className="flex flex-col gap-4 text-sm text-on-surface-variant">
-            <a className="hover:text-primary transition-colors" href="/dashboard">Dashboard</a>
-            <a className="hover:text-primary transition-colors" href="/booking">Bookings</a>
-            <a className="hover:text-primary transition-colors" href="#">Court Schedule</a>
+            <a className="hover:text-primary transition-colors" href="/dashboard">{t('home')}</a>
+            <a className="hover:text-primary transition-colors" href="/booking">{t('footerBookings')}</a>
+            <a className="hover:text-primary transition-colors" href="#">{t('footerSchedule')}</a>
           </div>
         </div>
 
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-6">Support</h3>
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-6">{t('footerSupport')}</h3>
           <div className="flex flex-col gap-4 text-sm text-on-surface-variant">
             <a className="inline-flex items-center gap-2 hover:text-primary transition-colors" href="#">
               <span className="material-symbols-outlined text-[16px]">call</span> 02-329-8000
             </a>
             <a className="inline-flex items-center gap-2 hover:text-primary transition-colors" href="#">
-              <span className="material-symbols-outlined text-[16px]">open_in_new</span> Help Center
+              <span className="material-symbols-outlined text-[16px]">open_in_new</span> {t('footerHelp')}
             </a>
-            <span className="text-on-surface-variant/60">Mon – Fri, 08:00 – 18:00</span>
+            <span className="text-on-surface-variant/60">{t('footerHours')}</span>
           </div>
         </div>
 
         <div className="md:col-span-4 lg:col-span-1">
           <div className="rounded-2xl border border-surface-container-high bg-surface-container-low p-5">
             <div className="flex items-center gap-2 text-sm font-bold text-on-surface mb-2">
-              <span className="material-symbols-outlined text-[18px] text-primary">bolt</span> System Status
+              <span className="material-symbols-outlined text-[18px] text-primary">bolt</span> {t('footerStatus')}
             </div>
             <p className="text-xs leading-relaxed text-on-surface-variant mb-4">
-              All booking services are operating normally.
+              {t('servicesNormal')}
             </p>
             <div className="flex items-center gap-2 text-xs font-bold text-secondary">
-              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span> Operational
+              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span> {t('operational')}
             </div>
           </div>
         </div>
@@ -85,7 +89,8 @@ const GlobalFooter = () => (
       </div>
     </div>
   </footer>
-);
+  );
+};
 
 type MainLayoutProps = {
   children: React.ReactNode;
@@ -93,6 +98,7 @@ type MainLayoutProps = {
 };
 
 export default function MainLayout({ children, width = 'compact' }: MainLayoutProps) {
+  const { locale, setLocale, t } = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -208,9 +214,10 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <LanguageToggle />
             <div className="relative">
               <button 
-                aria-label="Notifications" 
+                aria-label={t('notifications')}
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                 className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface active:bg-surface-container-high transition-colors relative"
               >
@@ -224,7 +231,7 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
               {isNotificationsOpen && (
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-surface rounded-xl shadow-lg border border-surface-container-high overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-4 border-b border-surface-container-high flex justify-between items-center bg-surface-container-lowest">
-                    <h3 className="font-headline-sm text-on-surface">การแจ้งเตือน {userRole === 'ADMIN' ? '(Admin)' : ''}</h3>
+                    <h3 className="font-headline-sm text-on-surface">{t('notifications')} {userRole === 'ADMIN' ? '(Admin)' : ''}</h3>
                     <button onClick={() => setIsNotificationsOpen(false)} className="text-on-surface-variant hover:text-on-surface">
                       <span className="material-symbols-outlined text-[20px]">close</span>
                     </button>
@@ -236,7 +243,7 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
                           return (
                             <div key={`sys-${index}`} className="p-4 border-b border-surface-container-low hover:bg-surface-container-lowest transition-colors border-l-4 border-l-secondary">
                               <div className="flex justify-between items-start">
-                                <p className="font-label-lg text-on-surface">📢 ประกาศจากระบบ</p>
+                                <p className="font-label-lg text-on-surface">📢 {t('notificationSystem')}</p>
                               </div>
                               <p className="text-body-sm text-on-surface-variant mt-1">{notif.message}</p>
                             </div>
@@ -247,19 +254,19 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
                             <div className="flex justify-between items-start">
                               <p className="font-label-lg text-on-surface">
                                 {userRole === 'ADMIN' 
-                                  ? (notif.status === 'CANCELLED' ? '🔴 ยกเลิกการจอง' : '🟢 การจองใหม่')
-                                  : (notif.status === 'CANCELLED' ? '🔴 ยกเลิกการจอง' : notif.status === 'CHECKED_IN' ? '🟢 เช็คอินสำเร็จ' : notif.status === 'COMPLETED' ? '🟢 การจองเสร็จสิ้น' : '🟢 จองคอร์ทสำเร็จ')}
+                                  ? (notif.status === 'CANCELLED' ? `🔴 ${t('notificationBookingCancelled')}` : `🟢 ${t('notificationNewBooking')}`)
+                                  : (notif.status === 'CANCELLED' ? `🔴 ${t('notificationBookingCancelled')}` : notif.status === 'CHECKED_IN' ? `🟢 ${t('notificationCheckin')}` : notif.status === 'COMPLETED' ? `🟢 ${t('notificationComplete')}` : `🟢 ${t('notificationSuccess')}`)}
                               </p>
                               <span className="text-[10px] text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full">
                                 ID: {notif.booking_id}
                               </span>
                             </div>
                             <p className="text-body-sm text-on-surface-variant mt-1">
-                              คอร์ท {notif.court} | วันที่ {notif.booking_date} | {notif.time_in}-{notif.time_out}
+                              {t('notificationCourt')} {notif.court} | {t('notificationDate')} {notif.booking_date} | {notif.time_in}-{notif.time_out}
                             </p>
                             {userRole === 'ADMIN' && (
                               <p className="text-label-sm text-primary mt-1">
-                                โดย รหัสนักศึกษา: {notif.stu_id} {notif.student ? `(${notif.student.first_name} ${notif.student.last_name})` : ''}
+                                {t('notificationByStudent')} {notif.stu_id} {notif.student ? `(${notif.student.first_name} ${notif.student.last_name})` : ''}
                               </p>
                             )}
                           </div>
@@ -268,14 +275,14 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
                     ) : (
                       <div className="p-8 text-center text-on-surface-variant">
                         <span className="material-symbols-outlined text-[48px] opacity-20 mb-2">notifications_off</span>
-                        <p>ไม่มีการแจ้งเตือน</p>
+                        <p>{t('noNotifications')}</p>
                       </div>
                     )}
                   </div>
                 </div>
               )}
             </div>
-            <button aria-label="Menu" onClick={() => setIsSidebarOpen(true)} className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-sm active:scale-95 transition-transform">
+            <button aria-label={t('menu')} onClick={() => setIsSidebarOpen(true)} className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-sm active:scale-95 transition-transform">
               <span className="material-symbols-outlined text-on-primary text-[20px]">menu</span>
             </button>
           </div>
@@ -299,19 +306,19 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
           <div className={cn('h-20 px-gutter-sm flex items-center justify-around mx-auto', containerWidth)}>
             <button onClick={() => router.push('/dashboard')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/dashboard') ? { fontVariationSettings: "'FILL' 1" } : {}}>home</span>
-              <span className="font-label-sm text-[10px] md:text-label-sm">หน้าหลัก</span>
+              <span className="font-label-sm text-[10px] md:text-label-sm">{t('home')}</span>
             </button>
             <button onClick={() => router.push('/booking')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/booking') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/booking') ? { fontVariationSettings: "'FILL' 1" } : {}}>calendar_month</span>
-              <span className="font-label-sm text-[10px] md:text-label-sm">จองคอร์ท</span>
+              <span className="font-label-sm text-[10px] md:text-label-sm">{t('booking')}</span>
             </button>
             <button onClick={() => router.push('/scan')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/scan') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/scan') ? { fontVariationSettings: "'FILL' 1" } : {}}>qr_code_scanner</span>
-              <span className="font-label-sm text-[10px] md:text-label-sm">สแกนเข้าสนาม</span>
+              <span className="font-label-sm text-[10px] md:text-label-sm">{t('scan')}</span>
             </button>
             <button onClick={() => router.push('/news')} className={`flex flex-col items-center justify-center min-w-14 h-12 gap-1 transition-colors cursor-pointer ${isActive('/news') ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
               <span className="material-symbols-outlined text-[24px]" style={isActive('/news') ? { fontVariationSettings: "'FILL' 1" } : {}}>newspaper</span>
-              <span className="font-label-sm text-[10px] md:text-label-sm">ข่าวสาร</span>
+              <span className="font-label-sm text-[10px] md:text-label-sm">{t('news')}</span>
             </button>
           </div>
         </nav>
@@ -323,31 +330,31 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
           <div className="absolute inset-0 bg-on-background/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
           <div className="relative w-70 bg-surface h-full shadow-2xl flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
             <div className="flex justify-between items-center mb-8">
-              <span className="font-headline-sm text-on-surface font-bold">KMITL Menu</span>
+              <span className="font-headline-sm text-on-surface font-bold">{t('menu')}</span>
               <button onClick={() => setIsSidebarOpen(false)} className="text-on-surface-variant hover:text-on-surface">
                 <span className="material-symbols-outlined text-[28px]">close</span>
               </button>
             </div>
             <nav className="flex flex-col gap-6">
               <div className="flex flex-col gap-4">
-                <button onClick={() => { setIsSidebarOpen(false); router.push('/dashboard'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">หน้าหลัก (Home)</button>
+                <button onClick={() => { setIsSidebarOpen(false); router.push('/dashboard'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">{t('home')}</button>
                 {userRole !== 'ADMIN' && (
                   <>
-                    <button onClick={() => { setIsSidebarOpen(false); router.push('/booking'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">จองคอร์ท (Book Courts)</button>
-                    <button onClick={() => { setIsSidebarOpen(false); router.push('/scan'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">สแกนคิวอาร์ (Scan QR)</button>
+                    <button onClick={() => { setIsSidebarOpen(false); router.push('/booking'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">{t('booking')}</button>
+                    <button onClick={() => { setIsSidebarOpen(false); router.push('/scan'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">{t('scan')}</button>
                   </>
                 )}
-                <button onClick={() => { setIsSidebarOpen(false); router.push('/news'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">ข่าวสาร (News)</button>
+                <button onClick={() => { setIsSidebarOpen(false); router.push('/news'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">{t('news')}</button>
                 {userRole === 'ADMIN' && (
-                  <button onClick={() => { setIsSidebarOpen(false); router.push('/admin/users'); }} className="text-left font-label-lg text-secondary hover:text-primary border-b border-surface-container-high pb-2">จัดการผู้ใช้ (Manage Users)</button>
+                  <button onClick={() => { setIsSidebarOpen(false); router.push('/admin/users'); }} className="text-left font-label-lg text-secondary hover:text-primary border-b border-surface-container-high pb-2">{t('users')}</button>
                 )}
               </div>
               
               <div>
-                <h3 className="font-label-lg text-on-surface-variant mb-3">ตั้งค่า (Settings)</h3>
+                <h3 className="font-label-lg text-on-surface-variant mb-3">{t('settings')}</h3>
                 <div className="flex flex-col gap-3 pl-4 border-l-2 border-surface-container-high">
                   <div className="flex items-center justify-between text-label-md text-on-surface">
-                    <span>โหมดมืด (Dark Mode)</span>
+                    <span>{t('dark')}</span>
                     <ThemeToggle />
                   </div>
                 </div>
@@ -356,7 +363,7 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
               <div className="mt-auto pt-6">
                 <button onClick={handleLogout} className="w-full bg-error-container text-on-error-container font-label-lg py-3 rounded-xl flex items-center justify-center gap-2 hover:opacity-80 transition-opacity">
                   <span className="material-symbols-outlined">logout</span>
-                  ออกจากระบบ
+                  {t('logout')}
                 </button>
               </div>
             </nav>

@@ -28,7 +28,7 @@ describe('booking lifecycle (Bangkok time)', () => {
     students = ['00000001', '00000002'].map(stu_id => Object.assign(new Student(), {
         stu_id, email: `${stu_id}@kmitl.ac.th`, first_name: 'Test', last_name: 'User',
         major: 'Engineering', year: 1, username: stu_id, password: 'test', strikes: 0,
-        banned_until: null,
+        banned_until: null, quota: 1,
     }));
     const matches = (row: object, where: object) => Object.entries(where).every(([key, value]) => (row as Record<string, unknown>)[key] === value);
     const save = async (...args: unknown[]) => {
@@ -55,6 +55,7 @@ describe('booking lifecycle (Bangkok time)', () => {
       create: (_entity: unknown, values: object) => Object.assign(new Booking(), values),
       createQueryBuilder: () => query,
       save,
+      getRepository: (entity: unknown) => entity === Student ? studentRepository : repository,
     };
     repository = {
       manager, save,
@@ -107,9 +108,15 @@ describe('booking lifecycle (Bangkok time)', () => {
     at('13:22:00');
     const booking = await bookings.createBooking('00000001', 1, date, '13:00:00');
     expect(booking.time_out).toBe('14:00:00');
+    expect(students[0].quota).toBe(0);
     at('13:23:00');
     await bookings.cancelBooking(booking.booking_id, '00000001');
     expect(students[0].strikes).toBe(0);
+    expect(students[0].quota).toBe(1);
+    // Same student can re-book on the same day
+    const rebooking = await bookings.createBooking('00000001', 2, date, '13:00:00');
+    expect(rebooking.booking_id).toBeDefined();
+    expect(students[0].quota).toBe(0);
   });
 
   it('still penalizes an advance reservation once, at the original 15-minute deadline', async () => {
@@ -122,6 +129,9 @@ describe('booking lifecycle (Bangkok time)', () => {
     await cron.handleCron();
     expect(rows.find(b => b.booking_id === booking.booking_id)!.status).toBe(BookingStatus.CANCELLED);
     expect(students[0].strikes).toBe(1);
+    expect(students[0].quota).toBe(0);
+    // Student who missed check-in cannot re-book on that day
+    await expect(bookings.createBooking('00000001', 2, date, '16:00:00')).rejects.toThrow();
   });
 
   it('rejects booking an already ended round', async () => {

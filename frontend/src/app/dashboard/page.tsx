@@ -1,11 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api, { isSessionExpiredError } from '@/lib/api';
 import { toast } from 'sonner';
 import QRCode from 'react-qr-code';
 import MainLayout from '@/components/MainLayout';
+import { useLocale } from '@/components/locale-provider';
+import { adminDashboardCopy } from '@/lib/admin-dashboard-copy.cjs';
+import { playerDashboardCopy } from '@/lib/player-dashboard-copy.cjs';
+import dashboardActionCopy from '@/lib/dashboard-action-copy.cjs';
+import {
+  aggregateBookings,
+  filterBookingLogs,
+  formatBucketLabel,
+  localizedStatus,
+  safeDashboardError,
+  STATUS_COLORS,
+  statusDistribution,
+} from '@/lib/dashboard-analytics.cjs';
+import { AdminStatusDonut, AdminTrendChart, AdminUsageBars, type BreakdownRow } from '@/components/AdminAnalyticsCharts';
 import SportBanner from '@/components/SportBanner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -62,7 +76,14 @@ export default function Dashboard() {
   const [courtFilter, setCourtFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<string>('');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+  const { locale, t, formatDate } = useLocale();
+  const c = adminDashboardCopy[locale];
+  const p = playerDashboardCopy[locale];
+  const actions = dashboardActionCopy(locale);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -121,14 +142,14 @@ export default function Dashboard() {
   }, [selectedBooking, serverOffset]);
 
   const handleFinishBooking = async (bookingId: number) => {
-    if (!confirm('Are you sure you want to finish this booking early?')) return;
+    if (!confirm(actions.finishConfirm)) return;
     try {
       await api.post(`/bookings/${bookingId}/finish`);
-      toast.success('Booking finished successfully');
+      toast.success(actions.finishSuccess);
       setSelectedBookingId(null);
       fetchAllBookings();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to finish booking');
+      toast.error(err.response?.data?.message || actions.finishFailed);
     }
   };
 
@@ -185,7 +206,7 @@ export default function Dashboard() {
       const response = await api.get('/bookings');
       setAllBookings(sortBookingsList(response.data));
       const now = new Date();
-      setLastSyncTime(`Today at ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} UTC+7`);
+      setLastSyncTime(`${c.todayAt}${formatDate(now)} ${now.toLocaleTimeString(locale === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} UTC+7`);
       if (response.headers?.date) {
         const serverHeaderTime = Date.parse(response.headers['date']);
         if (!isNaN(serverHeaderTime)) {
@@ -202,40 +223,52 @@ export default function Dashboard() {
     setIsSyncing(true);
     try {
       await fetchAllBookings();
-      toast.success('Live telemetry synchronized');
+      toast.success(actions.syncSuccess);
     } catch {
-      toast.error('Failed to sync telemetry');
+      toast.error(actions.syncFailed);
     } finally {
       setTimeout(() => setIsSyncing(false), 500);
     }
   };
 
-  const handleExportLogs = () => {
-    if (!allBookings.length) {
-      toast.error('No booking records to export');
+  const handleExportLogs = async () => {
+    if (!filteredBookings.length) {
+      toast.error(actions.exportEmpty);
       return;
     }
-    const headers = ['Booking ID', 'Student Name', 'Username', 'Court', 'Date', 'Time In', 'Time Out', 'Status', 'Updated At'];
-    const rows = allBookings.map(b => [
-      b.booking_id,
-      `"${(b.student?.first_name || '') + ' ' + (b.student?.last_name || '')}"`,
-      b.student?.username || '',
-      b.court,
-      b.booking_date,
-      b.time_in,
-      b.time_out,
-      b.status,
-      b.updated_at || ''
-    ]);
-    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `cybercourt-telemetry-${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('Logs exported to CSV');
+    setIsExporting(true);
+    try {
+      // The workbook is generated by the backend (GET /bookings/export.xlsx) from the same
+      // filters the table applies, so the file and the on-screen log cannot disagree.
+      const response = await api.get('/bookings/export.xlsx', {
+        params: {
+          court: courtFilter,
+          status: statusFilter,
+          search: searchQuery.trim(),
+          lang: locale,
+          from: dateFrom,
+          to: dateTo,
+        },
+        responseType: 'blob',
+      });
+      const disposition = String(response.headers?.['content-disposition'] || '');
+      const match = /filename="?([^"]+)"?/.exec(disposition);
+      const filename = match?.[1] || `booking-logs-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const blobUrl = URL.createObjectURL(response.data as Blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+      toast.success(actions.exportSuccess);
+    } catch (err) {
+      if (isSessionExpiredError(err)) return;
+      toast.error(safeDashboardError(err, 'export', locale));
+    } finally {
+      setIsExporting(false);
+    }
   };
 
 
@@ -244,26 +277,26 @@ export default function Dashboard() {
     if (!bookingToCancel) return;
     try {
       await api.post(`/bookings/${bookingToCancel}/cancel`);
-      toast.success('ยกเลิกการจองสำเร็จ (Booking cancelled successfully)');
+      toast.success(actions.cancelSuccess);
       setBookingToCancel(null);
       fetchBookings();
       if (user?.role === 'ADMIN') {
         fetchAllBookings();
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to cancel booking');
+      toast.error(err.response?.data?.message || actions.cancelFailed);
     }
   };
 
   const handleResetDatabase = async () => {
-    if (!confirm('WARNING: Are you sure you want to reset the database? This will delete ALL bookings!')) return;
-    if (!confirm('Are you ABSOLUTELY sure? This action cannot be undone.')) return;
+    if (!confirm(actions.resetWarning)) return;
+    if (!confirm(actions.resetConfirm)) return;
     try {
       await api.post('/bookings/reset');
-      toast.success('Database reset successfully');
+      toast.success(actions.resetSuccess);
       fetchAllBookings();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to reset database');
+      toast.error(err.response?.data?.message || actions.resetFailed);
     }
   };
 
@@ -300,138 +333,27 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [activeBooking, user, serverOffset]);
 
-  // Cybercourt Admin calculations
-  const totalBookingsCount = allBookings.length > 0 ? allBookings.length : 1428;
-  const cancelledBookings = allBookings.filter(b => b.status === 'CANCELLED');
-  const cancelledCount = allBookings.length > 0 ? cancelledBookings.length : 12;
-  const activeBookings = allBookings.filter(b => b.status === 'CHECKED_IN' || b.status === 'PENDING');
-  const completedBookings = allBookings.filter(b => b.status === 'COMPLETED');
-  const activeOrCompleted = activeBookings.length + completedBookings.length;
-  const utilizationRate = allBookings.length > 0
-    ? Math.min(98, Math.max(45, Math.round((activeOrCompleted / Math.max(allBookings.length, 1)) * 100)))
-    : 84.6;
-  const cancellationRate = allBookings.length > 0
-    ? ((cancelledCount / allBookings.length) * 100).toFixed(1)
-    : '4.2';
-
-  const peakHours = (() => {
-    if (!allBookings.length) return '18:00 - 21:00';
-    const slotMap: Record<string, number> = {};
-    allBookings.forEach(b => {
-      const key = `${(b.time_in || '').slice(0, 5)} - ${(b.time_out || '').slice(0, 5)}`;
-      slotMap[key] = (slotMap[key] || 0) + 1;
-    });
-    let maxSlot = '18:00 - 21:00';
-    let maxC = 0;
-    Object.entries(slotMap).forEach(([k, v]) => {
-      if (v > maxC) {
-        maxC = v;
-        maxSlot = k;
-      }
-    });
-    return maxSlot;
-  })();
-
-  const getChartData = () => {
-    let labels: string[] = [];
-    let baseData: number[] = [];
-
-    if (statPeriod === 'Day') {
-      labels = ['06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
-      baseData = [12, 18, 35, 28, 68, 42];
-    } else if (statPeriod === 'Week') {
-      labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      baseData = [28, 25, 22, 32, 44, 78, 62];
-    } else if (statPeriod === 'Month') {
-      labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-      baseData = [140, 165, 120, 195];
-    } else {
-      labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      baseData = [300, 320, 350, 340, 400, 420, 480, 500, 520, 550, 590, 650];
-    }
-
-    let factor = 1;
-    if (chartCourtFilter === '1') factor = 0.32;
-    else if (chartCourtFilter === '2') factor = 0.28;
-    else if (chartCourtFilter === '3') factor = 0.22;
-    else if (chartCourtFilter === '4') factor = 0.18;
-
-    const values = baseData.map(v => Math.round(v * factor));
-    return { labels, values };
+  // Cybercourt admin telemetry. Every number below is computed from the real booking
+  // rows in `allBookings` (GET /bookings) — nothing here is estimated or hard-coded.
+  const periodLabels: Record<'Day' | 'Week' | 'Month' | 'Year', string> = {
+    Day: t('periodDay'),
+    Week: t('periodWeek'),
+    Month: t('periodMonth'),
+    Year: t('periodYear'),
   };
-
-  const { labels: chartLabels, values: chartValues } = getChartData();
-  const maxChartVal = Math.max(...chartValues, 80) * 1.15;
-  const peakChartIdx = chartValues.indexOf(Math.max(...chartValues));
-  const peakChartVal = chartValues[peakChartIdx];
-
-  const chartPoints = chartValues.map((val, idx) => {
-    const x = 60 + (idx / Math.max(chartValues.length - 1, 1)) * (935 - 60);
-    const y = 260 - (val / maxChartVal) * (260 - 50);
-    return { x, y, val, label: chartLabels[idx] };
-  });
-
-  const createSmoothPath = (pts: { x: number; y: number }[]) => {
-    if (pts.length === 0) return '';
-    return pts.map((pt, i, arr) => {
-      if (i === 0) return `M ${pt.x} ${pt.y}`;
-      const prev = arr[i - 1];
-      const cp1x = prev.x + (pt.x - prev.x) * 0.45;
-      const cp1y = prev.y;
-      const cp2x = pt.x - (pt.x - prev.x) * 0.45;
-      const cp2y = pt.y;
-      return `C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${pt.x} ${pt.y}`;
-    }).join(' ');
+  const formatNumber = (value: number) => value.toLocaleString(locale === 'th' ? 'th-TH' : 'en-US');
+  const fillCopy = (template: string, values: Record<string, string>) =>
+    Object.entries(values).reduce((text, [key, value]) => text.replace(`{${key}}`, value), template);
+  const formatClockTime = (value?: string | Date) => {
+    if (!value) return '—';
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return new Intl.DateTimeFormat(locale === 'th' ? 'th-TH' : 'en-US', {
+      timeZone: 'Asia/Bangkok',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
   };
-
-  const chartLinePath = createSmoothPath(chartPoints);
-  const chartAreaPath = chartPoints.length
-    ? `${chartLinePath} L ${chartPoints[chartPoints.length - 1].x} 280 L ${chartPoints[0].x} 280 Z`
-    : '';
-
-  const filteredBookings = allBookings.filter(b => {
-    if (statusFilter === 'CANCELLED' && b.status !== 'CANCELLED') return false;
-    if (statusFilter === 'ACTIVE' && b.status !== 'CHECKED_IN' && b.status !== 'PENDING') return false;
-    if (statusFilter === 'READY_CHECK_IN') {
-      if (b.status !== 'PENDING') return false;
-      const now = new Date();
-      const startStr = `${b.booking_date}T${b.time_in}+07:00`;
-      const startTime = new Date(startStr);
-      const diffMs = now.getTime() - startTime.getTime();
-      if (diffMs < 0 || diffMs > 15 * 60 * 1000) return false;
-    }
-    if (statusFilter === 'COMPLETED' && b.status !== 'COMPLETED') return false;
-
-    if (courtFilter !== 'ALL' && String(b.court) !== courtFilter) return false;
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      const fullName = `${b.student?.first_name || ''} ${b.student?.last_name || ''}`.toLowerCase();
-      const username = (b.student?.username || '').toLowerCase();
-      const courtStr = `court ${b.court}`.toLowerCase();
-      const idStr = String(b.booking_id);
-      const dateStr = (b.booking_date || '').toLowerCase();
-      if (!fullName.includes(q) && !username.includes(q) && !courtStr.includes(q) && !idStr.includes(q) && !dateStr.includes(q)) {
-        return false;
-      }
-    }
-    return true;
-  });
-
-  const itemsPerPage = 6;
-  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / itemsPerPage));
-  const pagedBookings = filteredBookings.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  const formatThaiTime = (dateStr?: string | Date) => {
-    if (!dateStr) return '15:17';
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-    } catch {
-      return '15:17';
-    }
-  };
-
   const getInitials = (b: any) => {
     const fn = b.student?.first_name || '';
     const ln = b.student?.last_name || '';
@@ -440,6 +362,63 @@ export default function Dashboard() {
     if (b.student?.username) return b.student.username.slice(0, 2).toUpperCase();
     return 'TS';
   };
+  // The API can return either a court number or an expanded court object.
+  const playerCourtName = (booking: { court?: number | string | { name?: string } | null }) => {
+    const court = booking?.court;
+    if (court && typeof court === 'object') return court.name || p.courtFallback;
+    if (court === 0 || court) return fillCopy(p.courtPrefix, { court: String(court) });
+    return p.courtFallback;
+  };
+
+  const analytics = useMemo(
+    () => aggregateBookings(allBookings, { period: statPeriod, court: chartCourtFilter }),
+    [allBookings, statPeriod, chartCourtFilter]
+  );
+  const trendLabels = useMemo(
+    () => analytics.series.map((point) => formatBucketLabel(point.key, analytics.granularity, locale)),
+    [analytics, locale]
+  );
+  const peakIndex = analytics.peak ? analytics.series.findIndex((point) => point.key === analytics.peak!.key) : null;
+  const peakLabel = analytics.peak
+    ? analytics.granularity === 'hour'
+      ? `${analytics.peak.key}:00`
+      : formatBucketLabel(analytics.peak.key, analytics.granularity, locale)
+    : '—';
+  const statusCounts = statusDistribution(analytics);
+  const statusRows: BreakdownRow[] = (['PENDING', 'CHECKED_IN', 'COMPLETED', 'CANCELLED', 'OTHER'] as const).map((key) => ({
+    key,
+    label: localizedStatus(key, locale),
+    count: statusCounts[key],
+    share: analytics.total ? Math.round((statusCounts[key] / analytics.total) * 100) : 0,
+    color: STATUS_COLORS[key],
+  }));
+  const courtRows: BreakdownRow[] = analytics.courts.map((entry) => ({
+    key: String(entry.court),
+    label: `${c.court} ${entry.court}`,
+    count: entry.count,
+    share: analytics.total ? Math.round((entry.count / analytics.total) * 100) : 0,
+    color: '#f97316',
+  }));
+  const busiestCourt = analytics.courts.reduce((best, entry) => (entry.count > best.count ? entry : best), { court: 0, count: 0 });
+  const cancellationPercent = analytics.total ? ((analytics.cancelled / analytics.total) * 100).toFixed(1) : '0.0';
+  const deltaPercent = analytics.previousTotal ? Math.round(((analytics.total - analytics.previousTotal) / analytics.previousTotal) * 100) : null;
+  const deltaText = analytics.delta === null
+    ? c.noPreviousData
+    : `${analytics.delta > 0 ? '+' : ''}${formatNumber(analytics.delta)} ${c.deltaVsPrevious}`;
+  const dateRangeInvalid = Boolean(dateFrom && dateTo && dateFrom > dateTo);
+
+  // Same filter helper the XLSX export mirrors, so the table and the workbook always agree.
+  const filteredBookings = filterBookingLogs(allBookings, {
+    court: courtFilter,
+    status: statusFilter,
+    search: searchQuery,
+    dateFrom,
+    dateTo,
+  });
+
+  const itemsPerPage = 6;
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / itemsPerPage));
+  const pagedBookings = filteredBookings.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   if (!mounted) return null;
   if (!user) return null;
@@ -458,17 +437,17 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/90">KMITL Sports Complex</p>
-                  <p className="text-xs sm:text-sm font-semibold text-white">Admin control center</p>
+                  <p className="text-xs sm:text-sm font-semibold text-white">{c.adminControlCenter}</p>
                 </div>
               </div>
             }
-            eyebrow="Live system overview"
-            title="Good morning, Admin."
-            subtitle="Stay on top of every booking, court schedule, and player experience in one place."
+            eyebrow={c.liveSystemOverview}
+            title={c.greeting}
+            subtitle={c.heroSubtitle}
             meta={[
-              <span key="campus" className="inline-flex items-center gap-1"><span className="material-symbols-outlined text-[13px] sm:text-[14px]">pin_drop</span> Lat Krabang Campus</span>,
-              <span key="sync" className="inline-flex items-center gap-1"><span className="material-symbols-outlined text-[13px] sm:text-[14px]">schedule</span> Last synced {lastSyncTime.replace('Today at ', '') || 'just now'}</span>,
-              <span key="sec" className="inline-flex items-center gap-1"><span className="material-symbols-outlined text-[13px] sm:text-[14px]">security</span> Secure admin mode</span>,
+              <span key="campus" className="inline-flex items-center gap-1"><span className="material-symbols-outlined text-[13px] sm:text-[14px]">pin_drop</span> {c.campus}</span>,
+              <span key="sync" className="inline-flex items-center gap-1"><span className="material-symbols-outlined text-[13px] sm:text-[14px]">schedule</span> {c.lastSynced}{lastSyncTime.replace(c.todayAt, '') || c.justNow}</span>,
+              <span key="sec" className="inline-flex items-center gap-1"><span className="material-symbols-outlined text-[13px] sm:text-[14px]">security</span> {c.secureMode}</span>,
             ]}
           />
 
@@ -489,13 +468,13 @@ export default function Dashboard() {
                     </span>
                     <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-mono text-emerald-600 dark:text-emerald-400 font-medium">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      CORE SENSORS: ONLINE
+                      {c.coreSensors}
                     </div>
                   </div>
                   <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-0.5 font-thai">
-                    Booking Statistics &amp; Telemetry
+                    {c.statsTitle}
                     <span className="text-xs sm:text-sm font-normal text-slate-500 dark:text-slate-400 font-thai block sm:inline mt-0.5 sm:mt-0">
-                      {' '}| ระบบบริหารและวิเคราะห์การจองสนามอัจฉริยะ
+                      {' '}| {c.adminSubtitle}
                     </span>
                   </h1>
                 </div>
@@ -504,7 +483,7 @@ export default function Dashboard() {
               {/* Controls: Timeframe Filter & Action Hub */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full lg:w-auto">
                 {/* Segmented Time Range Selector */}
-                <nav aria-label="Timeframe Navigation" className="grid grid-cols-4 sm:flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-inner w-full sm:w-auto" data-purpose="timeframe-filter">
+                <nav aria-label={c.timeframeNav} className="grid grid-cols-4 sm:flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-inner w-full sm:w-auto" data-purpose="timeframe-filter">
                   {(['Day', 'Week', 'Month', 'Year'] as const).map(period => (
                     <button
                       key={period}
@@ -528,23 +507,26 @@ export default function Dashboard() {
                     className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-2 text-xs font-mono font-medium rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800/90 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 transition-all shadow-sm"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 text-orange-600 dark:text-orange-400 ${isSyncing ? 'animate-spin' : ''}`} />
-                    <span className="hidden sm:inline">SYNC</span>
-                    <span className="sm:hidden">SYNC</span>
+                    <span className="hidden sm:inline">{c.sync}</span>
+                    <span className="sm:hidden">{c.sync}</span>
                   </button>
                   <button
                     onClick={handleExportLogs}
-                    className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-2 text-xs font-mono font-medium rounded-xl bg-orange-50 hover:bg-orange-100 dark:bg-orange-500/10 dark:hover:bg-orange-500/20 border border-orange-200 dark:border-orange-500/40 text-orange-600 dark:text-orange-400 transition-all"
+                    disabled={isExporting}
+                    aria-busy={isExporting}
+                    title={c.exportNote}
+                    className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-2 text-xs font-mono font-medium rounded-xl bg-orange-50 hover:bg-orange-100 dark:bg-orange-500/10 dark:hover:bg-orange-500/20 border border-orange-200 dark:border-orange-500/40 text-orange-600 dark:text-orange-400 transition-all disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>EXPORT</span>
+                    <Download className={`w-3.5 h-3.5 ${isExporting ? 'animate-bounce' : ''}`} />
+                    <span>{isExporting ? c.exporting : c.export}</span>
                   </button>
                   <button
                     onClick={() => router.push('/admin/users')}
-                    title="Manage Users"
+                    title={c.manageUsers}
                     className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800/80 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 transition shadow-sm text-xs font-mono font-semibold"
                   >
                     <Users className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
-                    <span>USERS</span>
+                    <span>{c.users}</span>
                   </button>
                 </div>
               </div>
@@ -553,12 +535,12 @@ export default function Dashboard() {
 
             {/* BEGIN: MetricHudCards */}
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" data-purpose="telemetry-overview-metrics">
-              {/* Metric 1: Total Bookings */}
+              {/* Metric 1: Bookings in the selected period (real records) */}
               <div className="glass-card glass-card-hover rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-hud-panel border-slate-200 dark:border-slate-800">
                 <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl pointer-events-none"></div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">
-                    Total Bookings ({statPeriod})
+                    {c.bookingsInPeriod}
                   </span>
                   <span className="p-2 rounded-lg bg-orange-50 dark:bg-orange-500/15 border border-orange-200 dark:border-orange-500/30 text-orange-600 dark:text-orange-400">
                     <CalendarCheck2 className="w-4 h-4" />
@@ -566,24 +548,33 @@ export default function Dashboard() {
                 </div>
                 <div className="mt-3 flex items-baseline gap-3">
                   <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-mono text-slate-900 dark:text-white tracking-tight">
-                    {totalBookingsCount.toLocaleString()}
+                    {formatNumber(analytics.total)}
                   </span>
-                  <span className="inline-flex items-center text-xs font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-500/20">
-                    <TrendingUp className="w-3 h-3 mr-1 inline" />+18.4%
-                  </span>
+                  {deltaPercent !== null && (
+                    <span
+                      className={`inline-flex items-center text-xs font-mono font-semibold px-2 py-0.5 rounded border ${
+                        deltaPercent >= 0
+                          ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20'
+                          : 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20'
+                      }`}
+                    >
+                      {deltaPercent >= 0 ? <TrendingUp className="w-3 h-3 mr-1 inline" /> : <TrendingDown className="w-3 h-3 mr-1 inline" />}
+                      {`${deltaPercent > 0 ? '+' : ''}${deltaPercent}%`}
+                    </span>
+                  )}
                 </div>
-                <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-thai">
-                  <span>ความต้องการใช้งานคอร์ตรวม</span>
-                  <span className="font-mono text-slate-700 dark:text-slate-300 font-medium">+210 จากสัปดาห์ก่อน</span>
+                <div className="mt-3 flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400 font-thai">
+                  <span>{periodLabels[statPeriod]}</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-300 font-medium truncate">{deltaText}</span>
                 </div>
               </div>
 
-              {/* Metric 2: Utilization Rate */}
+              {/* Metric 2: Court utilization (booked hours vs offered hours) */}
               <div className="glass-card glass-card-hover rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-hud-panel border-slate-200 dark:border-slate-800">
                 <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">
-                    Court Utilization
+                    {c.courtUtilization}
                   </span>
                   <span className="p-2 rounded-lg bg-cyan-50 dark:bg-cyan-500/15 border border-cyan-200 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-400">
                     <Gauge className="w-4 h-4" />
@@ -591,26 +582,33 @@ export default function Dashboard() {
                 </div>
                 <div className="mt-3 flex items-baseline gap-3">
                   <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-mono text-cyan-600 dark:text-cyan-300 tracking-tight">
-                    {utilizationRate}%
+                    {analytics.utilization.percent}%
                   </span>
-                  <span className="text-xs font-mono text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-                    OPTIMAL RANGE
+                  <span
+                    className="text-xs font-mono text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 truncate max-w-[9rem]"
+                    title={c.utilizationNote}
+                  >
+                    {periodLabels[statPeriod]}
                   </span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 mt-3.5 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
                   <div
                     className="bg-gradient-to-r from-cyan-500 to-amber-500 h-full rounded-full transition-all duration-1000"
-                    style={{ width: `${utilizationRate}%` }}
+                    style={{ width: `${analytics.utilization.percent}%` }}
                   ></div>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  <span>{`${formatNumber(analytics.utilization.used)} / ${formatNumber(analytics.utilization.offered)}`}</span>
+                  <span className="truncate" title={c.utilizationNote}>{c.utilizationNote}</span>
                 </div>
               </div>
 
-              {/* Metric 3: Active Cancellations */}
+              {/* Metric 3: Cancelled bookings (real count + real rate) */}
               <div className="glass-card glass-card-hover rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-hud-panel border-rose-200 dark:border-rose-500/30">
                 <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl pointer-events-none"></div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">
-                    Cancelled Bookings
+                    {c.cancelledBookings}
                   </span>
                   <span className="p-2 rounded-lg bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400">
                     <Ban className="w-4 h-4" />
@@ -618,24 +616,24 @@ export default function Dashboard() {
                 </div>
                 <div className="mt-3 flex items-baseline gap-3">
                   <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-mono text-rose-600 dark:text-rose-400 tracking-tight">
-                    {cancelledCount}
+                    {formatNumber(analytics.cancelled)}
                   </span>
-                  <span className="inline-flex items-center text-xs font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-500/20">
-                    <ArrowDownRight className="w-3 h-3 mr-1 inline" />-{cancellationRate}%
+                  <span className="inline-flex items-center text-xs font-mono font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-500/20">
+                    <ArrowDownRight className="w-3 h-3 mr-1 inline" />{`${cancellationPercent}%`}
                   </span>
                 </div>
-                <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-thai">
-                  <span>อัตรายกเลิกต่ำกว่าเกณฑ์</span>
-                  <span className="font-mono text-rose-600 dark:text-rose-400 font-medium">Slot Release Auto</span>
+                <div className="mt-3 flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400 font-thai">
+                  <span>{c.cancelBelowThreshold}</span>
+                  <span className="font-mono text-rose-600 dark:text-rose-400 font-medium truncate">{c.cancellationRateLabel}</span>
                 </div>
               </div>
 
-              {/* Metric 4: Peak Activity Window */}
+              {/* Metric 4: Peak activity window (busiest bucket in this period) */}
               <div className="glass-card glass-card-hover rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-hud-panel border-slate-200 dark:border-slate-800">
                 <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">
-                    Peak Congestion
+                    {c.peakCongestion}
                   </span>
                   <span className="p-2 rounded-lg bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400">
                     <Flame className="w-4 h-4" />
@@ -643,14 +641,20 @@ export default function Dashboard() {
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
                   <span className="text-xl sm:text-2xl lg:text-3xl font-extrabold font-mono text-slate-900 dark:text-white tracking-tight truncate">
-                    {peakHours}
+                    {peakLabel}
                   </span>
                 </div>
-                <div className="mt-3.5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-thai">
-                  <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
-                    <Zap className="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" /> คอร์ต 1 - 4 จองเต็มอัตรา
+                <div className="mt-3.5 flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium font-thai truncate">
+                    <Zap className="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" />
+                    {analytics.peak ? `${formatNumber(analytics.peak.total)} ${c.chartSlots}` : c.noPeakYet}
                   </span>
-                  <span className="font-mono text-slate-500">Peak Window</span>
+                  <span className="font-mono truncate">
+                    {`${c.busiestCourtLabel}: `}
+                    <span className="text-slate-800 dark:text-slate-200 font-semibold">
+                      {busiestCourt.count > 0 ? `${c.court} ${busiestCourt.court}` : '—'}
+                    </span>
+                  </span>
                 </div>
               </div>
             </section>
@@ -664,26 +668,26 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
                     <h2 className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-slate-900 dark:text-white uppercase font-mono">
-                      Booking Trends by {statPeriod}
+                      {c.chartTitle}
                     </h2>
                     <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-medium font-mono">
-                      LIVE TELEMETRY
+                      {c.liveTelemetry}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-thai mt-0.5">
-                    กราฟวิเคราะห์ปริมาณการสำรองสนามรายสัปดาห์ แยกตามแต่ละช่วงเวลาและสนาม
+                    {c.chartSubtitle}
                   </p>
                 </div>
 
-                {/* Court Filters inside chart header (Courts 1 - 4, No VIP) */}
+                {/* Court Filters inside chart header (Courts 1 - 4) */}
                 <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 sm:pb-0 scrollbar-none w-full md:w-auto">
-                  <span className="text-xs font-mono text-slate-500 dark:text-slate-400 mr-1 hidden sm:inline font-medium shrink-0">ARENA:</span>
+                  <span className="text-xs font-mono text-slate-500 dark:text-slate-400 mr-1 hidden sm:inline font-medium shrink-0">{c.arena}</span>
                   {[
-                    { id: 'ALL', label: 'ALL COURTS' },
-                    { id: '1', label: 'COURT 1' },
-                    { id: '2', label: 'COURT 2' },
-                    { id: '3', label: 'COURT 3' },
-                    { id: '4', label: 'COURT 4' },
+                    { id: 'ALL', label: c.allCourtsUpper },
+                    { id: '1', label: `${c.court} 1` },
+                    { id: '2', label: `${c.court} 2` },
+                    { id: '3', label: `${c.court} 3` },
+                    { id: '4', label: `${c.court} 4` },
                   ].map(f => (
                     <button
                       key={f.id}
@@ -700,200 +704,60 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* High-Tech SVG Rendered Chart */}
-              <div className="mt-4 sm:mt-6 relative" data-purpose="chart-viewport">
-                {/* Desktop Peak Tooltip Card */}
-                <div
-                  className="hidden lg:flex flex-col absolute top-2 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3 rounded-xl border border-orange-300 dark:border-orange-500/40 shadow-cyber-glow pointer-events-none transform -translate-x-1/2 transition-all duration-300"
-                  style={{
-                    left: `${Math.min(88, Math.max(12, (chartPoints[peakChartIdx]?.x / 1000) * 100))}%`
-                  }}
-                >
-                  <div className="flex items-center justify-between gap-3 text-xs font-mono">
-                    <span className="text-orange-600 dark:text-orange-400 font-bold flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping"></span>
-                      {chartLabels[peakChartIdx]?.toUpperCase()} PEAK
-                    </span>
-                    <span className="text-slate-900 dark:text-white font-extrabold">{peakChartVal} SLOTS</span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 font-thai mt-1 font-medium">
-                    อัตราจองเต็มสูงสุดประจำสัปดาห์ (14:00 - 22:00)
-                  </p>
-                </div>
-
-                {/* Mobile Peak Information Bar */}
-                <div className="flex lg:hidden items-center justify-between p-2.5 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/30 text-xs font-mono mb-3">
-                  <span className="text-orange-600 dark:text-orange-400 font-bold flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
-                    {chartLabels[peakChartIdx]?.toUpperCase()} PEAK: {peakChartVal} SLOTS
-                  </span>
-                  <span className="text-slate-500 dark:text-slate-400 font-thai text-[11px]">ช่วงเวลาจองสูงสุด (14:00 - 22:00)</span>
-                </div>
-
-                {/* SVG Graph Viewport */}
-                <div className="w-full overflow-x-auto scrollbar-thin pb-2 sm:pb-0">
-                  <div className="min-w-[620px] sm:min-w-[700px] h-[260px] sm:h-[320px] relative">
-                    <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 320">
-                      <defs>
-                        {/* Light Area Gradient */}
-                        <linearGradient id="cyberAreaGradientLight" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor="#EA580C" stopOpacity="0.28" />
-                          <stop offset="45%" stopColor="#F97316" stopOpacity="0.14" />
-                          <stop offset="85%" stopColor="#FB923C" stopOpacity="0.04" />
-                          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.0" />
-                        </linearGradient>
-                        {/* Dark Area Gradient */}
-                        <linearGradient id="cyberAreaGradientDark" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor="#FF5500" stopOpacity="0.38" />
-                          <stop offset="45%" stopColor="#FF7A00" stopOpacity="0.18" />
-                          <stop offset="85%" stopColor="#FF9900" stopOpacity="0.04" />
-                          <stop offset="100%" stopColor="#0B0F19" stopOpacity="0.0" />
-                        </linearGradient>
-
-                        {/* Light Line Gradient */}
-                        <linearGradient id="cyberLineGradientLight" x1="0" x2="1" y1="0" y2="0">
-                          <stop offset="0%" stopColor="#C2410C" />
-                          <stop offset="35%" stopColor="#EA580C" />
-                          <stop offset="70%" stopColor="#F97316" />
-                          <stop offset="100%" stopColor="#FB923C" />
-                        </linearGradient>
-                        {/* Dark Line Gradient */}
-                        <linearGradient id="cyberLineGradientDark" x1="0" x2="1" y1="0" y2="0">
-                          <stop offset="0%" stopColor="#DD4B00" />
-                          <stop offset="35%" stopColor="#F97316" />
-                          <stop offset="70%" stopColor="#FF8A00" />
-                          <stop offset="100%" stopColor="#FFA826" />
-                        </linearGradient>
-
-                        {/* Glow Filters */}
-                        <filter id="neonGlowLight" width="140%" height="140%" x="-20%" y="-20%">
-                          <feGaussianBlur stdDeviation="3.5" result="blur" />
-                          <feMerge>
-                            <feMergeNode in="blur" />
-                            <feMergeNode in="SourceGraphic" />
-                          </feMerge>
-                        </filter>
-                        <filter id="neonGlowDark" width="140%" height="140%" x="-20%" y="-20%">
-                          <feGaussianBlur stdDeviation="5" result="blur" />
-                          <feMerge>
-                            <feMergeNode in="blur" />
-                            <feMergeNode in="SourceGraphic" />
-                          </feMerge>
-                        </filter>
-                      </defs>
-
-                      {/* Clean Grid Horizontal Guides */}
-                      <g className="stroke-slate-200 dark:stroke-slate-800" strokeDasharray="4 6" strokeWidth="1.2">
-                        <line x1="40" x2="960" y1="50" y2="50" />
-                        <line x1="40" x2="960" y1="110" y2="110" />
-                        <line x1="40" x2="960" y1="170" y2="170" />
-                        <line x1="40" x2="960" y1="230" y2="230" />
-                      </g>
-
-                      {/* Grid Metric Labels on Left */}
-                      <g className="text-[11px] font-mono fill-slate-400 dark:fill-slate-500 font-semibold select-none">
-                        <text x="15" y="54">80</text>
-                        <text x="15" y="114">60</text>
-                        <text x="15" y="174">40</text>
-                        <text x="15" y="234">20</text>
-                      </g>
-
-                      {/* Area Gradients: Light vs Dark */}
-                      <path d={chartAreaPath} className="block dark:hidden" fill="url(#cyberAreaGradientLight)" />
-                      <path d={chartAreaPath} className="hidden dark:block" fill="url(#cyberAreaGradientDark)" />
-
-                      {/* Curve Lines: Light vs Dark */}
-                      <path
-                        d={chartLinePath}
-                        className="block dark:hidden"
-                        fill="none"
-                        filter="url(#neonGlowLight)"
-                        stroke="url(#cyberLineGradientLight)"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="5"
-                      />
-                      <path
-                        d={chartLinePath}
-                        className="hidden dark:block"
-                        fill="none"
-                        filter="url(#neonGlowDark)"
-                        stroke="url(#cyberLineGradientDark)"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="6"
-                      />
-
-                      {/* Interactive Node Points */}
-                      {chartPoints.map((pt, i) => {
-                        const isPeak = i === peakChartIdx;
-                        return (
-                          <g
-                            key={i}
-                            className="cursor-pointer group"
-                            transform={`translate(${pt.x}, ${pt.y})`}
-                          >
-                            <circle
-                              className={isPeak ? "animate-ping" : "group-hover:scale-125 transition-transform"}
-                              fill="#EA580C"
-                              fillOpacity={isPeak ? 0.35 : 0.2}
-                              r={isPeak ? 16 : 12}
-                            />
-                            {isPeak && (
-                              <circle fill="#F97316" fillOpacity="0.3" r="13" />
-                            )}
-                            <circle
-                              fill="#EA580C"
-                              r={isPeak ? 9 : 8}
-                              stroke="#FFFFFF"
-                              strokeWidth={isPeak ? 3.5 : 3}
-                              className="dark:stroke-slate-900"
-                            />
-                          </g>
-                        );
-                      })}
-
-                      {/* Baseline X Axis Line */}
-                      <line stroke="currentColor" className="text-slate-300 dark:text-slate-800" strokeWidth="1.5" x1="40" x2="960" y1="280" y2="280" />
-                    </svg>
-
-                    {/* X-Axis Labels */}
-                    <div className="flex justify-between items-center px-4 sm:px-14 pt-3 font-mono text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      {chartLabels.map((lbl, idx) => {
-                        const isPeak = idx === peakChartIdx;
-                        return isPeak ? (
-                          <span key={lbl} className="text-orange-600 dark:text-orange-400 font-bold bg-orange-50 dark:bg-orange-500/10 px-2 sm:px-2.5 py-0.5 rounded border border-orange-200 dark:border-orange-500/30 shadow-sm">
-                            {lbl} (Peak)
-                          </span>
-                        ) : (
-                          <span key={lbl} className="hover:text-orange-600 dark:hover:text-orange-400 transition cursor-default">
-                            {lbl}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+              {/* Responsive SVG trend chart: real booked slots vs verified check-ins */}
+              <div className="mt-4 sm:mt-6">
+                <AdminTrendChart
+                  points={analytics.series}
+                  axisLabels={trendLabels}
+                  peakIndex={peakIndex}
+                  seriesNames={{ total: c.allBookedSlots, checkins: c.verifiedCheckin, cancelled: c.statusCancelled }}
+                  peakBadge={c.chartPeakBadge}
+                  unitLabel={c.chartSlots}
+                  emptyText={c.chartEmpty}
+                  ariaLabel={c.chartAria}
+                  loading={isSyncing}
+                  loadingText={c.chartLoading}
+                />
               </div>
 
               {/* Chart Legend / Footnotes */}
               <div className="mt-4 sm:mt-6 pt-3.5 sm:pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-2.5">
                 <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="w-3.5 h-1.5 rounded-full bg-orange-500"></span>
-                    <span className="font-medium text-slate-700 dark:text-slate-300">All Booked Slots (Gross Total)</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full border-2 border-white dark:border-slate-900 bg-orange-600 shadow-sm"></span>
-                    <span className="font-medium text-slate-700 dark:text-slate-300">Verified Check-in Milestone</span>
-                  </div>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">{`${formatNumber(analytics.total)} ${c.recordsUnit}`}</span>
+                  <span className="font-medium text-emerald-600 dark:text-emerald-400">{`${formatNumber(analytics.checkins)} ${c.verifiedCheckin}`}</span>
                 </div>
                 <div className="font-mono text-slate-500 dark:text-slate-400 text-[11px] sm:text-xs">
-                  Last calculation synced: <span className="text-slate-800 dark:text-slate-200 font-semibold">{lastSyncTime || 'Today at 15:20:41 UTC+7'}</span>
+                  {c.lastCalculationSynced}<span className="text-slate-800 dark:text-slate-200 font-semibold">{lastSyncTime || c.justNow}</span>
                 </div>
               </div>
             </section>
-            {/* END: FuturisticBookingTrendsChart */}
+
+            {/* BEGIN: BreakdownPanels — booked slots per court and status split */}
+            <section className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4" data-purpose="analytics-breakdown">
+              <div className="glass-card rounded-2xl p-4 sm:p-6 shadow-hud-panel border-slate-200 dark:border-slate-800">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white font-mono uppercase tracking-tight">{c.panelCourtUsage}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-thai mt-0.5 mb-4">{c.panelCourtUsageSub}</p>
+                <AdminUsageBars
+                  rows={courtRows}
+                  total={analytics.total}
+                  totalLabel={c.panelTotal}
+                  emptyText={c.panelNoData}
+                  unitLabel={c.recordsUnit}
+                />
+              </div>
+              <div className="glass-card rounded-2xl p-4 sm:p-6 shadow-hud-panel border-slate-200 dark:border-slate-800">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white font-mono uppercase tracking-tight">{c.panelStatusSplit}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-thai mt-0.5 mb-4">{c.panelStatusSplitSub}</p>
+                <AdminStatusDonut
+                  rows={statusRows}
+                  total={analytics.total}
+                  totalLabel={c.panelTotal}
+                  emptyText={c.panelNoData}
+                  unitLabel={c.recordsUnit}
+                />
+              </div>
+            </section>
+            {/* END: BreakdownPanels */}
 
             {/* BEGIN: AllBookingsSection */}
             <section className="space-y-3.5 sm:space-y-4" data-purpose="all-bookings-management-hub">
@@ -907,14 +771,14 @@ export default function Dashboard() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 font-thai">
-                        All Bookings
+                        {c.allBookings}
                       </h2>
                       <span className="px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-orange-600 dark:text-orange-400 border border-slate-200 dark:border-slate-700">
-                        {filteredBookings.length} Records Listed
+                        {`${filteredBookings.length} ${c.recordsUnit}`}
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-thai">
-                      รายการบันทึกการจองคอร์ตทั้งหมด พร้อมสถานะและประวัติการยกเลิกเรียลไทม์
+                      {c.tableSubtitle}
                     </p>
                   </div>
                 </div>
@@ -928,7 +792,7 @@ export default function Dashboard() {
                       value={searchQuery}
                       onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                       className="w-full pl-9 pr-8 py-2 text-xs font-mono bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 transition shadow-sm"
-                      placeholder="Search user, ID or court..."
+                      placeholder={c.searchPlaceholder}
                       type="text"
                     />
                     {searchQuery && (
@@ -952,7 +816,7 @@ export default function Dashboard() {
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
-                      ALL
+                      {c.filterAll}
                     </button>
                     <button
                       onClick={() => { setStatusFilter('CANCELLED'); setCurrentPage(1); }}
@@ -962,7 +826,7 @@ export default function Dashboard() {
                           : 'text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400'
                       }`}
                     >
-                      CANCELLED
+                      {c.filterCancelled}
                     </button>
                     <button
                       onClick={() => { setStatusFilter('ACTIVE'); setCurrentPage(1); }}
@@ -972,7 +836,7 @@ export default function Dashboard() {
                           : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'
                       }`}
                     >
-                      ACTIVE
+                      {c.filterActive}
                     </button>
                     <button
                       onClick={() => { setStatusFilter('COMPLETED'); setCurrentPage(1); }}
@@ -982,7 +846,7 @@ export default function Dashboard() {
                           : 'text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400'
                       }`}
                     >
-                      COMPLETE
+                      {c.filterComplete}
                     </button>
                   </div>
 
@@ -993,23 +857,64 @@ export default function Dashboard() {
                       onChange={(e) => { setCourtFilter(e.target.value); setCurrentPage(1); }}
                       className="w-full sm:w-auto text-xs font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-200 focus:border-orange-500 focus:ring-0 cursor-pointer shadow-sm font-medium"
                     >
-                      <option value="ALL">All Courts</option>
-                      <option value="1">Court 1</option>
-                      <option value="2">Court 2</option>
-                      <option value="3">Court 3</option>
-                      <option value="4">Court 4</option>
+                      <option value="ALL">{c.allCourts}</option>
+                      <option value="1">{c.court} 1</option>
+                      <option value="2">{c.court} 2</option>
+                      <option value="3">{c.court} 3</option>
+                      <option value="4">{c.court} 4</option>
                     </select>
+                  </div>
+
+                  {/* Date range filter — inclusive bounds, identical to the XLSX export */}
+                  <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                    <label className="relative flex-1 sm:w-36">
+                      <span className="sr-only">{c.dateFromLabel}</span>
+                      <input
+                        type="date"
+                        value={dateFrom}
+                        max={dateTo || undefined}
+                        aria-label={c.dateFromLabel}
+                        onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1); }}
+                        className="w-full text-xs font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-700 dark:text-slate-200 focus:border-orange-500 focus:ring-0 cursor-pointer shadow-sm"
+                      />
+                    </label>
+                    <label className="relative flex-1 sm:w-36">
+                      <span className="sr-only">{c.dateToLabel}</span>
+                      <input
+                        type="date"
+                        value={dateTo}
+                        min={dateFrom || undefined}
+                        aria-label={c.dateToLabel}
+                        onChange={(e) => { setDateTo(e.target.value); setCurrentPage(1); }}
+                        className="w-full text-xs font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-2 text-slate-700 dark:text-slate-200 focus:border-orange-500 focus:ring-0 cursor-pointer shadow-sm"
+                      />
+                    </label>
+                    {(dateFrom || dateTo) && (
+                      <button
+                        type="button"
+                        onClick={() => { setDateFrom(''); setDateTo(''); setCurrentPage(1); }}
+                        title={c.clearDates}
+                        aria-label={c.clearDates}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
+
+              {dateRangeInvalid && (
+                <p role="alert" className="text-xs font-medium text-rose-600 dark:text-rose-400">{c.dateRangeInvalid}</p>
+              )}
 
               {/* Bookings 3-Column Futuristic Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4" data-purpose="booking-card-grid">
                 {pagedBookings.length === 0 ? (
                   <div className="col-span-full glass-card rounded-2xl p-10 sm:p-12 text-center text-slate-500 dark:text-slate-400">
                     <span className="material-symbols-outlined text-[42px] sm:text-[48px] opacity-30 mb-2">event_busy</span>
-                    <p className="font-semibold text-sm sm:text-base">No booking records found</p>
-                    <p className="text-xs mt-1">Try adjusting your filters or search query.</p>
+                    <p className="font-semibold text-sm sm:text-base">{c.emptyTitle}</p>
+                    <p className="text-xs mt-1">{c.emptyHint}</p>
                   </div>
                 ) : (
                   pagedBookings.map((booking) => {
@@ -1053,11 +958,11 @@ export default function Dashboard() {
                                 </h3>
                                 {booking.student?.role === 'ADMIN' ? (
                                   <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold">
-                                    ADMIN
+                                    {c.roleAdmin}
                                   </span>
                                 ) : (
                                   <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-semibold">
-                                    MEMBER
+                                    {c.roleMember}
                                   </span>
                                 )}
                               </div>
@@ -1072,44 +977,44 @@ export default function Dashboard() {
                             {isCancelled && (
                               <>
                                 <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-xs font-mono font-bold bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 shadow-sm">
-                                  CANCELLED
+                                  {c.statusCancelled}
                                 </span>
                                 <div className="text-[10px] sm:text-[11px] text-rose-600/90 dark:text-rose-400 font-thai mt-1 flex items-center justify-end gap-1 font-medium">
                                   <RotateCcw className="w-3 h-3 text-rose-500" />
-                                  ยกเลิกเมื่อ {formatThaiTime(booking.updated_at || booking.created_at)} น.
+                                  {c.cancelledAt.replace('{time}', formatClockTime(booking.updated_at || booking.created_at))}
                                 </div>
                               </>
                             )}
                             {isCheckedIn && (
                               <>
                                 <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-xs font-mono font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 shadow-sm">
-                                  ACTIVE
+                                  {c.statusActive}
                                 </span>
                                 <div className="text-[10px] sm:text-[11px] text-emerald-600 dark:text-emerald-400 font-thai mt-1 flex items-center justify-end gap-1 font-medium">
                                   <Clock className="w-3 h-3 text-emerald-500" />
-                                  เข้าเล่นเมื่อ {formatThaiTime(booking.updated_at || booking.created_at)} น.
+                                  {c.startedAt.replace('{time}', formatClockTime(booking.updated_at || booking.created_at))}
                                 </div>
                               </>
                             )}
                             {isPending && (
                               <>
                                 <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-xs font-mono font-bold bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 shadow-sm">
-                                  PENDING
+                                  {c.statusPending}
                                 </span>
                                 <div className="text-[10px] sm:text-[11px] text-amber-600 dark:text-amber-400 font-thai mt-1 flex items-center justify-end gap-1 font-medium">
                                   <Clock className="w-3 h-3 text-amber-500" />
-                                  รอเช็คอิน
+                                  {c.statusPending}
                                 </div>
                               </>
                             )}
                             {isCompleted && (
                               <>
                                 <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-xs font-mono font-bold bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/30 shadow-sm">
-                                  COMPLETED
+                                  {c.statusCompleted}
                                 </span>
                                 <div className="text-[10px] sm:text-[11px] text-cyan-600 dark:text-cyan-400 font-thai mt-1 flex items-center justify-end gap-1 font-medium">
                                   <CheckCircle2 className="w-3 h-3 text-cyan-500" />
-                                  เสร็จสิ้นเมื่อ {formatThaiTime(booking.updated_at || booking.created_at)} น.
+                                  {c.completedAt.replace('{time}', formatClockTime(booking.updated_at || booking.created_at))}
                                 </div>
                               </>
                             )}
@@ -1124,14 +1029,14 @@ export default function Dashboard() {
                           <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                             <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-600 dark:text-orange-400 shrink-0" />
                             <div className="min-w-0">
-                              <span className="block text-[9px] sm:text-[10px] text-slate-400 uppercase font-mono font-semibold">ARENA</span>
-                              <span className="font-bold text-slate-800 dark:text-slate-200 truncate block text-xs">Court {booking.court}</span>
+                              <span className="block text-[9px] sm:text-[10px] text-slate-400 uppercase font-mono font-semibold">{c.cardCourt}</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 truncate block text-xs">{c.court} {booking.court}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                             <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
                             <div className="min-w-0">
-                              <span className="block text-[9px] sm:text-[10px] text-slate-400 uppercase font-mono font-semibold">DATE</span>
+                              <span className="block text-[9px] sm:text-[10px] text-slate-400 uppercase font-mono font-semibold">{c.cardDate}</span>
                               <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate block text-xs">{booking.booking_date}</span>
                             </div>
                           </div>
@@ -1141,7 +1046,7 @@ export default function Dashboard() {
                         <div className="mt-2.5 sm:mt-3 p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
                           <div className="flex items-center gap-1.5 sm:gap-2 text-slate-600 dark:text-slate-400 text-xs font-medium">
                             <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
-                            <span className="text-[11px] sm:text-xs">Reserved Slot:</span>
+                            <span className="text-[11px] sm:text-xs">{c.reservedSlot}</span>
                           </div>
                           <div className="font-mono font-bold text-xs sm:text-sm text-slate-900 dark:text-white tracking-wider bg-white dark:bg-slate-900 px-2 sm:px-2.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-sm">
                             {(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)}
@@ -1150,7 +1055,7 @@ export default function Dashboard() {
 
                         {/* Telemetry Footer / Action Buttons */}
                         <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-mono text-slate-500 dark:text-slate-400">
-                          <span className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500">REF: #BK-{booking.booking_id}</span>
+                          <span className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500">{c.reference}{booking.booking_id}</span>
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
@@ -1159,7 +1064,7 @@ export default function Dashboard() {
                                 setSelectedBookingId(booking.booking_id);
                               }}
                               className="hover:text-orange-600 dark:hover:text-orange-400 transition p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400"
-                              title="Details"
+                              title={c.details}
                             >
                               <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
@@ -1167,7 +1072,7 @@ export default function Dashboard() {
                               type="button"
                               onClick={(e) => { e.stopPropagation(); router.push('/scan'); }}
                               className="hover:text-emerald-600 dark:hover:text-emerald-400 transition p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg text-slate-400"
-                              title="ไปสแกน QR"
+                              title={c.goScanQr}
                             >
                               <span className="material-symbols-outlined text-[16px]">qr_code_scanner</span>
                             </button>
@@ -1178,7 +1083,7 @@ export default function Dashboard() {
                                 setSelectedBookingId(booking.booking_id);
                               }}
                               className="hover:text-orange-600 dark:hover:text-orange-400 transition p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400"
-                              title="More"
+                              title={c.more}
                             >
                               <MoreVertical className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
@@ -1195,7 +1100,7 @@ export default function Dashboard() {
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                   <span className="text-center sm:text-left text-[11px] sm:text-xs">
-                    Showing {pagedBookings.length} of {filteredBookings.length} weekly telemetry logs
+                    {fillCopy(c.paginationShowing, { shown: String(pagedBookings.length), total: String(filteredBookings.length) })}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 flex-wrap justify-center">
@@ -1255,14 +1160,14 @@ export default function Dashboard() {
 
                 <div className="text-center mb-6 mt-1">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 text-xs font-mono font-semibold border border-orange-200 dark:border-orange-500/30 mb-2">
-                    REF: #BK-{selectedBooking.booking_id}
+                    {c.reference}{selectedBooking.booking_id}
                   </div>
-                  <h3 className="font-headline-lg font-bold text-slate-900 dark:text-white mb-1">Booking Telemetry</h3>
+                  <h3 className="font-headline-lg font-bold text-slate-900 dark:text-white mb-1">{c.telemetryTitle}</h3>
                   <p className="font-body-md text-slate-500 dark:text-slate-400">
                     {selectedBooking.student?.first_name} {selectedBooking.student?.last_name} (@{selectedBooking.student?.username})
                   </p>
                   <p className="font-mono text-sm text-orange-600 dark:text-orange-400 font-bold mt-2 bg-orange-50 dark:bg-orange-500/10 inline-block px-4 py-1.5 rounded-full border border-orange-200 dark:border-orange-500/30">
-                    Court {selectedBooking.court} • {(selectedBooking.time_in || '').slice(0, 5)} - {(selectedBooking.time_out || '').slice(0, 5)}
+                    {c.courtLine} {selectedBooking.court} • {(selectedBooking.time_in || '').slice(0, 5)} - {(selectedBooking.time_out || '').slice(0, 5)}
                   </p>
                 </div>
 
@@ -1276,9 +1181,9 @@ export default function Dashboard() {
                       {isEarly ? (
                         <div className="bg-slate-50 dark:bg-slate-800/60 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 w-full text-center">
                           <Clock className="w-12 h-12 text-slate-400 mx-auto mb-2" />
-                          <p className="font-label-lg font-bold text-slate-800 dark:text-slate-200">Too Early for Check-in</p>
+                          <p className="font-label-lg font-bold text-slate-800 dark:text-slate-200">{c.tooEarlyTitle}</p>
                           <p className="font-body-sm text-slate-500 dark:text-slate-400 mt-2">
-                            QR Code will be available when the booking time starts.
+                            {c.qrNotReady}
                           </p>
                         </div>
                       ) : (
@@ -1291,7 +1196,7 @@ export default function Dashboard() {
                             />
                           </div>
                           <p className="font-body-sm text-slate-500 dark:text-slate-400 text-center px-4">
-                            Ask the player to scan this QR code with their app to check in and start their session.
+                            {c.qrInstruction}
                           </p>
                         </>
                       )}
@@ -1304,7 +1209,7 @@ export default function Dashboard() {
                         }}
                         className="w-full bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 text-xs font-mono font-bold py-2.5 rounded-xl transition"
                       >
-                        Cancel this Booking
+                        {c.cancelThisBooking}
                       </button>
                     </div>
                   );
@@ -1314,7 +1219,7 @@ export default function Dashboard() {
                   <div className="flex flex-col items-center gap-5 mt-4">
                     <div className="text-center p-6 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-2xl w-full border border-emerald-200 dark:border-emerald-800/40">
                       <p className="font-label-sm font-bold uppercase tracking-wider mb-2 font-mono text-emerald-600 dark:text-emerald-400">
-                        Live Session In Progress
+                        {c.liveSession}
                       </p>
                       <p className="text-5xl font-mono font-black">{bookingTimeRemaining}</p>
                     </div>
@@ -1324,7 +1229,7 @@ export default function Dashboard() {
                       className="w-full bg-rose-600 text-white font-label-lg font-bold py-3.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 hover:bg-rose-700 active:scale-95"
                     >
                       <span className="material-symbols-outlined">stop_circle</span>
-                      Finish Early
+                      {c.finishEarly}
                     </button>
                   </div>
                 )}
@@ -1337,11 +1242,11 @@ export default function Dashboard() {
                       <Ban className="w-12 h-12 text-rose-600 dark:text-rose-400" />
                     )}
                     <p className="font-label-lg font-bold text-slate-800 dark:text-slate-200">
-                      This booking is {selectedBooking.status.toLowerCase()}.
+                      {selectedBooking.status === 'COMPLETED' ? c.bookingCompleted : c.bookingCancelled}
                     </p>
                     {selectedBooking.updated_at && (
                       <p className="text-xs font-mono text-slate-500">
-                        Recorded at: {new Date(selectedBooking.updated_at).toLocaleString('th-TH')}
+                        {c.recordedAt} {formatDate(selectedBooking.updated_at)}
                       </p>
                     )}
                   </div>
@@ -1353,7 +1258,6 @@ export default function Dashboard() {
       </MainLayout>
     );
   }
-
   return (
     <MainLayout width="full">
       <div className="flex flex-col w-full">
@@ -1368,19 +1272,19 @@ export default function Dashboard() {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/90">KMITL Badminton</p>
-                        <p className="text-sm font-semibold text-white">Player Dashboard</p>
+                        <p className="text-sm font-semibold text-white">{p.bannerPortalLabel}</p>
                       </div>
                     </div>
                   }
                   topRight={
                     <span className="px-3 py-1.5 rounded-full bg-white/15 border border-white/25 text-white text-[11px] font-black uppercase tracking-wider flex items-center gap-1 backdrop-blur-sm">
                       <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-                      {user.role}
+                      {user.role === 'ADMIN' ? p.roleAdmin : p.roleStudent}
                     </span>
                   }
-                  eyebrow="Ready to play"
-                  title={<>Hi, {user.name}</>}
-                  subtitle="Welcome back to your personal KMITL Badminton portal. Book a court, check your schedule, and get ready to smash."
+                  eyebrow={p.bannerEyebrow}
+                  title={<>{fillCopy(p.bannerTitle, { name: user.name })}</>}
+                  subtitle={p.bannerSubtitle}
                 />
 
         <div className="mx-auto max-w-7xl px-4 md:px-10 w-full flex flex-col gap-6 mt-8 pb-10">
@@ -1394,21 +1298,21 @@ export default function Dashboard() {
                 <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-primary-fixed-dim/25 blur-2xl pointer-events-none"></div>
                 <div className="flex items-center justify-between mb-3.5">
                   <div className="flex flex-col">
-                    <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">Upcoming Booking</h2>
-                    <span className="font-body-sm text-body-sm text-on-surface-variant">Your next court reservation</span>
+                    <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">{p.upcomingTitle}</h2>
+                    <span className="font-body-sm text-body-sm text-on-surface-variant">{p.upcomingSubtitle}</span>
                   </div>
                   <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm font-bold">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
-                    CONFIRMED
+                    {p.confirmedBadge}
                   </span>
                 </div>
                 
                 <div className="rounded-xl bg-surface-container-low p-3.5 flex flex-col gap-3 relative">
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase font-semibold">Reserved Court</span>
+                      <span className="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase font-semibold">{p.reservedCourtLabel}</span>
                       <div className="font-headline-md text-headline-md text-primary font-extrabold flex items-center gap-1">
-                        <span>{pendingBooking.court?.name}</span>
+                        <span>{playerCourtName(pendingBooking)}</span>
                       </div>
                     </div>
                     <div className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center text-primary shadow-sm">
@@ -1420,22 +1324,22 @@ export default function Dashboard() {
                     <div className="flex items-center gap-2 bg-surface-container-lowest py-2 px-2.5 rounded-lg shadow-sm">
                       <span className="material-symbols-outlined text-[18px] text-primary">schedule</span>
                       <div className="flex flex-col min-w-0">
-                        <span className="font-label-sm text-label-sm text-on-surface-variant">Time</span>
+                        <span className="font-label-sm text-label-sm text-on-surface-variant">{p.timeLabel}</span>
                         <span className="font-label-lg text-label-lg text-on-surface font-bold truncate">{pendingBooking.time_in?.slice(0, 5)} - {pendingBooking.time_out?.slice(0, 5)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 bg-surface-container-lowest py-2 px-2.5 rounded-lg shadow-sm">
                       <span className="material-symbols-outlined text-[18px] text-primary">calendar_today</span>
                       <div className="flex flex-col min-w-0">
-                        <span className="font-label-sm text-label-sm text-on-surface-variant">Date</span>
-                        <span className="font-label-lg text-label-lg text-on-surface font-bold truncate">{pendingBooking.booking_date}</span>
+                        <span className="font-label-sm text-label-sm text-on-surface-variant">{p.dateLabel}</span>
+                        <span className="font-label-lg text-label-lg text-on-surface font-bold truncate">{formatDate(pendingBooking.booking_date)}</span>
                       </div>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-1.5 text-on-surface-variant pt-0.5">
                     <span className="material-symbols-outlined text-[15px] text-primary">pin_drop</span>
-                    <span className="font-body-sm text-body-sm font-medium">Main Sports Complex • อาคารยิมเนเซียม 1</span>
+                    <span className="font-body-sm text-body-sm font-medium">{p.venueLabel}</span>
                   </div>
                 </div>
 
@@ -1445,14 +1349,14 @@ export default function Dashboard() {
                     className="col-span-3 h-12 rounded-xl bg-linear-to-r from-primary-container to-primary text-on-primary font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-[0_6px_18px_rgba(255,94,30,0.32)] active:scale-95 transition-transform cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
-                    <span>Check-in (เช็คอิน)</span>
+                    <span>{p.checkInAction}</span>
                   </button>
                   <button 
                     onClick={() => setBookingToCancel(pendingBooking.booking_id)}
                     className="col-span-2 h-12 rounded-xl bg-error-container text-on-error-container font-label-lg text-label-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition-transform hover:bg-opacity-90 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[18px]">close</span>
-                    <span>Cancel</span>
+                    <span>{p.cancelAction}</span>
                   </button>
                 </div>
               </div>
@@ -1463,21 +1367,21 @@ export default function Dashboard() {
                 <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-secondary/25 blur-2xl pointer-events-none"></div>
                 <div className="flex items-center justify-between mb-3.5">
                   <div className="flex flex-col">
-                    <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">Currently Playing</h2>
-                    <span className="font-body-sm text-body-sm text-on-surface-variant">You are checked in</span>
+                    <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">{p.playingTitle}</h2>
+                    <span className="font-body-sm text-body-sm text-on-surface-variant">{p.playingSubtitle}</span>
                   </div>
                   <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary/10 text-secondary font-label-sm text-label-sm font-bold">
                     <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-ping"></span>
-                    ACTIVE
+                    {p.activeBadge}
                   </span>
                 </div>
                 
                 <div className="rounded-xl bg-surface-container-low p-3.5 flex flex-col gap-3 relative">
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase font-semibold">Active Court</span>
+                      <span className="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase font-semibold">{p.activeCourtLabel}</span>
                       <div className="font-headline-md text-headline-md text-secondary font-extrabold flex items-center gap-1">
-                        <span>{typeof activeBooking.court === 'object' ? activeBooking.court?.name : (activeBooking.court ? `Court ${activeBooking.court}` : 'Court')}</span>
+                        <span>{playerCourtName(activeBooking)}</span>
                       </div>
                     </div>
                     <div className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center text-secondary shadow-sm">
@@ -1486,7 +1390,9 @@ export default function Dashboard() {
                   </div>
                   
                   <div className="text-center py-4 bg-surface-container-lowest rounded-lg shadow-sm border border-secondary/20">
-                    <p className="font-label-sm text-[13px] font-bold text-on-surface-variant mb-1 tracking-widest">TIME REMAINING (ENDS AT {activeBooking.time_out?.slice(0, 5)})</p>
+                    <p className="font-label-sm text-[13px] font-bold text-on-surface-variant mb-1 tracking-widest">
+                      {fillCopy(p.timeRemaining, { time: activeBooking.time_out?.slice(0, 5) || '—' })}
+                    </p>
                     <div className="font-headline-xl text-[48px] font-black text-secondary">
                       {timeLeft}
                     </div>
@@ -1509,8 +1415,8 @@ export default function Dashboard() {
                 <span className="material-symbols-outlined text-[22px] text-on-primary">edit_calendar</span>
               </div>
               <div className="flex flex-col z-10 mt-3">
-                <span className="font-headline-sm text-headline-sm font-extrabold leading-tight text-on-primary">Book Court</span>
-                <span className="font-body-sm text-body-sm text-on-primary/80 font-medium">จองคอร์ทแบดมินตัน</span>
+                <span className="font-headline-sm text-headline-sm font-extrabold leading-tight text-on-primary">{p.bookCourtTitle}</span>
+                <span className="font-body-sm text-body-sm text-on-primary/80 font-medium">{p.bookCourtSubtitle}</span>
               </div>
             </div>
 
@@ -1525,8 +1431,8 @@ export default function Dashboard() {
                 <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_scanner</span>
               </div>
               <div className="flex flex-col z-10 mt-3">
-                <span className="font-headline-sm text-headline-sm font-extrabold leading-tight text-on-surface">Scan QR</span>
-                <span className="font-body-sm text-body-sm text-on-surface-variant font-medium">สแกนเข้าสนาม</span>
+                <span className="font-headline-sm text-headline-sm font-extrabold leading-tight text-on-surface">{p.scanQrTitle}</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant font-medium">{p.scanQrSubtitle}</span>
               </div>
             </div>
           </section>
@@ -1538,12 +1444,11 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[20px] text-primary">history</span>
-                <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">Recent Bookings</h2>
-                <span className="font-body-sm text-body-sm text-on-surface-variant">(ประวัติการจอง)</span>
+                <h2 className="font-headline-sm text-headline-sm text-on-surface font-bold">{p.recentTitle}</h2>
               </div>
               {bookings.length > 0 && (
                 <button onClick={() => setShowHistoryModal(true)} className="font-label-md text-label-md text-primary font-bold hover:underline flex items-center gap-0.5 cursor-pointer">
-                  <span>View all</span>
+                  <span>{p.viewAll}</span>
                   <span className="material-symbols-outlined text-[16px]">chevron_right</span>
                 </button>
               )}
@@ -1552,7 +1457,7 @@ export default function Dashboard() {
             <div className="flex flex-col gap-2.5">
               {bookings.length === 0 && (
                 <div className="bg-surface-container-lowest border border-outline-variant/30 shadow-sm rounded-xl p-6 text-center text-on-surface-variant">
-                  <p className="font-body-md text-body-md font-medium">No bookings yet.</p>
+                  <p className="font-body-md text-body-md font-medium">{p.noBookingsYet}</p>
                 </div>
               )}
               {bookings?.slice(0, 3).map(booking => {
@@ -1578,7 +1483,7 @@ export default function Dashboard() {
                   statusIcon = 'sports_tennis';
                 }
 
-                const courtName = typeof booking.court === 'object' ? booking.court?.name : (booking.court ? `Court ${booking.court}` : 'Court');
+                const courtName = playerCourtName(booking);
 
                 return (
                   <div 
@@ -1595,7 +1500,7 @@ export default function Dashboard() {
                         <div className="flex items-center gap-1.5">
                           <span className="font-headline-sm text-headline-sm font-bold text-on-surface">{courtName}</span>
                           <span className={`px-2 py-0.5 rounded-full font-label-sm text-label-sm font-bold ${badgeClass}`}>
-                            {booking.status}
+                            {localizedStatus(booking.status, locale)}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 mt-0.5 text-on-surface-variant font-body-sm text-body-sm">
@@ -1603,7 +1508,7 @@ export default function Dashboard() {
                             <span className="material-symbols-outlined text-[13px]">schedule</span> {(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)}
                           </span>
                           <span>•</span>
-                          <span className="font-medium">{booking.booking_date}</span>
+                          <span className="font-medium">{formatDate(booking.booking_date)}</span>
                         </div>
                       </div>
                     </div>
@@ -1624,9 +1529,9 @@ export default function Dashboard() {
           <section className="rounded-xl bg-surface-container-low p-3.5 flex items-start gap-3">
             <span className="material-symbols-outlined text-primary text-[22px] mt-0.5 shrink-0">info</span>
             <div className="flex flex-col">
-              <span className="font-label-md text-label-md text-on-surface font-bold">กฎการเข้าใช้คอร์ทและเช็คอิน</span>
+              <span className="font-label-md text-label-md text-on-surface font-bold">{p.rulesTitle}</span>
               <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
-                กรุณาสแกน QR หน้าสนามเพื่อเช็คอิน หากยกเลิกช้าหรือมาสายเกิน 15 นาที ระบบจะนับว่าผิดกฎ 1 ครั้ง (สะสมความผิดครบ 2 ครั้งจะถูกแบน 24 ชั่วโมง)
+                {p.rulesBody}
               </p>
             </div>
           </section>
@@ -1645,10 +1550,10 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <DialogTitle className="font-headline-sm text-lg font-bold text-on-surface">
-                    ประวัติการจองทั้งหมด (Booking History)
+                    {p.historyTitle}
                   </DialogTitle>
                   <DialogDescription className="font-body-sm text-xs text-on-surface-variant">
-                    รายการประวัติการจองคอร์ทแบดมินตันทั้งหมดของคุณ ({bookings.length} รายการ)
+                    {fillCopy(p.historySubtitle, { count: String(bookings.length) })}
                   </DialogDescription>
                 </div>
               </div>
@@ -1657,7 +1562,11 @@ export default function Dashboard() {
             {/* Filter pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pt-3 pb-1 no-scrollbar">
               {(['ALL', 'ACTIVE', 'PENDING', 'COMPLETED', 'CANCELLED'] as const).map(tab => {
-                const label = tab === 'ALL' ? 'ทั้งหมด' : tab === 'ACTIVE' ? 'กำลังเล่น' : tab === 'PENDING' ? 'รอเช็คอิน' : tab === 'COMPLETED' ? 'สำเร็จ' : 'ยกเลิกแล้ว';
+                const label = tab === 'ALL' ? p.historyTabAll
+                  : tab === 'ACTIVE' ? p.historyTabActive
+                  : tab === 'PENDING' ? p.historyTabPending
+                  : tab === 'COMPLETED' ? p.historyTabCompleted
+                  : p.historyTabCancelled;
                 const count = tab === 'ALL' 
                   ? bookings.length 
                   : tab === 'ACTIVE' 
@@ -1697,8 +1606,8 @@ export default function Dashboard() {
                 return (
                   <div className="text-center py-12 text-on-surface-variant">
                     <span className="material-symbols-outlined text-[44px] opacity-30 mb-2">event_busy</span>
-                    <p className="font-bold text-sm">ไม่พบประวัติการจองในหมวดนี้</p>
-                    <p className="text-xs opacity-70 mt-0.5">คุณสามารถจองคอร์ทใหม่ได้ที่เมนู "Book Court"</p>
+                    <p className="font-bold text-sm">{p.historyEmpty}</p>
+                    <p className="text-xs opacity-70 mt-0.5">{p.historyEmptyHint}</p>
                   </div>
                 );
               }
@@ -1706,28 +1615,22 @@ export default function Dashboard() {
               return filtered.map(booking => {
                 const isPending = booking.status === 'PENDING';
                 const isCancelled = booking.status === 'CANCELLED';
-                const isCompleted = booking.status === 'COMPLETED';
-                const isCheckedIn = booking.status === 'CHECKED_IN';
 
                 let badgeBg = 'bg-primary-fixed text-on-primary-fixed';
-                let statusThai = 'รอเช็คอิน';
                 let borderColor = 'border-primary/20';
 
-                if (isCheckedIn) {
+                if (booking.status === 'CHECKED_IN') {
                   badgeBg = 'bg-secondary-container text-on-secondary-container';
-                  statusThai = 'กำลังใช้งาน (Active)';
                   borderColor = 'border-secondary/30';
-                } else if (isCompleted) {
+                } else if (booking.status === 'COMPLETED') {
                   badgeBg = 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300';
-                  statusThai = 'ใช้งานเสร็จสิ้น';
                   borderColor = 'border-sky-300/30';
                 } else if (isCancelled) {
                   badgeBg = 'bg-error-container text-on-error-container';
-                  statusThai = 'ยกเลิกแล้ว';
                   borderColor = 'border-error/20';
                 }
 
-                const courtName = typeof booking.court === 'object' ? booking.court?.name : (booking.court ? `Court ${booking.court}` : 'Court');
+                const courtName = playerCourtName(booking);
 
                 return (
                   <div
@@ -1747,30 +1650,30 @@ export default function Dashboard() {
                             </span>
                           </div>
                           <span className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5">
-                            <span className="material-symbols-outlined text-[13px]">calendar_today</span> {booking.booking_date}
+                            <span className="material-symbols-outlined text-[13px]">calendar_today</span> {formatDate(booking.booking_date)}
                           </span>
                         </div>
                       </div>
 
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${badgeBg}`}>
-                        {statusThai}
+                        {localizedStatus(booking.status, locale)}
                       </span>
                     </div>
 
                     {/* Details Row */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 border-t border-outline-variant/20 text-xs">
                       <div className="flex flex-col">
-                        <span className="text-on-surface-variant text-[11px]">ช่วงเวลา</span>
+                        <span className="text-on-surface-variant text-[11px]">{p.historyTimeLabel}</span>
                         <span className="font-bold text-on-surface">
-                          {(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)} น.
+                          {(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)}
                         </span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-on-surface-variant text-[11px]">ระยะเวลา</span>
-                        <span className="font-bold text-on-surface">1 ชั่วโมง</span>
+                        <span className="text-on-surface-variant text-[11px]">{p.historyDurationLabel}</span>
+                        <span className="font-bold text-on-surface">{p.historyDurationValue}</span>
                       </div>
                       <div className="flex flex-col col-span-2 sm:col-span-1">
-                        <span className="text-on-surface-variant text-[11px]">สถานะระบบ</span>
+                        <span className="text-on-surface-variant text-[11px]">{p.historySystemStatusLabel}</span>
                         <span className="font-mono font-semibold text-on-surface">{booking.status}</span>
                       </div>
                     </div>
@@ -1786,7 +1689,7 @@ export default function Dashboard() {
                           className="flex-1 py-2 px-3 rounded-lg bg-primary text-on-primary text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-all cursor-pointer"
                         >
                           <span className="material-symbols-outlined text-[16px]">qr_code_scanner</span>
-                          <span>สแกนเข้าสนาม</span>
+                          <span>{p.checkInAction}</span>
                         </button>
                         <button
                           onClick={() => {
@@ -1795,7 +1698,7 @@ export default function Dashboard() {
                           }}
                           className="py-2 px-3 rounded-lg bg-error-container text-on-error-container text-xs font-bold hover:bg-error-container/80 transition-all cursor-pointer"
                         >
-                          ยกเลิก
+                          {p.cancelAction}
                         </button>
                       </div>
                     )}
@@ -1807,7 +1710,7 @@ export default function Dashboard() {
 
           <DialogFooter className="p-3 bg-surface-container-low/60 border-t border-outline-variant/20">
             <Button variant="outline" onClick={() => setShowHistoryModal(false)} className="w-full sm:w-auto">
-              ปิดหน้าต่าง (Close)
+              {p.historyClose}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1816,21 +1719,21 @@ export default function Dashboard() {
       <Dialog open={bookingToCancel !== null} onOpenChange={(open) => !open && setBookingToCancel(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>ยืนยันการยกเลิกจองคอร์ท (Cancel Booking)</DialogTitle>
+            <DialogTitle>{p.cancelDialogTitle}</DialogTitle>
             <DialogDescription className="text-on-surface-variant pt-2 space-y-2">
-              <p>คุณต้องการยกเลิกการจองคอร์ทนี้ใช่หรือไม่?</p>
+              <p>{p.cancelDialogQuestion}</p>
               <ul className="list-disc pl-5 text-error font-medium">
-                <li>ต้องยกเลิกก่อนครบ 15 นาทีหลังเวลาเริ่มจอง</li>
-                <li>หากยกเลิกทันเวลา คุณสามารถจองคอร์ทใหม่ในวันนี้ได้ 1 ครั้ง</li>
+                <li>{p.cancelDialogRuleOne}</li>
+                <li>{p.cancelDialogRuleTwo}</li>
               </ul>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4 gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setBookingToCancel(null)}>
-              ปิด (Close)
+              {p.cancelDialogClose}
             </Button>
             <Button variant="destructive" onClick={handleCancelBooking} className="bg-error hover:bg-error/90 text-on-error">
-              ยืนยันยกเลิก (Confirm Cancel)
+              {p.cancelDialogConfirm}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
 import { LoadingProvider } from '@/components/loading-provider';
+import { LocaleProvider } from '@/components/locale-provider';
 import Script from 'next/script';
 import 'material-symbols/outlined.css';
 
@@ -25,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="th"
       translate="no"
       className={`${robotoCondensed.variable} h-full antialiased`}
       suppressHydrationWarning
@@ -72,7 +73,7 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
         >
-          <LoadingProvider>{children}</LoadingProvider>
+          <LocaleProvider><LoadingProvider>{children}</LoadingProvider></LocaleProvider>
           <Toaster position="top-center" theme="system" />
         </ThemeProvider>
       </body>

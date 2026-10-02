@@ -18,6 +18,35 @@ test('creates exactly one booking date for the current Bangkok day', () => {
   });
 });
 
+test('localizes the booking date to English on request', () => {
+  const now = new Date('2026-09-16T23:30:00+07:00');
+
+  assert.deepEqual(createTodayBookingDate(now, 'en'), {
+    date: '2026-09-16',
+    day: 'Wednesday',
+    num: '16',
+    month: 'September',
+  });
+});
+
+test('localizes the confirmation details to English without the Thai time suffix', () => {
+  assert.deepEqual(
+    createBookingConfirmationDetails({
+      date: '2026-09-16',
+      time: '18:00',
+      courtName: 'Court 2',
+      bookerName: 'MIDTION User',
+    }, 'en'),
+    {
+      date: '16',
+      month: 'September',
+      court: 'Court 2',
+      time: '18:00 - 19:00',
+      booker: 'MIDTION User',
+    },
+  );
+});
+
 test('builds the confirmation details shown before a booking is submitted', () => {
   assert.deepEqual(
     createBookingConfirmationDetails({

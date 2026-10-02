@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryColumn, OneToMany, Check } from 'typeorm';
+import { Entity, Column, PrimaryColumn, OneToMany, Check, Index } from 'typeorm';
 import { Booking } from '../../bookings/entities/booking.entity';
 
 @Entity('users_students')
@@ -9,6 +9,10 @@ export class Student {
 
   @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
+
+  @Index('IDX_student_email_normalized')
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  email_normalized: string | null;
 
   @Column({ type: 'varchar', length: 100 })
   first_name: string;
@@ -30,6 +34,18 @@ export class Student {
 
   @Column({ type: 'varchar', length: 255 })
   password: string;
+
+  @Column({ type: 'varchar', length: 64, nullable: true, unique: true })
+  reset_token_hash: string | null;
+
+  @Column({ type: 'datetime', nullable: true })
+  reset_token_expires_at: Date | null;
+
+  @Column({ type: 'datetime', nullable: true })
+  reset_requested_at: Date | null;
+
+  @Column({ type: 'int', default: 0 })
+  password_version: number;
 
   @Column({ type: 'int', default: 0 })
   strikes: number;

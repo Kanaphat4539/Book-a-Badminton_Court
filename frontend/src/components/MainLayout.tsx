@@ -242,33 +242,7 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Student Strike Points Badge */}
-            {isAuthenticated && userRole !== 'ADMIN' && banStatus && (
-              <button
-                type="button"
-                onClick={() => setIsStrikeDialogOpen(true)}
-                title={t('strikesBadgeLabel')}
-                aria-label={`${t('strikesBadgeLabel')}: ${banStatus.strikes}/2`}
-                className={cn(
-                  'h-8 px-2 sm:px-2.5 rounded-full flex items-center gap-1 sm:gap-1.5 transition-all duration-200 cursor-pointer text-xs font-semibold border select-none',
-                  banStatus.isBanned
-                    ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30 hover:bg-rose-500/20 shadow-xs'
-                    : banStatus.strikes === 1
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20 shadow-xs'
-                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25 hover:bg-emerald-500/20'
-                )}
-              >
-                <span className="material-symbols-outlined text-[16px] sm:text-[18px]">
-                  {banStatus.isBanned ? 'block' : banStatus.strikes === 1 ? 'warning' : 'verified_user'}
-                </span>
-                <span className="sm:hidden font-bold leading-none">{banStatus.strikes}/2</span>
-                <span className="hidden sm:inline leading-none font-medium">
-                  {banStatus.strikes}/2 {t('strikesUnit')}
-                </span>
-              </button>
-            )}
-
+          <div className="flex items-center gap-2 shrink-0">
             <LanguageToggle />
             <div className="relative">
               <button 

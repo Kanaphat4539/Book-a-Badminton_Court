@@ -6,6 +6,7 @@ import api from '@/lib/api';
 import { toast } from 'sonner';
 import { usePageLoading } from '@/components/loading-provider';
 import { useLocale } from '@/components/locale-provider';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { translate as authNewsText } from '@/lib/auth-news-messages.cjs';
 
 export default function RegisterPage() {
@@ -54,7 +55,9 @@ export default function RegisterPage() {
       className="min-h-screen flex flex-col items-center justify-center p-6 text-on-surface dark:text-orange-50 font-sans relative overflow-hidden transition-colors duration-300 bg-cover bg-center"
       style={{ backgroundImage: `url('https://images.unsplash.com/photo-1661020812032-90582fe13ca6?w=1920&auto=format&fit=crop&q=80')` }}
     >
-      <button type="button" aria-label={locale === 'th' ? 'Switch language to English' : 'เปลี่ยนภาษาเป็นไทย'} aria-pressed={locale === 'en'} onClick={() => setLocale(locale === 'th' ? 'en' : 'th')} className="absolute right-6 top-6 z-20 rounded-lg border border-primary/40 bg-black/40 px-3 py-2 text-sm font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">{locale === 'th' ? 'English' : 'ไทย'}</button>
+      <div className="absolute right-6 top-6 z-20">
+        <LanguageToggle />
+      </div>
       {/* Subtle overlay for text readability */}
       <div className="absolute inset-0 bg-white/40 dark:bg-black/60 backdrop-blur-[2px] transition-colors duration-300 z-0"></div>
 

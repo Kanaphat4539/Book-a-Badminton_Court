@@ -1,6 +1,6 @@
 const landingMessages = {
   th: {
-    menuNews:'ข่าวสาร', loginToConsole:'เข้าสู่ระบบคอนโซล', openMenu:'เปิดเมนู', heroConnect:'เชื่อมต่อกับ', heroCta:'เริ่มใช้งาน', slideLabel:'ไปยังสไลด์',
+    menuNews:'ข่าวสาร', loginToConsole:'เข้าสู่ระบบคอนโซล', openMenu:'เปิดเมนู', heroConnect:'จองคอร์ทสำหรับประสบการณ์ที่สุดยอด', heroCta:'เริ่มใช้งาน', slideLabel:'ไปยังสไลด์',
     serviceBookingBody:'จองและจัดการสนามแบบเรียลไทม์สำหรับนักศึกษาและบุคลากรของ KMITL', serviceMembershipBody:'เข้าสู่ระบบและเชื่อมต่อบัญชีแบดมินตัน KMITL ได้อย่างสะดวก', serviceCheckinBody:'เชื่อมโยงการจองกับสนามด้วยการสแกน QR Code',
     newsTermsBody:'ข้อกำหนดการใช้งานสำหรับนักกีฬา KMITL จะปรับปรุงในวันที่ 27 กรกฎาคม 2569 กำหนดการอาจเปลี่ยนแปลงได้ โดยมีรายละเอียดเกี่ยวกับนโยบายการยกเลิกการจองสนาม', newsStatsBody:'เพิ่มแผงสถิติในแดชบอร์ดผู้ใช้ เพื่อดูชั่วโมงการเล่น สนามที่เข้าใช้บ่อย และข้อมูลอื่น ๆ', newsCourtCategory:'การจองสนาม', newsDashboardCategory:'อัปเดตแดชบอร์ด',
     guideTitle:'วิธีใช้งาน', guideIntro:'คู่มือฉบับย่อสำหรับระบบจองสนามแบดมินตัน KMITL PCC',
@@ -19,7 +19,7 @@ const landingMessages = {
     footerDescription:'ระบบจองสนามแบดมินตันสำหรับสถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง เล่นเต็มที่ เล่นอย่างมีน้ำใจ', footerRules:'กฎและคู่มือ', footerBooking:'พื้นฐานการจอง', footerCancellation:'นโยบายการยกเลิก', footerEtiquette:'มารยาทการใช้สนาม', footerFees:'ค่าสมาชิก', footerContact:'ติดต่อเรา', footerSupport:'ศูนย์ช่วยเหลือ', footerIssue:'แจ้งปัญหา', footerTerms:'ข้อกำหนดและนโยบาย', footerTrademarks:'เกี่ยวกับเครื่องหมายการค้า'
   },
   en: {
-    menuNews:'News', loginToConsole:'Log in to Console', openMenu:'Open menu', heroConnect:'Connect with', heroCta:"Let's Go", slideLabel:'Go to slide',
+    menuNews:'News', loginToConsole:'Log in to Console', openMenu:'Open menu', heroConnect:'Book a court for an ultimate experience.', heroCta:"Let's Go", slideLabel:'Go to slide',
     serviceBookingBody:'Enable real-time court reservations and management for KMITL students and staff.', serviceMembershipBody:'Let athletes easily log in and connect with their KMITL Badminton ID.', serviceCheckinBody:'Link your booking with the court via QR code scanning.',
     newsTermsBody:'The Terms of Use (for KMITL Athletes) will be revised on July 27, 2026. The scheduled date and content may change. Details include court cancellation policies...', newsStatsBody:"We have added a new statistics panel to the user dashboard where you can see how many hours you've played, your most frequently visited courts, and more...", newsCourtCategory:'Court Booking', newsDashboardCategory:'Dashboard Update',
     guideTitle:'How to Use', guideIntro:'Your quick guide to the KMITL PCC Badminton Booking System',

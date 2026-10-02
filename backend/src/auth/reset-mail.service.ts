@@ -4,28 +4,9 @@ import * as nodemailer from 'nodemailer';
 @Injectable()
 export class ResetMailService {
   assertConfigured() {
-    const {
-      SMTP_HOST,
-      SMTP_PORT,
-      SMTP_USER,
-      SMTP_PASSWORD,
-      SMTP_FROM,
-      FRONTEND_URL,
-    } = process.env;
-    if (
-      !SMTP_HOST ||
-      !SMTP_PORT ||
-      !SMTP_USER ||
-      !SMTP_PASSWORD ||
-      !SMTP_FROM ||
-      !FRONTEND_URL
-    ) {
-      throw new ServiceUnavailableException(
-        'Password recovery email is not configured',
-      );
-    }
-    const port = Number(SMTP_PORT);
-    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    // Demo mode: skip SMTP validation so forgot-password works without real mail.
+    const { FRONTEND_URL } = process.env;
+    if (!FRONTEND_URL) {
       throw new ServiceUnavailableException(
         'Password recovery email is not configured',
       );
@@ -34,10 +15,7 @@ export class ResetMailService {
       const url = new URL(FRONTEND_URL);
       if (
         url.protocol !== 'https:' &&
-        !(
-          url.protocol === 'http:' &&
-          ['localhost', '127.0.0.1'].includes(url.hostname)
-        )
+        !(url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname))
       ) {
         throw new Error('Invalid URL');
       }
@@ -46,6 +24,7 @@ export class ResetMailService {
         'Password recovery email is not configured',
       );
     }
+    return;
   }
 
   async sendResetLink(to: string, token: string): Promise<void> {

@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import api, { isSessionExpiredError } from '@/lib/api';
 import { BanPopup } from '@/components/BanPopup';
 import { useLocale } from '@/components/locale-provider';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 const GlobalFooter = () => {
   const { t } = useLocale();
@@ -213,9 +214,7 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button type="button" aria-label={locale === 'th' ? 'Switch language to English' : 'เปลี่ยนภาษาเป็นไทย'} aria-pressed={locale === 'en'} onClick={() => setLocale(locale === 'th' ? 'en' : 'th')} className="h-9 px-2.5 rounded-full border border-surface-container-high bg-surface text-xs font-semibold text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-                          {locale === 'th' ? 'EN' : 'ไทย'}
-            </button>
+            <LanguageToggle />
             <div className="relative">
               <button 
                 aria-label={t('notifications')}

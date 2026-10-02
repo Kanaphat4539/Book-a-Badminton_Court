@@ -7,6 +7,7 @@ import api from '@/lib/api';
 import { toast } from 'sonner';
 import { usePageLoading } from '@/components/loading-provider';
 import { useLocale } from '@/components/locale-provider';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { translate as authNewsText } from '@/lib/auth-news-messages.cjs';
 
 
@@ -59,7 +60,7 @@ export default function LoginPage() {
                 >
                   <span className="material-symbols-outlined text-[20px]" aria-hidden="true">arrow_back</span>
         </a>
-        <button type="button" aria-label={locale === 'th' ? 'Switch language to English' : 'เปลี่ยนภาษาเป็นไทย'} aria-pressed={locale === 'en'} onClick={() => setLocale(locale === 'th' ? 'en' : 'th')} className="rounded-lg border border-primary/40 bg-black/40 px-3 py-2 text-sm font-bold text-white hover:bg-black/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">{locale === 'th' ? 'English' : 'ไทย'}</button>
+        <LanguageToggle />
       </div>
 
       <main className="w-full max-w-md relative z-10 flex flex-col items-center">

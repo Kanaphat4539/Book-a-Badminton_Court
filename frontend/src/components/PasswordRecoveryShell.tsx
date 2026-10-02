@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useLocale } from '@/components/locale-provider';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { translate as authNewsText } from '@/lib/auth-news-messages.cjs';
 
 export function PasswordRecoveryShell({ title, description, children }: {
@@ -15,15 +16,7 @@ export function PasswordRecoveryShell({ title, description, children }: {
   return (
     <main className="min-h-screen flex items-center justify-center bg-surface px-5 py-12 text-on-surface dark:bg-[#140e0b] relative">
       <div className="absolute top-6 right-6 z-10">
-        <button
-          type="button"
-          aria-label={locale === 'th' ? 'Switch language to English' : 'เปลี่ยนภาษาเป็นไทย'}
-          aria-pressed={locale === 'en'}
-          onClick={() => setLocale(locale === 'th' ? 'en' : 'th')}
-          className="rounded-lg border border-primary/40 bg-black/40 px-3 py-2 text-sm font-bold text-white hover:bg-black/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          {locale === 'th' ? 'English' : 'ไทย'}
-        </button>
+        <LanguageToggle />
       </div>
       <section className="w-full max-w-md rounded-3xl border border-outline-variant/50 bg-white p-7 shadow-xl dark:border-[#ff6b00]/20 dark:bg-[#241911] sm:p-9">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">KMITL BADMINTON</p>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useLocale } from '@/components/locale-provider';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { landingMessages, type LandingLocale, type LandingCopy } from '@/lib/landing-messages.cjs';
 
 
@@ -78,7 +79,7 @@ export default function LandingPage() {
         </div>
 
         <div className="flex items-center gap-2 md:gap-6">
-          <button type="button" aria-label={locale === 'th' ? 'Switch language to English' : 'เปลี่ยนภาษาเป็นไทย'} onClick={() => setLocale(locale === 'th' ? 'en' : 'th')} className="rounded-full border border-white/40 px-3 py-2 text-sm font-bold text-white">{locale === 'th' ? 'English' : 'ไทย'}</button>
+          <LanguageToggle />
           <Link href="/login" className="hidden md:flex bg-white text-black font-bold text-[14px] px-6 py-2.5 rounded-full hover:bg-gray-200 transition-colors shadow-lg active:scale-95">
             {copy.loginToConsole}
           </Link>
@@ -163,8 +164,7 @@ export default function LandingPage() {
             className="relative z-10 max-w-7xl w-full mx-auto px-8 md:px-12 lg:px-24 flex flex-col justify-center h-full pt-16"
             style={{ opacity: heroOpacity }}
           >
-            <h1 className="font-display-lg text-[42px] sm:text-[56px] md:text-[80px] font-extrabold text-white leading-[1.05] drop-shadow-xl mb-6 tracking-tight">
-              {copy.heroConnect} <br />
+            <h1 className="font-display-lg text-[42px] sm:text-[56px] md:text-[80px] font-extrabold text-white leading-[1.05] drop-shadow-xl tracking-tight">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F26522] to-yellow-400 filter drop-shadow-md">
                 KMITL&nbsp;
               </span>
@@ -173,6 +173,9 @@ export default function LandingPage() {
               </span>
               <br className="md:hidden" /> BADMINTON
             </h1>
+            <p className="text-[20px] sm:text-[26px] md:text-[32px] font-medium text-white/95 drop-shadow-lg mt-3 md:mt-4 mb-8 max-w-3xl leading-snug">
+              {copy.heroConnect}
+            </p>
             <Link href="/login" className="font-bold text-[18px] md:text-[22px] text-[#F26522] hover:text-[#ff7e22] transition-all inline-flex items-center gap-2 w-fit bg-white/10 hover:bg-white/20 hover:scale-[1.05] active:scale-[0.98] px-8 py-4 rounded-full backdrop-blur-md border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.3)] pointer-events-auto">
               {copy.heroCta} <span className="material-symbols-outlined font-bold text-[20px] md:text-[24px]">arrow_forward_ios</span>
             </Link>

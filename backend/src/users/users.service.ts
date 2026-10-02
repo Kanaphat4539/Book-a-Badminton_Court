@@ -173,6 +173,15 @@ export class UsersService implements OnModuleInit {
     return this.studentRepository.find();
   }
 
+  async updatePasswordByEmail(email: string, newPassword: string): Promise<boolean> {
+    const student = await this.findStudentByEmail(email);
+    if (!student) return false;
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    student.password = hashedPassword;
+    await this.studentRepository.save(student);
+    return true;
+  }
+
   async removeStudent(stu_id: string): Promise<void> {
     // Delete related bookings first due to RESTRICT foreign key constraint
     await this.studentRepository.manager.getRepository(Booking).delete({ student: { stu_id } as any });

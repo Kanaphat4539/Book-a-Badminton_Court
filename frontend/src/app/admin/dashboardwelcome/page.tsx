@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 import { toast } from 'sonner';
+import api from '@/lib/api';
 import {
   fetchWelcomeContent,
   saveWelcomeContent,
@@ -31,7 +32,8 @@ import {
   BookOpen,
   Lightbulb,
   ShieldAlert,
-  Info
+  Info,
+  LayoutGrid
 } from 'lucide-react';
 
 export default function EditWelcomeDashboard() {
@@ -39,7 +41,11 @@ export default function EditWelcomeDashboard() {
   const [data, setData] = useState<WelcomeContentData>(DEFAULT_WELCOME_DATA);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'hero' | 'news' | 'services' | 'guide' | 'tips' | 'rules'>('news');
+  const [activeTab, setActiveTab] = useState<'hero' | 'news' | 'services' | 'guide' | 'tips' | 'rules' | 'courts'>('news');
+
+  // Courts state
+  const [courtsList, setCourtsList] = useState<any[]>([]);
+  const [savingCourtId, setSavingCourtId] = useState<number | null>(null);
 
   // News form state
   const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
@@ -82,7 +88,46 @@ export default function EditWelcomeDashboard() {
       setData(loaded);
       setLoading(false);
     });
+
+    api.get('/courts').then((res) => {
+      if (res.data) setCourtsList(res.data);
+    }).catch(() => {});
   }, [router]);
+
+  const handleCourtFileInDashboard = (courtId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('ขนาดไฟล์รูปภาพไม่ควรเกิน 5MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setCourtsList((prev) =>
+          prev.map((c) => (c.id === courtId ? { ...c, image: reader.result } : c))
+        );
+        toast.success('โหลดรูปภาพเรียบร้อยแล้ว กด "บันทึกคอร์ท" เพื่อยืนยัน');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveCourtInDashboard = async (court: any) => {
+    setSavingCourtId(court.id);
+    try {
+      await api.patch(`/courts/${court.id}`, {
+        image: court.image,
+        location: court.location,
+        name: court.name,
+      });
+      toast.success(`บันทึกรูปภาพและข้อมูล ${court.name} เรียบร้อยแล้ว!`);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'ไม่สามารถบันทึกข้อมูลคอร์ทได้');
+    } finally {
+      setSavingCourtId(null);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -344,6 +389,16 @@ export default function EditWelcomeDashboard() {
               }`}
             >
               <ShieldAlert className="w-4 h-4" /> กฎและข้อกำหนด (Rules)
+            </button>
+            <button
+              onClick={() => setActiveTab('courts')}
+              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
+                activeTab === 'courts'
+                  ? 'bg-[#F26522] text-white shadow-md'
+                  : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" /> สนาม & รูปคอร์ท (Courts)
             </button>
           </div>
         </div>
@@ -792,6 +847,134 @@ export default function EditWelcomeDashboard() {
                       </div>
                     ))}
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 7: สนามและรูปคอร์ท (Courts) */}
+        {activeTab === 'courts' && (
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold">จัดการรูปภาพและข้อมูลสนาม (Courts 1-4)</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  เปลี่ยนรูปภาพคอร์ท หรือระบุสถานที่/โซน เพื่อแสดงในหน้าเลือกคอร์ท (/booking/select-court)
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {courtsList.map((court) => (
+                <div
+                  key={court.id}
+                  className="bg-white dark:bg-[#140900] rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-sm flex flex-col justify-between gap-4"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="w-8 h-8 rounded-lg bg-orange-500/10 text-[#F26522] font-black text-sm flex items-center justify-center">
+                          {court.id}
+                        </span>
+                        <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                          {court.name}
+                        </h3>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-600 dark:text-green-400">
+                        {court.status || 'ACTIVE'}
+                      </span>
+                    </div>
+
+                    {/* Court Image Preview */}
+                    <div className="relative h-48 w-full rounded-2xl overflow-hidden bg-black/10 border border-gray-200 dark:border-white/10">
+                      {court.image ? (
+                        <img
+                          src={court.image}
+                          alt={court.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs gap-1">
+                          <ImageIcon className="w-8 h-8 opacity-40" />
+                          <span>ยังไม่มีรูปภาพ</span>
+                        </div>
+                      )}
+                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-bold">
+                        {court.location || `คอร์ท ${court.id}`}
+                      </div>
+                    </div>
+
+                    {/* Upload File Button */}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
+                        อัปโหลดรูปภาพใหม่จากเครื่อง
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id={`court-file-${court.id}`}
+                        className="hidden"
+                        onChange={(e) => handleCourtFileInDashboard(court.id, e)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById(`court-file-${court.id}`)?.click()}
+                        className="w-full py-2.5 px-3 rounded-xl border border-dashed border-[#F26522] text-[#F26522] hover:bg-[#F26522]/5 text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
+                      >
+                        <Upload className="w-4 h-4" />
+                        เลือกไฟล์รูปภาพ (Max 5MB)
+                      </button>
+                    </div>
+
+                    {/* Image URL Input */}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
+                        หรือกรอก Image URL
+                      </label>
+                      <input
+                        type="text"
+                        value={court.image || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCourtsList((prev) =>
+                            prev.map((c) => (c.id === court.id ? { ...c, image: val } : c))
+                          );
+                        }}
+                        placeholder="https://images.unsplash.com/..."
+                        className="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                      />
+                    </div>
+
+                    {/* Location / Zone Label */}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
+                        สถานที่ / โซน (Location Text)
+                      </label>
+                      <input
+                        type="text"
+                        value={court.location || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCourtsList((prev) =>
+                            prev.map((c) => (c.id === court.id ? { ...c, location: val } : c))
+                          );
+                        }}
+                        placeholder="เช่น KMITL Sports Hall • Main"
+                        className="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={savingCourtId === court.id}
+                    onClick={() => handleSaveCourtInDashboard(court)}
+                    className="w-full mt-2 py-2.5 rounded-xl bg-[#F26522] hover:bg-[#d95314] text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 cursor-pointer"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    {savingCourtId === court.id ? 'กำลังบันทึก...' : `บันทึกรูป ${court.name}`}
+                  </button>
                 </div>
               ))}
             </div>

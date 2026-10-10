@@ -1,11 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, UpdateDateColumn } from 'typeorm';
 
 const textColumnType = () => {
-  const dbType = process.env.DB_TYPE || '';
-  if (dbType === 'sqlite' || dbType === 'sqljs') {
-    return 'text';
+  if (process.env.DB_TYPE === 'mysql') {
+    return 'longtext';
   }
-  return 'longtext';
+  return 'text';
 };
 
 @Entity('welcome_content')

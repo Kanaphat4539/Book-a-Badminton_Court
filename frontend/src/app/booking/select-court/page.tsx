@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { isAxiosError } from 'axios';
 import { bookingErrorMessage, formatBookingDate } from '@/lib/booking-page-messages.cjs';
@@ -29,6 +29,8 @@ type Court = {
   name: string;
   description?: string;
   status: string;
+  image?: string;
+  location?: string;
   bookings?: Array<{
     start_time: string;
     status: string;
@@ -53,6 +55,68 @@ function SelectCourtContent() {
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<SelectedBooking | null>(null);
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [editingCourt, setEditingCourt] = useState<Court | null>(null);
+  const [editCourtImage, setEditCourtImage] = useState('');
+  const [editCourtLocation, setEditCourtLocation] = useState('');
+  const [updatingCourt, setUpdatingCourt] = useState(false);
+  const courtFileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      if (u.role === 'ADMIN') setIsAdmin(true);
+    } catch {}
+  }, []);
+
+  const handleOpenEditCourt = (court: Court, currentImg: string, currentLoc: string) => {
+    setEditingCourt(court);
+    setEditCourtImage(court.image || currentImg);
+    setEditCourtLocation(court.location || currentLoc);
+  };
+
+  const handleCourtFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('ขนาดไฟล์รูปภาพไม่ควรเกิน 5MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setEditCourtImage(reader.result);
+        toast.success('โหลดรูปภาพเรียบร้อยแล้ว');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveCourt = async () => {
+    if (!editingCourt) return;
+    setUpdatingCourt(true);
+    try {
+      await api.patch(`/courts/${editingCourt.id}`, {
+        image: editCourtImage,
+        location: editCourtLocation,
+      });
+      setCourts((prev) =>
+        prev.map((c) =>
+          c.id === editingCourt.id
+            ? { ...c, image: editCourtImage, location: editCourtLocation }
+            : c
+        )
+      );
+      toast.success(`บันทึกการเปลี่ยนรูปภาพของ ${editingCourt.name} สำเร็จแล้ว!`);
+      setEditingCourt(null);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || 'ไม่สามารถบันทึกข้อมูลคอร์ทได้');
+    } finally {
+      setUpdatingCourt(false);
+    }
+  };
 
   const displayDateStr = useMemo(() => {
     if (!dateParam || !timeParam) return '';
@@ -237,7 +301,7 @@ function SelectCourtContent() {
                 "https://lh3.googleusercontent.com/aida-public/AB6AXuCBYUbU_WdVKEifnxDG32AtMOD8jd6gHx6Mr9D2k1QDOnaH_dogMdf14FnilKm5690ke0x2zx1RkDRo_4Z4WjXFAsDVTSE7DjEcsIFAld9-ztK5qN3kwQBKdRcJLeJ4BPcJDqPMOS8fEkA7zGhqvGT4uqM5UoBQY4hNXgkXBU6sC8quyjAgOf0h203Z2imr-oKgKWSdTX8xzmHo7Cm4O77i_KyiwBtSDzwaFKXwIjpKA_2fQCwIkYmk",
                 "https://lh3.googleusercontent.com/aida-public/AB6AXuBiwfc8uZdNBwBblIxMMsANZ02DSX8Ic11FRNK0cOyWGEcEvkYMXWRQCe8upBmOAT5KVyPFkTEFrR5PQP_lY9ri31KG-s3ESUrr3EZl0sttxG4Xe6ySiyBe6dn4gZXrvf8JJTXVI9fOhz8RrVgyPcjZ9MasMdOQ2mhmCidqg1WuCRVaTol_oom7smnKk2umHISNInxM0IXmo7bPnWMF0hjihD2OXtlZYUy-jLY6oYkm6ot6SaHSM19Q"
               ];
-              const imageSrc = courtImages[index % courtImages.length];
+              const imageSrc = court.image || courtImages[index % courtImages.length];
 
               const locations = [
                 "KMITL Sports Hall • Main",
@@ -245,7 +309,7 @@ function SelectCourtContent() {
                 t('indoorLocation'),
                 t('northLocation')
               ];
-              const locationText = locations[index % locations.length];
+              const locationText = court.location || locations[index % locations.length];
 
               return (
                 <div key={court.id} className={`bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm flex flex-col transition-all hover:shadow-md ${isBooked ? 'opacity-60 grayscale-[50%]' : ''}`}>
@@ -261,6 +325,22 @@ function SelectCourtContent() {
                         {t('indoor')}
                       </span>
                     </div>
+
+                    {/* Admin Change Court Image Button */}
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenEditCourt(court, imageSrc, locationText);
+                        }}
+                        className="absolute top-2 right-2 md:top-3 md:right-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/75 hover:bg-[#F26522] text-white text-xs font-bold backdrop-blur-md border border-white/20 shadow-lg transition-all active:scale-95 cursor-pointer"
+                        title="เปลี่ยนรูปภาพหรือสถานที่คอร์ท (Admin Only)"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">photo_camera</span>
+                        <span>เปลี่ยนรูปคอร์ท</span>
+                      </button>
+                    )}
                     <div className="absolute bottom-2 left-2 right-2 md:bottom-3 md:left-3 md:right-3 flex items-end justify-between text-white">
                                           <div>
                                             <span className="font-label-sm text-[10px] md:text-label-sm text-white/85 block truncate max-w-[180px] drop-shadow-sm">{locationText}</span>
@@ -381,6 +461,111 @@ function SelectCourtContent() {
                 <>
                   <span className="material-symbols-outlined text-[18px] text-white">check_circle</span>
                   <span className="text-white font-bold drop-shadow-sm">{t('confirmBooking')}</span>
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Admin Court Edit Modal */}
+      <Dialog open={editingCourt !== null} onOpenChange={(open) => !open && setEditingCourt(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[#F26522]">photo_camera</span>
+              แก้ไขรูปภาพ {editingCourt?.name}
+            </DialogTitle>
+            <DialogDescription>
+              สามารถใส่ URL รูปภาพ หรือ อัปโหลดรูปภาพใหม่จากเครื่องของคุณ (Admin Only)
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4 py-2">
+            {/* Live Image Preview */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-on-surface-variant">ตัวอย่างรูปภาพ</label>
+              <div className="relative h-44 w-full rounded-2xl overflow-hidden bg-black/10 border border-outline-variant/40">
+                {editCourtImage ? (
+                  <img src={editCourtImage} alt="Court Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-on-surface-variant text-xs gap-1">
+                    <span className="material-symbols-outlined text-3xl opacity-40">image_not_supported</span>
+                    <span>ไม่มีรูปภาพ</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* File Upload Input & Trigger */}
+            <input
+              type="file"
+              accept="image/*"
+              ref={courtFileRef}
+              className="hidden"
+              onChange={handleCourtFileUpload}
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => courtFileRef.current?.click()}
+                className="flex-1 py-2 px-3 rounded-xl border border-dashed border-[#F26522] text-[#F26522] hover:bg-[#F26522]/5 text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95"
+              >
+                <span className="material-symbols-outlined text-[18px]">upload_file</span>
+                เลือกไฟล์รูปจากเครื่อง (Max 5MB)
+              </button>
+            </div>
+
+            {/* Direct Image URL Input */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-on-surface-variant">หรือกรอก Image URL</label>
+              <input
+                type="text"
+                value={editCourtImage}
+                onChange={(e) => setEditCourtImage(e.target.value)}
+                placeholder="https://images.unsplash.com/..."
+                className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-low text-on-surface focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+              />
+            </div>
+
+            {/* Location / Zone Input */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-on-surface-variant">สถานที่ / โซน (Location)</label>
+              <input
+                type="text"
+                value={editCourtLocation}
+                onChange={(e) => setEditCourtLocation(e.target.value)}
+                placeholder="เช่น KMITL Sports Hall • Main"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-low text-on-surface focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={updatingCourt}
+              onClick={() => setEditingCourt(null)}
+              className="rounded-xl px-4 py-2 font-medium hover:bg-surface-container"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              type="button"
+              disabled={updatingCourt}
+              onClick={handleSaveCourt}
+              className="rounded-xl bg-gradient-to-r from-[#F26522] to-[#E05310] hover:from-[#E05310] hover:to-[#C94709] text-white font-bold text-sm px-5 py-2.5 shadow-[0_4px_16px_rgba(242,101,34,0.35)] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 border-0 hover:text-white"
+            >
+              {updatingCourt ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  <span>กำลังบันทึก...</span>
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[18px]">save</span>
+                  <span>บันทึกรูปภาพคอร์ท</span>
                 </>
               )}
             </Button>

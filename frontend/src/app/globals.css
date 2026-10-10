@@ -69,6 +69,7 @@
   --color-tertiary: #565e74;
   --color-inverse-on-surface: #f1f1f0;
   --color-on-primary: #ffffff;
+  --color-primary-foreground: #ffffff;
   --color-on-secondary: #ffffff;
   --color-surface-variant: #e2e2e2;
   --color-tertiary-container: #8b93ab;
@@ -188,6 +189,7 @@
     --color-tertiary: #a4adc9;
     --color-inverse-on-surface: #303030;
     --color-on-primary: #5d1700;
+    --color-primary-foreground: #ffffff;
     --color-on-secondary: #003825;
     --color-surface-variant: #52443e;
     --color-tertiary-container: #3f465c;

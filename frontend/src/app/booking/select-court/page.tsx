@@ -356,17 +356,33 @@ function SelectCourtContent() {
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2">
             <Button
               type="button"
               variant="outline"
               disabled={bookingLoading}
               onClick={() => setSelectedBooking(null)}
+              className="rounded-xl px-4 py-2 font-medium hover:bg-surface-container"
             >
               {t('backToChoose')}
             </Button>
-            <Button type="button" disabled={bookingLoading} onClick={handleBook}>
-              {bookingLoading ? t('booking') : t('confirmBooking')}
+            <Button
+              type="button"
+              disabled={bookingLoading}
+              onClick={handleBook}
+              className="rounded-xl bg-gradient-to-r from-[#F26522] to-[#E05310] hover:from-[#E05310] hover:to-[#C94709] text-white font-bold text-sm px-5 py-2.5 shadow-[0_4px_16px_rgba(242,101,34,0.35)] dark:shadow-[0_4px_20px_rgba(242,101,34,0.5)] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 border-0 hover:text-white"
+            >
+              {bookingLoading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  <span className="text-white font-bold">{t('booking')}</span>
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[18px] text-white">check_circle</span>
+                  <span className="text-white font-bold drop-shadow-sm">{t('confirmBooking')}</span>
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

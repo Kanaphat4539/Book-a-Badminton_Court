@@ -49,7 +49,8 @@ import {
   ChevronRight,
   Users,
   CheckCircle2,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -527,6 +528,14 @@ export default function Dashboard() {
                   >
                     <Users className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
                     <span>{c.users}</span>
+                  </button>
+                  <button
+                    onClick={() => router.push('/admin/dashboardwelcome')}
+                    title="จัดการเนื้อหาหน้าแรก (Welcome / Landing Page)"
+                    className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-600 dark:text-orange-400 transition shadow-sm text-xs font-mono font-semibold"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+                    <span>{locale === 'th' ? 'จัดการหน้าแรก' : 'Welcome Page'}</span>
                   </button>
                 </div>
               </div>

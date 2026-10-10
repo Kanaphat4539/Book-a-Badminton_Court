@@ -17,8 +17,22 @@ interface BanStatus {
   strikes: number;
 }
 
-const GlobalFooter = () => {
+const GlobalFooter = ({ isAdmin }: { isAdmin?: boolean }) => {
   const { t } = useLocale();
+  const router = useRouter();
+  const [showSettings, setShowSettings] = useState(isAdmin || false);
+
+  useEffect(() => {
+    if (isAdmin !== undefined) {
+      setShowSettings(isAdmin);
+    } else {
+      try {
+        const u = JSON.parse(localStorage.getItem('user') || '{}');
+        setShowSettings(u.role === 'ADMIN');
+      } catch {}
+    }
+  }, [isAdmin]);
+
   return (
   <footer className="hidden md:block w-full mt-auto bg-surface text-on-surface overflow-hidden relative border-t border-surface-container-high">
     <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full border-30 border-primary/10 pointer-events-none"></div>
@@ -42,15 +56,35 @@ const GlobalFooter = () => {
             {t('footerDescription')}
           </p>
           <div className="flex gap-3">
-            <button className="grid w-10 h-10 place-items-center rounded-xl bg-surface-container-high text-primary transition-all hover:bg-primary hover:text-on-primary hover:scale-105">
+            <button
+              type="button"
+              onClick={() => router.push('/')}
+              title="หน้าแรก (Landing Page)"
+              aria-label="Home"
+              className="grid w-10 h-10 place-items-center rounded-xl bg-surface-container-high text-primary transition-all hover:bg-primary hover:text-on-primary hover:scale-105"
+            >
               <span className="material-symbols-outlined text-[18px]">public</span>
             </button>
-            <button className="grid w-10 h-10 place-items-center rounded-xl bg-surface-container-high text-primary transition-all hover:bg-primary hover:text-on-primary hover:scale-105">
+            <button
+              type="button"
+              onClick={() => router.push('/news')}
+              title="ข่าวสาร (News)"
+              aria-label="News"
+              className="grid w-10 h-10 place-items-center rounded-xl bg-surface-container-high text-primary transition-all hover:bg-primary hover:text-on-primary hover:scale-105"
+            >
               <span className="material-symbols-outlined text-[18px]">photo_camera</span>
             </button>
-            <button className="grid w-10 h-10 place-items-center rounded-xl bg-surface-container-high text-primary transition-all hover:bg-primary hover:text-on-primary hover:scale-105">
-              <span className="material-symbols-outlined text-[18px]">settings</span>
-            </button>
+            {showSettings && (
+              <button
+                type="button"
+                onClick={() => router.push('/admin/dashboardwelcome')}
+                title="แก้ไขหน้าแรก (Edit Welcome / Landing Page)"
+                aria-label="Edit Welcome Page"
+                className="grid w-10 h-10 place-items-center rounded-xl bg-surface-container-high text-primary transition-all hover:bg-primary hover:text-on-primary hover:scale-105"
+              >
+                <span className="material-symbols-outlined text-[18px]">settings</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -327,7 +361,7 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
       </div>
 
       {/* Global Footer (Visible only on Desktop) */}
-      <GlobalFooter />
+      <GlobalFooter isAdmin={userRole === 'ADMIN'} />
 
       {/* Bottom Nav */}
       {userRole !== 'ADMIN' && (
@@ -412,7 +446,12 @@ export default function MainLayout({ children, width = 'compact' }: MainLayoutPr
                 )}
                 <button onClick={() => { setIsSidebarOpen(false); router.push('/news'); }} className="text-left font-label-lg text-on-surface hover:text-primary border-b border-surface-container-high pb-2">{t('news')}</button>
                 {userRole === 'ADMIN' && (
-                  <button onClick={() => { setIsSidebarOpen(false); router.push('/admin/users'); }} className="text-left font-label-lg text-secondary hover:text-primary border-b border-surface-container-high pb-2">{t('users')}</button>
+                  <>
+                    <button onClick={() => { setIsSidebarOpen(false); router.push('/admin/users'); }} className="text-left font-label-lg text-secondary hover:text-primary border-b border-surface-container-high pb-2">{t('users')}</button>
+                    <button onClick={() => { setIsSidebarOpen(false); router.push('/admin/dashboardwelcome'); }} className="text-left font-label-lg text-[#F26522] hover:underline border-b border-surface-container-high pb-2 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[18px]">edit_note</span> จัดการหน้าแรก
+                    </button>
+                  </>
                 )}
               </div>
               

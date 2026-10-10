@@ -6,8 +6,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { useLocale } from '@/components/locale-provider';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { landingMessages, type LandingLocale, type LandingCopy } from '@/lib/landing-messages.cjs';
-
-
+import { fetchWelcomeContent, type WelcomeContentData, type WelcomeNewsItem } from '@/lib/welcome-content';
 
 const heroImages = [
   'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1920&q=80',
@@ -18,19 +17,50 @@ const heroImages = [
 export default function LandingPage() {
   const { locale, setLocale, t } = useLocale();
   const copy = landingMessages[locale as LandingLocale] as LandingCopy;
+  const [welcomeData, setWelcomeData] = useState<WelcomeContentData | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [selectedNews, setSelectedNews] = useState<WelcomeNewsItem | null>(null);
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentHeroImage, setCurrentHeroImage] = useState(0);
   const [scrollY, setScrollY] = useState(0);
 
-  const nextImage = () => setCurrentHeroImage((prev) => (prev + 1) % heroImages.length);
-  const prevImage = () => setCurrentHeroImage((prev) => (prev - 1 + heroImages.length) % heroImages.length);
+  const activeHeroImages = welcomeData?.hero?.images?.length ? welcomeData.hero.images : heroImages;
+
+  const nextImage = () => setCurrentHeroImage((prev) => (prev + 1) % activeHeroImages.length);
+  const prevImage = () => setCurrentHeroImage((prev) => (prev - 1 + activeHeroImages.length) % activeHeroImages.length);
   const goToImage = (index: number) => setCurrentHeroImage(index);
+
+  useEffect(() => {
+    fetchWelcomeContent().then(setWelcomeData);
+
+    const handleContentUpdated = (e: any) => {
+      if (e.detail) {
+        setWelcomeData(e.detail);
+      } else {
+        fetchWelcomeContent().then(setWelcomeData);
+      }
+    };
+    window.addEventListener('welcome_content_updated', handleContentUpdated);
+
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const u = JSON.parse(userStr);
+        if (u.role === 'ADMIN') setIsAdmin(true);
+      } catch {}
+    }
+
+    return () => {
+      window.removeEventListener('welcome_content_updated', handleContentUpdated);
+    };
+  }, []);
 
   useEffect(() => {
     const heroInterval = setInterval(nextImage, 6000);
     return () => clearInterval(heroInterval);
-  }, []);
+  }, [activeHeroImages.length]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,8 +77,45 @@ export default function LandingPage() {
   const heroTranslateY = scrollY * 0.5;
   const heroBorderRadius = Math.min(scrollY * 0.1, 40);
 
+  // Dynamic or dictionary news
+  const displayNews: WelcomeNewsItem[] = welcomeData?.news?.length
+    ? welcomeData.news
+    : [
+        {
+          id: 'news-default-1',
+          tag: t('newsNew'),
+          date: '2026/10/10',
+          title: t('newsTermsTitle'),
+          body: copy.newsTermsBody,
+          category: copy.newsCourtCategory,
+          image: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=1200&q=80'
+        },
+        {
+          id: 'news-default-2',
+          tag: t('newsNew'),
+          date: '2026/10/08',
+          title: t('newsStatsTitle'),
+          body: copy.newsStatsBody,
+          category: copy.newsDashboardCategory,
+          image: 'https://images.unsplash.com/photo-1521537634581-0dced2fee2ef?w=1200&q=80'
+        }
+      ];
+
   return (
     <div className="min-h-screen font-sans bg-[#f8f9fa] dark:bg-[#0a0400] text-gray-900 dark:text-gray-100 transition-colors duration-300">
+
+      {/* Floating Admin Quick Edit Button */}
+      {isAdmin && (
+        <aside aria-label="Admin controls" className="fixed bottom-6 right-6 z-50 animate-bounce">
+          <Link
+            href="/admin/dashboardwelcome"
+            className="flex items-center gap-2 px-5 py-3 rounded-full bg-[#F26522] text-white font-bold shadow-2xl hover:bg-[#d95314] hover:scale-105 active:scale-95 transition-all border border-white/30 backdrop-blur-md"
+          >
+            <span className="material-symbols-outlined text-[20px]">edit_note</span>
+            <span className="text-sm">แก้ไขหน้าแรก (Edit Welcome)</span>
+          </Link>
+        </aside>
+      )}
 
       {/* Fixed Navbar */}
       <nav className={`fixed top-0 w-full z-50 px-6 md:px-12 lg:px-24 py-4 flex items-center justify-between transition-all duration-300 ${scrolled ? 'bg-black/80 backdrop-blur-md shadow-lg border-b border-white/10' : 'bg-black/20 backdrop-blur-sm border-b border-white/10'}`}>
@@ -75,6 +142,11 @@ export default function LandingPage() {
             <Link href="#guide" className="text-white/80 hover:text-white transition-colors">{t('menuGuide')}</Link>
             <Link href="#tips" className="text-white/80 hover:text-white transition-colors">{t('menuTips')}</Link>
             <Link href="#rules" className="text-white/80 hover:text-white transition-colors">{t('menuRules')}</Link>
+            {isAdmin && (
+              <Link href="/admin/dashboardwelcome" className="text-[#F26522] hover:text-[#ff7e22] font-bold transition-colors flex items-center gap-1">
+                <span className="material-symbols-outlined text-[18px]">edit</span> จัดการหน้าแรก
+              </Link>
+            )}
           </div>
         </div>
 
@@ -114,6 +186,11 @@ export default function LandingPage() {
                   <Link href="#guide" onClick={() => setIsSidebarOpen(false)} className="font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-[#F26522] transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">{t('menuGuide')}</Link>
                   <Link href="#tips" onClick={() => setIsSidebarOpen(false)} className="font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-[#F26522] transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">{t('menuTips')}</Link>
                   <Link href="#rules" onClick={() => setIsSidebarOpen(false)} className="font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-[#F26522] transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">{t('menuRules')}</Link>
+                  {isAdmin && (
+                    <Link href="/admin/dashboardwelcome" onClick={() => setIsSidebarOpen(false)} className="font-bold text-[18px] text-[#F26522] hover:underline border-b border-gray-100 dark:border-gray-800 pb-2 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[20px]">edit</span> จัดการหน้าแรก
+                    </Link>
+                  )}
                 </div>
 
                 <div className="mt-4">
@@ -145,7 +222,7 @@ export default function LandingPage() {
             borderRadius: `${heroBorderRadius}px` 
           }}
         >
-          {heroImages.map((img, index) => (
+          {activeHeroImages.map((img, index) => (
             <div
               key={img}
               className={`absolute inset-0 bg-cover bg-center z-0 transition-all duration-1000 ease-in-out`}
@@ -174,15 +251,15 @@ export default function LandingPage() {
               <br className="md:hidden" /> BADMINTON
             </h1>
             <p className="text-[20px] sm:text-[26px] md:text-[32px] font-medium text-white/95 drop-shadow-lg mt-3 md:mt-4 mb-8 max-w-3xl leading-snug">
-              {copy.heroConnect}
+              {welcomeData?.hero?.subtitle || copy.heroConnect}
             </p>
             <Link href="/login" className="font-bold text-[18px] md:text-[22px] text-[#F26522] hover:text-[#ff7e22] transition-all inline-flex items-center gap-2 w-fit bg-white/10 hover:bg-white/20 hover:scale-[1.05] active:scale-[0.98] px-8 py-4 rounded-full backdrop-blur-md border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.3)] pointer-events-auto">
-              {copy.heroCta} <span className="material-symbols-outlined font-bold text-[20px] md:text-[24px]">arrow_forward_ios</span>
+              {welcomeData?.hero?.ctaText || copy.heroCta} <span className="material-symbols-outlined font-bold text-[20px] md:text-[24px]">arrow_forward_ios</span>
             </Link>
 
             {/* Slider Dots */}
             <div className="absolute bottom-12 left-8 md:left-12 lg:left-24 flex gap-3 z-20 pointer-events-auto">
-              {heroImages.map((_, idx) => (
+              {activeHeroImages.map((_, idx) => (
                 <button 
                   key={idx}
                   onClick={() => goToImage(idx)}
@@ -216,27 +293,45 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Card 1 */}
             <div className="bg-gray-50 dark:bg-[#140900] p-10 rounded-3xl border border-gray-100 dark:border-white/5 hover:border-[#F26522]/50 transition-all hover:shadow-xl group">
-              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6">event_available</span>
-              <h3 className="font-bold text-[24px] text-gray-900 dark:text-white mb-4">{t('courtBookingApi')}</h3>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{copy.serviceBookingBody}</p>
+              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6">
+                {welcomeData?.services?.[0]?.icon || 'event_available'}
+              </span>
+              <h3 className="font-bold text-[24px] text-gray-900 dark:text-white mb-4">
+                {welcomeData?.services?.[0]?.title || t('courtBookingApi')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                {welcomeData?.services?.[0]?.body || copy.serviceBookingBody}
+              </p>
             </div>
             {/* Card 2 */}
             <div className="bg-gray-50 dark:bg-[#140900] p-10 rounded-3xl border border-gray-100 dark:border-white/5 hover:border-[#F26522]/50 transition-all hover:shadow-xl group">
-              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6">card_membership</span>
-              <h3 className="font-bold text-[24px] text-gray-900 dark:text-white mb-4">{t('membershipLogin')}</h3>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{copy.serviceMembershipBody}</p>
+              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6">
+                {welcomeData?.services?.[1]?.icon || 'card_membership'}
+              </span>
+              <h3 className="font-bold text-[24px] text-gray-900 dark:text-white mb-4">
+                {welcomeData?.services?.[1]?.title || t('membershipLogin')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                {welcomeData?.services?.[1]?.body || copy.serviceMembershipBody}
+              </p>
             </div>
             {/* Card 3 */}
             <div className="bg-gray-50 dark:bg-[#140900] p-10 rounded-3xl border border-gray-100 dark:border-white/5 hover:border-[#F26522]/50 transition-all hover:shadow-xl group">
-              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6">qr_code_scanner</span>
-              <h3 className="font-bold text-[24px] text-gray-900 dark:text-white mb-4">{t('smartCheckin')}</h3>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{copy.serviceCheckinBody}</p>
+              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6">
+                {welcomeData?.services?.[2]?.icon || 'qr_code_scanner'}
+              </span>
+              <h3 className="font-bold text-[24px] text-gray-900 dark:text-white mb-4">
+                {welcomeData?.services?.[2]?.title || t('smartCheckin')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                {welcomeData?.services?.[2]?.body || copy.serviceCheckinBody}
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. News Section (Image 2 - Parallax) */}
+      {/* 3. News Section (Image 2 - Parallax with Image Cards) */}
       <section id="news" className="relative py-24 px-6 md:px-12 lg:px-24 bg-cover bg-fixed bg-center" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=1920&q=80')` }}>
         <div className="absolute inset-0 bg-black/80 z-0"></div>
         <div className="relative z-10 max-w-7xl mx-auto">
@@ -245,35 +340,72 @@ export default function LandingPage() {
               <h2 className="font-display-lg text-[40px] md:text-[64px] font-extrabold text-white tracking-tight">{t('menuNews')}</h2>
               <p className="text-[18px] text-gray-300 mt-2">{t('newsIntro')}</p>
             </div>
-            <Link href="#" className="font-bold text-white hover:text-[#F26522] transition-colors flex items-center gap-1">
-              {copy.tipsViewAll} <span className="material-symbols-outlined text-[20px]">chevron_right</span>
-            </Link>
+            <div className="flex items-center gap-4">
+              {isAdmin && (
+                <Link href="/admin/dashboardwelcome" className="text-xs font-bold px-3 py-1.5 rounded-full bg-[#F26522]/80 text-white hover:bg-[#F26522] transition-colors inline-flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[16px]">add_photo_alternate</span> จัดการข่าว/รูป
+                </Link>
+              )}
+              <Link href="/news" className="font-bold text-white hover:text-[#F26522] transition-colors flex items-center gap-1">
+                {copy.tipsViewAll} <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              </Link>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-black/60 backdrop-blur-md p-8 rounded-3xl border border-white/10 hover:bg-black/80 transition-colors">
-              <div className="flex justify-between items-start mb-4">
-                <span className="bg-green-500 text-white text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider">{t('newsNew')}</span>
-                <span className="text-gray-400 text-[14px]">2026/07/17</span>
-              </div>
-              <h3 className="font-bold text-[22px] text-white mb-4 leading-snug">{t('newsTermsTitle')}</h3>
-              <p className="text-gray-300 text-[15px] leading-relaxed line-clamp-3 mb-6">
-                {copy.newsTermsBody}
-              </p>
-              <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">{copy.newsCourtCategory}</span>
-            </div>
+            {displayNews.map((item, idx) => (
+              <div
+                key={item.id || idx}
+                onClick={() => setSelectedNews(item)}
+                className="group bg-black/60 backdrop-blur-md rounded-3xl border border-white/10 hover:border-[#F26522]/50 hover:bg-black/80 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-[0_8px_30px_rgba(242,101,34,0.15)] hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#F26522] to-yellow-500 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
 
-            <div className="bg-black/60 backdrop-blur-md p-8 rounded-3xl border border-white/10 hover:bg-black/80 transition-colors">
-              <div className="flex justify-between items-start mb-4">
-                <span className="bg-green-500 text-white text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider">{t('newsNew')}</span>
-                <span className="text-gray-400 text-[14px]">2026/07/15</span>
+                {item.image && (
+                  <div className="h-52 w-full overflow-hidden bg-black/40 relative">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                    <span className="absolute top-4 left-4 bg-[#F26522] text-white text-[10px] font-black px-2.5 py-1 rounded uppercase tracking-wider shadow">
+                      {item.tag || t('newsNew')}
+                    </span>
+                    <time className="absolute bottom-3 right-4 text-gray-300 text-[13px] font-medium bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-md">
+                      {item.date}
+                    </time>
+                  </div>
+                )}
+
+                <div className="p-8 flex-1 flex flex-col justify-between">
+                  {!item.image && (
+                    <div className="flex justify-between items-start mb-4">
+                      <span className="bg-green-500 text-white text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider">
+                        {item.tag || t('newsNew')}
+                      </span>
+                      <span className="text-gray-400 text-[14px]">{item.date}</span>
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-bold text-[22px] text-white mb-4 leading-snug group-hover:text-[#F26522] transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="text-gray-300 text-[15px] leading-relaxed line-clamp-3 mb-6">
+                      {item.body}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                    <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">
+                      {item.category}
+                    </span>
+                    <span className="text-xs text-[#F26522] font-bold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                      อ่านเพิ่มเติม <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    </span>
+                  </div>
+                </div>
               </div>
-              <h3 className="font-bold text-[22px] text-white mb-4 leading-snug">{t('newsStatsTitle')}</h3>
-              <p className="text-gray-300 text-[15px] leading-relaxed line-clamp-3 mb-6">
-                {copy.newsStatsBody}
-              </p>
-              <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">{copy.newsDashboardCategory}</span>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -290,40 +422,56 @@ export default function LandingPage() {
             {/* Step 1 */}
             <div className="relative bg-gray-50 dark:bg-[#140900] p-8 rounded-3xl border border-gray-100 dark:border-white/5 hover:border-[#F26522]/50 transition-all hover:-translate-y-2 hover:shadow-xl group">
               <div className="absolute -top-6 -left-6 w-12 h-12 bg-gradient-to-br from-[#F26522] to-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg border-4 border-white dark:border-[#0a0400] group-hover:scale-110 transition-transform">1</div>
-              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6 block">login</span>
-              <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">{copy.guideStep1Title}</h3>
+              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6 block">
+                {welcomeData?.guide?.[0]?.icon || 'login'}
+              </span>
+              <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">
+                {welcomeData?.guide?.[0]?.title || copy.guideStep1Title}
+              </h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-[15px]">
-                {copy.guideStep1Body}
+                {welcomeData?.guide?.[0]?.body || copy.guideStep1Body}
               </p>
             </div>
 
             {/* Step 2 */}
             <div className="relative bg-gray-50 dark:bg-[#140900] p-8 rounded-3xl border border-gray-100 dark:border-white/5 hover:border-[#F26522]/50 transition-all hover:-translate-y-2 hover:shadow-xl group">
               <div className="absolute -top-6 -left-6 w-12 h-12 bg-gradient-to-br from-[#F26522] to-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg border-4 border-white dark:border-[#0a0400] group-hover:scale-110 transition-transform">2</div>
-              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6 block">event_seat</span>
-              <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">{copy.guideStep2Title}</h3>
+              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6 block">
+                {welcomeData?.guide?.[1]?.icon || 'event_seat'}
+              </span>
+              <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">
+                {welcomeData?.guide?.[1]?.title || copy.guideStep2Title}
+              </h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-[15px]">
-                {copy.guideStep2Body}
+                {welcomeData?.guide?.[1]?.body || copy.guideStep2Body}
               </p>
             </div>
 
             {/* Step 3 */}
             <div className="relative bg-gray-50 dark:bg-[#140900] p-8 rounded-3xl border border-gray-100 dark:border-white/5 hover:border-[#F26522]/50 transition-all hover:-translate-y-2 hover:shadow-xl group">
               <div className="absolute -top-6 -left-6 w-12 h-12 bg-gradient-to-br from-[#F26522] to-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg border-4 border-white dark:border-[#0a0400] group-hover:scale-110 transition-transform">3</div>
-              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6 block">check_circle</span>
-              <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">{copy.guideStep3Title}</h3>
+              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6 block">
+                {welcomeData?.guide?.[2]?.icon || 'check_circle'}
+              </span>
+              <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">
+                {welcomeData?.guide?.[2]?.title || copy.guideStep3Title}
+              </h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-[15px]">
-                {copy.guideStep3Body}
+                {welcomeData?.guide?.[2]?.body || copy.guideStep3Body}
               </p>
             </div>
 
             {/* Step 4 */}
             <div className="relative bg-gray-50 dark:bg-[#140900] p-8 rounded-3xl border border-gray-100 dark:border-white/5 hover:border-[#F26522]/50 transition-all hover:-translate-y-2 hover:shadow-xl group">
               <div className="absolute -top-6 -left-6 w-12 h-12 bg-gradient-to-br from-[#F26522] to-yellow-400 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg border-4 border-white dark:border-[#0a0400] group-hover:scale-110 transition-transform">4</div>
-              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6 block">qr_code_scanner</span>
-              <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">{copy.guideStep4Title}</h3>
+              <span className="material-symbols-outlined text-[48px] text-gray-400 group-hover:text-[#F26522] transition-colors mb-6 block">
+                {welcomeData?.guide?.[3]?.icon || 'qr_code_scanner'}
+              </span>
+              <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">
+                {welcomeData?.guide?.[3]?.title || copy.guideStep4Title}
+              </h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-[15px]">
-                {copy.guideStep4Body}
+                {welcomeData?.guide?.[3]?.body || copy.guideStep4Body}
               </p>
             </div>
           </div>
@@ -345,27 +493,39 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-[#1a1a1a]/90 backdrop-blur-md p-8 rounded-3xl border border-white/5 hover:border-white/20 transition-colors">
-              <span className="text-gray-400 text-[14px] block mb-3">2026/07/16</span>
-              <h3 className="font-bold text-[24px] text-white mb-4 leading-snug">{copy.tipsWarmTitle}</h3>
+              <span className="text-gray-400 text-[14px] block mb-3">
+                {welcomeData?.tips?.[0]?.date || '2026/10/05'}
+              </span>
+              <h3 className="font-bold text-[24px] text-white mb-4 leading-snug">
+                {welcomeData?.tips?.[0]?.title || copy.tipsWarmTitle}
+              </h3>
               <p className="text-gray-300 text-[15px] leading-relaxed mb-8">
-                {copy.tipsWarmBody}
+                {welcomeData?.tips?.[0]?.body || copy.tipsWarmBody}
               </p>
-              <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">{copy.tipsWarmCategory}</span>
+              <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">
+                {welcomeData?.tips?.[0]?.category || copy.tipsWarmCategory}
+              </span>
             </div>
 
             <div className="bg-[#1a1a1a]/90 backdrop-blur-md p-8 rounded-3xl border border-white/5 hover:border-white/20 transition-colors">
-              <span className="text-gray-400 text-[14px] block mb-3">2026/07/10</span>
-              <h3 className="font-bold text-[24px] text-white mb-4 leading-snug">{copy.tipsStringTitle}</h3>
+              <span className="text-gray-400 text-[14px] block mb-3">
+                {welcomeData?.tips?.[1]?.date || '2026/10/01'}
+              </span>
+              <h3 className="font-bold text-[24px] text-white mb-4 leading-snug">
+                {welcomeData?.tips?.[1]?.title || copy.tipsStringTitle}
+              </h3>
               <p className="text-gray-300 text-[15px] leading-relaxed mb-8">
-                {copy.tipsStringBody}
+                {welcomeData?.tips?.[1]?.body || copy.tipsStringBody}
               </p>
-              <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">{copy.tipsStringCategory}</span>
+              <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">
+                {welcomeData?.tips?.[1]?.category || copy.tipsStringCategory}
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 5. Rules Section */}
+      {/* 6. Rules Section */}
       <section id="rules" className="py-24 px-6 md:px-12 lg:px-24 bg-white dark:bg-[#0a0400]">
         <div className="max-w-7xl mx-auto">
           <div className="mb-16">
@@ -378,16 +538,22 @@ export default function LandingPage() {
             <div className="bg-gray-50 dark:bg-[#140900] p-8 rounded-3xl border border-gray-100 dark:border-white/5 hover:border-[#F26522]/50 transition-all hover:shadow-xl">
               <div className="flex items-center gap-4 mb-6">
                 <span className="material-symbols-outlined text-[32px] text-[#F26522]">schedule</span>
-                <h3 className="font-bold text-[22px] text-gray-900 dark:text-white">{copy.rulesBookingTitle}</h3>
+                <h3 className="font-bold text-[22px] text-gray-900 dark:text-white">
+                  {welcomeData?.rules?.[0]?.title || copy.rulesBookingTitle}
+                </h3>
               </div>
               <ul className="space-y-4 text-gray-600 dark:text-gray-400">
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-green-500 shrink-0">check_circle</span>
-                  <span className="leading-relaxed">{copy.rulesBookingLimit}</span>
+                  <span className="leading-relaxed">
+                    {welcomeData?.rules?.[0]?.items?.[0] || copy.rulesBookingLimit}
+                  </span>
                 </li>
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-green-500 shrink-0">check_circle</span>
-                  <span className="leading-relaxed">{copy.rulesAdvance}</span>
+                  <span className="leading-relaxed">
+                    {welcomeData?.rules?.[0]?.items?.[1] || copy.rulesAdvance}
+                  </span>
                 </li>
               </ul>
             </div>
@@ -396,16 +562,22 @@ export default function LandingPage() {
             <div className="bg-gray-50 dark:bg-[#140900] p-8 rounded-3xl border border-gray-100 dark:border-white/5 hover:border-[#F26522]/50 transition-all hover:shadow-xl">
               <div className="flex items-center gap-4 mb-6">
                 <span className="material-symbols-outlined text-[32px] text-[#F26522]">how_to_reg</span>
-                <h3 className="font-bold text-[22px] text-gray-900 dark:text-white">{copy.rulesAccessTitle}</h3>
+                <h3 className="font-bold text-[22px] text-gray-900 dark:text-white">
+                  {welcomeData?.rules?.[1]?.title || copy.rulesAccessTitle}
+                </h3>
               </div>
               <ul className="space-y-4 text-gray-600 dark:text-gray-400">
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-blue-500 shrink-0">qr_code_scanner</span>
-                  <span className="leading-relaxed">{copy.rulesIdentity}</span>
+                  <span className="leading-relaxed">
+                    {welcomeData?.rules?.[1]?.items?.[0] || copy.rulesIdentity}
+                  </span>
                 </li>
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-red-500 shrink-0">timer</span>
-                  <span className="leading-relaxed">{copy.rulesLate}</span>
+                  <span className="leading-relaxed">
+                    {welcomeData?.rules?.[1]?.items?.[1] || copy.rulesLate}
+                  </span>
                 </li>
               </ul>
             </div>
@@ -414,16 +586,22 @@ export default function LandingPage() {
             <div className="bg-gray-50 dark:bg-[#140900] p-8 rounded-3xl border border-gray-100 dark:border-white/5 hover:border-[#F26522]/50 transition-all hover:shadow-xl">
               <div className="flex items-center gap-4 mb-6">
                 <span className="material-symbols-outlined text-[32px] text-[#F26522]">cancel</span>
-                <h3 className="font-bold text-[22px] text-gray-900 dark:text-white">{copy.rulesCancelTitle}</h3>
+                <h3 className="font-bold text-[22px] text-gray-900 dark:text-white">
+                  {welcomeData?.rules?.[2]?.title || copy.rulesCancelTitle}
+                </h3>
               </div>
               <ul className="space-y-4 text-gray-600 dark:text-gray-400">
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-orange-500 shrink-0">event_busy</span>
-                  <span className="leading-relaxed">{copy.rulesCancellation}</span>
+                  <span className="leading-relaxed">
+                    {welcomeData?.rules?.[2]?.items?.[0] || copy.rulesCancellation}
+                  </span>
                 </li>
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-red-500 shrink-0">warning</span>
-                  <span className="leading-relaxed">{copy.rulesPenalty}</span>
+                  <span className="leading-relaxed">
+                    {welcomeData?.rules?.[2]?.items?.[1] || copy.rulesPenalty}
+                  </span>
                 </li>
               </ul>
             </div>
@@ -432,12 +610,16 @@ export default function LandingPage() {
             <div className="bg-gray-50 dark:bg-[#140900] p-8 rounded-3xl border border-gray-100 dark:border-white/5 hover:border-[#F26522]/50 transition-all hover:shadow-xl">
               <div className="flex items-center gap-4 mb-6">
                 <span className="material-symbols-outlined text-[32px] text-[#F26522]">sports_score</span>
-                <h3 className="font-bold text-[22px] text-gray-900 dark:text-white">{copy.rulesCourtTitle}</h3>
+                <h3 className="font-bold text-[22px] text-gray-900 dark:text-white">
+                  {welcomeData?.rules?.[3]?.title || copy.rulesCourtTitle}
+                </h3>
               </div>
               <ul className="space-y-4 text-gray-600 dark:text-gray-400">
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-[#F26522] shrink-0">steps</span>
-                  <span className="leading-relaxed">{copy.rulesFootwear}</span>
+                  <span className="leading-relaxed">
+                    {welcomeData?.rules?.[3]?.items?.[0] || copy.rulesFootwear}
+                  </span>
                 </li>
               </ul>
             </div>
@@ -445,7 +627,49 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 6. Documentation & Footer */}
+      {/* Modal Dialog: Read Full News */}
+      {selectedNews && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-[#140900] rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 max-h-[90vh] flex flex-col">
+            {selectedNews.image && (
+              <div className="relative h-60 w-full bg-black">
+                <img
+                  src={selectedNews.image}
+                  alt={selectedNews.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+              </div>
+            )}
+            <div className="p-6 sm:p-8 overflow-y-auto flex-1">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#F26522]/15 text-[#F26522]">
+                  {selectedNews.category}
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                  {selectedNews.date}
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white mb-4 leading-snug">
+                {selectedNews.title}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm sm:text-base whitespace-pre-line">
+                {selectedNews.body}
+              </p>
+            </div>
+            <div className="p-4 sm:p-6 border-t border-gray-100 dark:border-white/10 flex justify-end bg-gray-50 dark:bg-zinc-900/50">
+              <button
+                onClick={() => setSelectedNews(null)}
+                className="px-6 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold text-sm hover:opacity-90 transition-opacity"
+              >
+                ปิดหน้าต่าง
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Documentation & Footer */}
       <footer className="bg-black text-white pt-20 pb-10 px-6 md:px-12 lg:px-24">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 border-b border-white/10 pb-16 mb-8">

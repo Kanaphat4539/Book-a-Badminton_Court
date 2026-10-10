@@ -14,7 +14,7 @@ test('Thai and English landing copy have identical keys and all visible sections
     assert.notEqual(landingMessages.th[key], landingMessages.en[key], `${key} is translated`);
   }
   assert.match(landingMessages.en.rulesLate, /15 minutes/);
-  assert.match(landingMessages.en.rulesPenalty, /2 .*No-shows.*7-day/);
+  assert.match(landingMessages.en.rulesPenalty, /2 .*No-shows.*24-hour/);
   assert.match(landingMessages.en.rulesBookingLimit, /1 booking per day.*1 hour/);
 });
 

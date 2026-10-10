@@ -13,6 +13,8 @@ import { Admin } from './users/entities/admin.entity';
 import { Student } from './users/entities/student.entity';
 import { Booking } from './bookings/entities/booking.entity';
 import { Court } from './courts/entities/court.entity';
+import { WelcomeContent } from './welcome/entities/welcome-content.entity';
+import { WelcomeModule } from './welcome/welcome.module';
 
 @Module({
   imports: [
@@ -27,7 +29,7 @@ import { Court } from './courts/entities/court.entity';
             password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || 'password',
             database: process.env.DB_NAME || process.env.MYSQLDATABASE || 'badminton_db',
           }),
-      entities: [Admin, Student, Booking, Court],
+      entities: [Admin, Student, Booking, Court, WelcomeContent],
       synchronize: process.env.DB_SYNCHRONIZE === 'false' ? false : true,
       ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
     }),
@@ -38,6 +40,7 @@ import { Court } from './courts/entities/court.entity';
     CourtsModule,
     BookingsModule,
     CronModule,
+    WelcomeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

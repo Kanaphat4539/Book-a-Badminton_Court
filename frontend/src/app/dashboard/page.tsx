@@ -85,11 +85,14 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
-  const [lastSyncTime, setLastSyncTime] = useState<string>('');
+  const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
   const { locale, t, formatDate } = useLocale();
   const c = adminDashboardCopy[locale];
+  const lastSyncLabel = lastSyncAt
+    ? `${formatDate(lastSyncAt)} ${lastSyncAt.toLocaleTimeString(locale === 'th' ? 'th-TH' : 'en-US', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', second: '2-digit' })} UTC+7`
+    : '';
   const p = playerDashboardCopy[locale];
   const actions = dashboardActionCopy(locale);
 
@@ -213,8 +216,8 @@ export default function Dashboard() {
     try {
       const response = await api.get('/bookings');
       setAllBookings(sortBookingsList(response.data));
-      const now = new Date();
-      setLastSyncTime(`${c.todayAt}${formatDate(now)} ${now.toLocaleTimeString(locale === 'th' ? 'th-TH' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} UTC+7`);
+      // Store the instant only; it is formatted at render so a language switch re-labels it.
+      setLastSyncAt(new Date());
       if (response.headers?.date) {
         const serverHeaderTime = Date.parse(response.headers['date']);
         if (!isNaN(serverHeaderTime)) {
@@ -457,7 +460,7 @@ export default function Dashboard() {
             subtitle={c.heroSubtitle}
             meta={[
               <span key="campus" className="inline-flex items-center gap-1"><span className="material-symbols-outlined text-[13px] sm:text-[14px]">pin_drop</span> {c.campus}</span>,
-              <span key="sync" className="inline-flex items-center gap-1"><span className="material-symbols-outlined text-[13px] sm:text-[14px]">schedule</span> {c.lastSynced}{lastSyncTime.replace(c.todayAt, '') || c.justNow}</span>,
+              <span key="sync" className="inline-flex items-center gap-1"><span className="material-symbols-outlined text-[13px] sm:text-[14px]">schedule</span> {c.lastSynced}{lastSyncLabel || c.justNow}</span>,
               <span key="sec" className="inline-flex items-center gap-1"><span className="material-symbols-outlined text-[13px] sm:text-[14px]">security</span> {c.secureMode}</span>,
             ]}
           />
@@ -746,7 +749,7 @@ export default function Dashboard() {
                   <span className="font-medium text-emerald-600 dark:text-emerald-400">{`${formatNumber(analytics.checkins)} ${c.verifiedCheckin}`}</span>
                 </div>
                 <div className="font-mono text-slate-500 dark:text-slate-400 text-[11px] sm:text-xs">
-                  {c.lastCalculationSynced}<span className="text-slate-800 dark:text-slate-200 font-semibold">{lastSyncTime || c.justNow}</span>
+                  {c.lastCalculationSynced}<span className="text-slate-800 dark:text-slate-200 font-semibold">{lastSyncAt ? `${c.todayAt}${lastSyncLabel}` : c.justNow}</span>
                 </div>
               </div>
             </section>

@@ -6,6 +6,7 @@ import { isAxiosError } from 'axios';
 import { bookingErrorMessage, formatBookingDate } from '@/lib/booking-page-messages.cjs';
 import { selectCourtText, type SelectCourtCopyKey } from '@/lib/select-court-copy.cjs';
 import api from '@/lib/api';
+import { localizeKnownBackendError } from '@/lib/backend-error-messages.cjs';
 import { toast } from 'sonner';
 import MainLayout from '@/components/MainLayout';
 import { useLocale } from '@/components/locale-provider';
@@ -112,7 +113,7 @@ function SelectCourtContent() {
       setEditingCourt(null);
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.response?.data?.message || t('courtSaveFailed'));
+      toast.error(localizeKnownBackendError(err?.response?.data?.message, locale) ?? t('courtSaveFailed'));
     } finally {
       setUpdatingCourt(false);
     }

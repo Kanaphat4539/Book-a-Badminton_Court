@@ -8,7 +8,7 @@ const bookingMessages = {
 };
 const errorRules = [
   [/Day-by-day policy|only book courts for today/i, 'todayPolicy'],
-  [/already have an active booking|ใช้โควตาประจำวันแล้ว/i, 'quotaUsed'],
+  [/already have an active booking|Daily booking quota already used|ใช้โควตาประจำวันแล้ว/i, 'quotaUsed'],
   [/already booked/i, 'courtConflict'],
   [/currently banned from booking/i, 'banned'],
   [/round has already ended/i, 'slotEnded'],

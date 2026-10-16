@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { localizeKnownBackendError } from '@/lib/backend-error-messages.cjs';
 import { toast } from 'sonner';
 import { usePageLoading } from '@/components/loading-provider';
 import { useLocale } from '@/components/locale-provider';
@@ -31,7 +32,7 @@ export default function LoginPage() {
       pageLoading.start('/login');
       router.push('/dashboard');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || text('loginFailed'));
+      toast.error(localizeKnownBackendError(err.response?.data?.message, locale) ?? text('loginFailed'));
     } finally {
       setLoading(false);
     }

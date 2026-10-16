@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 import { toast } from 'sonner';
 import api from '@/lib/api';
+import { localizeKnownBackendError } from '@/lib/backend-error-messages.cjs';
 import { useLocale } from '@/components/locale-provider';
 import { adminWelcomeCopy } from '@/lib/admin-welcome-copy.cjs';
 import {
@@ -151,7 +152,7 @@ export default function EditWelcomeDashboard() {
       });
       toast.success(c.courtSaved.replace('{name}', court.name));
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || c.courtSaveFailed);
+      toast.error(localizeKnownBackendError(err?.response?.data?.message, locale) ?? c.courtSaveFailed);
     } finally {
       setSavingCourtId(null);
     }
@@ -165,7 +166,7 @@ export default function EditWelcomeDashboard() {
       toast.success(c.saveAllSuccess);
     } catch (e: any) {
       console.error('Save failed:', e);
-      const msg = e?.response?.data?.message || e?.message || c.saveErrorDefault;
+      const msg = localizeKnownBackendError(e?.response?.data?.message, locale) ?? c.saveErrorDefault;
       toast.error(c.saveError.replace('{msg}', msg));
     } finally {
       setSaving(false);
@@ -181,7 +182,7 @@ export default function EditWelcomeDashboard() {
       toast.success(c.resetSuccess);
     } catch (e: any) {
       console.error('Reset failed:', e);
-      const msg = e?.response?.data?.message || e?.message || c.resetErrorDefault;
+      const msg = localizeKnownBackendError(e?.response?.data?.message, locale) ?? c.resetErrorDefault;
       toast.error(c.resetFailed.replace('{msg}', msg));
     } finally {
       setSaving(false);

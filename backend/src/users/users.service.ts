@@ -197,7 +197,7 @@ export class UsersService implements OnModuleInit {
       throw new BadRequestException('Student not found');
     }
     if (student.quota !== 0) {
-      throw new BadRequestException('ยังมีโควตาร์อยู่');
+      throw new BadRequestException('Student still has quota available.');
     }
     student.quota = 1;
     // Also cancel today's pending/checked-in bookings so user can actually book again

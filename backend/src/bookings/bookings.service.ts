@@ -93,7 +93,7 @@ export class BookingsService {
         }
 
         if (studentRecord.quota <= 0) {
-          throw new BadRequestException('ใช้โควตาประจำวันแล้ว: คุณมีรายการจองที่ยังไม่เสร็จสิ้น (จองได้ 1 ครั้ง/วัน)');
+          throw new BadRequestException('Daily booking quota already used.');
         }
         studentRecord.quota = studentRecord.quota - 1;
         await studentRepo.save(studentRecord);

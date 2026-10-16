@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api, { isSessionExpiredError } from '@/lib/api';
+import { localizeKnownBackendError } from '@/lib/backend-error-messages.cjs';
 import { toast } from 'sonner';
 import QRCode from 'react-qr-code';
 import MainLayout from '@/components/MainLayout';
@@ -160,7 +161,7 @@ export default function Dashboard() {
       setSelectedBookingId(null);
       fetchAllBookings();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || actions.finishFailed);
+      toast.error(localizeKnownBackendError(err.response?.data?.message, locale) ?? actions.finishFailed);
     }
   };
 
@@ -297,7 +298,7 @@ export default function Dashboard() {
         fetchAllBookings();
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || actions.cancelFailed);
+      toast.error(localizeKnownBackendError(err.response?.data?.message, locale) ?? actions.cancelFailed);
     }
   };
   const handleCancelBooking = () => cancelBookingById(bookingToCancel);
@@ -310,7 +311,7 @@ export default function Dashboard() {
       toast.success(actions.resetSuccess);
       fetchAllBookings();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || actions.resetFailed);
+      toast.error(localizeKnownBackendError(err.response?.data?.message, locale) ?? actions.resetFailed);
     }
   };
 

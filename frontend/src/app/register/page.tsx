@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import { localizeKnownBackendError } from '@/lib/backend-error-messages.cjs';
 import { toast } from 'sonner';
 import { usePageLoading } from '@/components/loading-provider';
 import { useLocale } from '@/components/locale-provider';
@@ -44,7 +45,7 @@ export default function RegisterPage() {
       pageLoading.start('/register');
       router.push('/dashboard');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || text('registerFailed'));
+      toast.error(localizeKnownBackendError(err.response?.data?.message, locale) ?? text('registerFailed'));
     } finally {
       setLoading(false);
     }

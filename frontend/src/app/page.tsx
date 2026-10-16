@@ -112,7 +112,7 @@ export default function LandingPage() {
             className="flex items-center gap-2 px-5 py-3 rounded-full bg-[#F26522] text-white font-bold shadow-2xl hover:bg-[#d95314] hover:scale-105 active:scale-95 transition-all border border-white/30 backdrop-blur-md"
           >
             <span className="material-symbols-outlined text-[20px]">edit_note</span>
-            <span className="text-sm">{locale === 'th' ? 'แก้ไขหน้าแรก' : 'Edit Welcome'}</span>
+            <span className="text-sm">{copy.editWelcome}</span>
           </Link>
         </aside>
       )}
@@ -144,7 +144,7 @@ export default function LandingPage() {
             <Link href="#rules" className="text-white/80 hover:text-white transition-colors">{t('menuRules')}</Link>
             {isAdmin && (
               <Link href="/admin/dashboardwelcome" className="text-[#F26522] hover:text-[#ff7e22] font-bold transition-colors flex items-center gap-1">
-                <span className="material-symbols-outlined text-[18px]">edit</span> {locale === 'th' ? 'จัดการหน้าแรก' : 'Manage Welcome'}
+                <span className="material-symbols-outlined text-[18px]">edit</span> {copy.manageWelcome}
               </Link>
             )}
           </div>
@@ -188,7 +188,7 @@ export default function LandingPage() {
                   <Link href="#rules" onClick={() => setIsSidebarOpen(false)} className="font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-[#F26522] transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">{t('menuRules')}</Link>
                   {isAdmin && (
                     <Link href="/admin/dashboardwelcome" onClick={() => setIsSidebarOpen(false)} className="font-bold text-[18px] text-[#F26522] hover:underline border-b border-gray-100 dark:border-gray-800 pb-2 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[20px]">edit</span> {locale === 'th' ? 'จัดการหน้าแรก' : 'Manage Welcome'}
+                      <span className="material-symbols-outlined text-[20px]">edit</span> {copy.manageWelcome}
                     </Link>
                   )}
                 </div>
@@ -343,7 +343,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-4">
               {isAdmin && (
                 <Link href="/admin/dashboardwelcome" className="text-xs font-bold px-3 py-1.5 rounded-full bg-[#F26522]/80 text-white hover:bg-[#F26522] transition-colors inline-flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">add_photo_alternate</span> {locale === 'th' ? 'จัดการข่าว/รูป' : 'Manage News'}
+                  <span className="material-symbols-outlined text-[16px]">add_photo_alternate</span> {copy.manageNewsImages}
                 </Link>
               )}
               <Link href="/news" className="font-bold text-white hover:text-[#F26522] transition-colors flex items-center gap-1">
@@ -400,7 +400,7 @@ export default function LandingPage() {
                       {getLocalizedText(item.category, item.category_en, locale)}
                     </span>
                     <span className="text-xs text-[#F26522] font-bold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                      {locale === 'th' ? 'อ่านเพิ่มเติม' : 'Read more'} <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                      {copy.readMoreAction} <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                     </span>
                   </div>
                 </div>
@@ -662,7 +662,7 @@ export default function LandingPage() {
                 onClick={() => setSelectedNews(null)}
                 className="px-6 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold text-sm hover:opacity-90 transition-opacity"
               >
-                {locale === 'th' ? 'ปิดหน้าต่าง' : 'Close'}
+                {copy.closeWindow}
               </button>
             </div>
           </div>

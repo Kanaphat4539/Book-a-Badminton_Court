@@ -67,11 +67,12 @@ export class BookingsService {
         const existingUserBooking = await transactionalEntityManager.findOne(Booking, {
           where: [
             { stu_id, booking_date: date, status: BookingStatus.PENDING },
-            { stu_id, booking_date: date, status: BookingStatus.CHECKED_IN },
-            { stu_id, booking_date: date, status: BookingStatus.COMPLETED }
+            { stu_id, booking_date: date, status: BookingStatus.CHECKED_IN }
           ]
         });
 
+        // A COMPLETED booking is not active; the daily limit is enforced by the quota below,
+        // so an admin quota reset lets a user who already played book again the same day.
         if (existingUserBooking) {
           throw new BadRequestException('You already have an active booking. Please complete or cancel it first.');
         }

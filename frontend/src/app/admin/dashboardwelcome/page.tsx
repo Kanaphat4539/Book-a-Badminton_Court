@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 import { toast } from 'sonner';
 import api from '@/lib/api';
+import { useLocale } from '@/components/locale-provider';
+import { adminWelcomeCopy } from '@/lib/admin-welcome-copy.cjs';
 import {
   fetchWelcomeContent,
   saveWelcomeContent,
@@ -43,6 +45,8 @@ import {
 
 export default function EditWelcomeDashboard() {
   const router = useRouter();
+  const { locale } = useLocale();
+  const c = adminWelcomeCopy[locale];
   const [data, setData] = useState<WelcomeContentData>(DEFAULT_WELCOME_DATA);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -97,7 +101,7 @@ export default function EditWelcomeDashboard() {
     try {
       const user = JSON.parse(userStr);
       if (user.role !== 'ADMIN') {
-        toast.error('สิทธิ์การเข้าถึงเฉพาะผู้ดูแลระบบ (Admin Only)');
+        toast.error(c.adminOnly);
         router.push('/dashboard');
         return;
       }
@@ -120,7 +124,7 @@ export default function EditWelcomeDashboard() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('ขนาดไฟล์รูปภาพไม่ควรเกิน 5MB');
+      toast.error(c.imageTooLarge5);
       return;
     }
     const reader = new FileReader();
@@ -129,7 +133,7 @@ export default function EditWelcomeDashboard() {
         setCourtsList((prev) =>
           prev.map((c) => (c.id === courtId ? { ...c, image: reader.result } : c))
         );
-        toast.success('โหลดรูปภาพเรียบร้อยแล้ว กด "บันทึกคอร์ท" เพื่อยืนยัน');
+        toast.success(c.imageLoadedCourt);
       }
     };
     reader.readAsDataURL(file);
@@ -143,9 +147,9 @@ export default function EditWelcomeDashboard() {
         location: court.location,
         name: court.name,
       });
-      toast.success(`บันทึกรูปภาพและข้อมูล ${court.name} เรียบร้อยแล้ว!`);
+      toast.success(c.courtSaved.replace('{name}', court.name));
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'ไม่สามารถบันทึกข้อมูลคอร์ทได้');
+      toast.error(err?.response?.data?.message || c.courtSaveFailed);
     } finally {
       setSavingCourtId(null);
     }
@@ -156,27 +160,27 @@ export default function EditWelcomeDashboard() {
     try {
       const saved = await saveWelcomeContent(data);
       setData(saved);
-      toast.success('บันทึกการเปลี่ยนแปลงลงฐานข้อมูลจริงเรียบร้อยแล้ว!');
+      toast.success(c.saveAllSuccess);
     } catch (e: any) {
       console.error('Save failed:', e);
-      const msg = e?.response?.data?.message || e?.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
-      toast.error(`เกิดข้อผิดพลาดในการบันทึก: ${msg}`);
+      const msg = e?.response?.data?.message || e?.message || c.saveErrorDefault;
+      toast.error(c.saveError.replace('{msg}', msg));
     } finally {
       setSaving(false);
     }
   };
 
   const handleReset = async () => {
-    if (!confirm('ยืนยันรีเซ็ตเนื้อหาหน้าแรกทั้งหมดกลับเป็นค่าเริ่มต้นของระบบ?')) return;
+    if (!confirm(c.resetConfirm)) return;
     setSaving(true);
     try {
       const resetData = await resetWelcomeContent();
       setData(resetData);
-      toast.success('รีเซ็ตเนื้อหาในฐานข้อมูลกลับเป็นค่าเริ่มต้นแล้ว');
+      toast.success(c.resetSuccess);
     } catch (e: any) {
       console.error('Reset failed:', e);
-      const msg = e?.response?.data?.message || e?.message || 'เกิดข้อผิดพลาดในการรีเซ็ต';
-      toast.error(`รีเซ็ตไม่สำเร็จ: ${msg}`);
+      const msg = e?.response?.data?.message || e?.message || c.resetErrorDefault;
+      toast.error(c.resetFailed.replace('{msg}', msg));
     } finally {
       setSaving(false);
     }
@@ -184,9 +188,9 @@ export default function EditWelcomeDashboard() {
 
   // Master Auto-Translate All
   const handleAutoTranslateAll = async () => {
-    if (!confirm('ต้องการให้ระบบแปลเนื้อหาทุกส่วนที่ยังไม่มีภาษาอังกฤษอัตโนมัติหรือไม่? (จะไม่เขียนทับส่วนที่มีการแก้ไขภาษาอังกฤษไว้แล้ว)')) return;
+    if (!confirm(c.confirmTranslateAll)) return;
     setTranslatingAll(true);
-    toast.info('กำลังดำเนินการแปลเนื้อหาด้วย AI / Google Translate...');
+    toast.info(c.translatingToast);
     try {
       const next = JSON.parse(JSON.stringify(data)) as WelcomeContentData;
 
@@ -237,10 +241,10 @@ export default function EditWelcomeDashboard() {
       }
 
       setData(next);
-      toast.success('แปลเนื้อหาทุกส่วนเป็นภาษาอังกฤษเรียบร้อยแล้ว! อย่าลืมกด "บันทึกการเปลี่ยนแปลง"');
+      toast.success(c.translateAllSuccess);
     } catch (e) {
       console.error('Auto translate all error:', e);
-      toast.error('การแปลบางส่วนขัดข้อง กรุณาลองใหม่อีกครั้ง');
+      toast.error(c.translateAllPartialError);
     } finally {
       setTranslatingAll(false);
     }
@@ -251,7 +255,7 @@ export default function EditWelcomeDashboard() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('ขนาดไฟล์รูปภาพไม่ควรเกิน 2MB');
+      toast.error(c.imageTooLarge2);
       return;
     }
     const reader = new FileReader();
@@ -273,12 +277,12 @@ export default function EditWelcomeDashboard() {
       }
     }));
     setNewSlideUrl('');
-    toast.success('เพิ่มรูปภาพสไลด์แล้ว');
+    toast.success(c.slideAdded);
   };
 
   const removeHeroImage = (index: number) => {
     if (data.hero.images.length <= 1) {
-      toast.error('ต้องมีรูปภาพสไลด์อย่างน้อย 1 รูป');
+      toast.error(c.slideMinimum);
       return;
     }
     setData((prev) => ({
@@ -309,9 +313,9 @@ export default function EditWelcomeDashboard() {
         }
       }));
       setHeroLang('en');
-      toast.success('แปลส่วน Hero Banner เป็นภาษาอังกฤษเรียบร้อยแล้ว');
+      toast.success(c.translateHeroSuccess);
     } catch {
-      toast.error('แปลไม่สำเร็จ');
+      toast.error(c.translateFailed);
     } finally {
       setTranslatingSection(null);
     }
@@ -352,7 +356,7 @@ export default function EditWelcomeDashboard() {
 
   const handleAutoTranslateNewsModal = async () => {
     if (!newsForm.title.trim() && !newsForm.body.trim()) {
-      toast.error('กรุณากรอกหัวข้อหรือเนื้อหาข่าวภาษาไทยก่อนแปล');
+      toast.error(c.newsNeedThai);
       return;
     }
     setTranslatingNews(true);
@@ -371,9 +375,9 @@ export default function EditWelcomeDashboard() {
         tag_en: transTag || prev.tag_en
       }));
       setNewsModalLang('en');
-      toast.success('แปลเป็นภาษาอังกฤษสำเร็จ! สลับไปยังแท็บ English ให้ตรวจทานแล้ว');
+      toast.success(c.newsTranslateSuccess);
     } catch {
-      toast.error('เกิดข้อผิดพลาดในการแปลภาษา');
+      toast.error(c.translateError);
     } finally {
       setTranslatingNews(false);
     }
@@ -382,7 +386,7 @@ export default function EditWelcomeDashboard() {
   const saveNewsItem = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newsForm.title.trim() || !newsForm.body.trim()) {
-      toast.error('กรุณากรอกหัวข้อข่าวและเนื้อหาให้ครบถ้วน');
+      toast.error(c.newsRequired);
       return;
     }
 
@@ -399,16 +403,16 @@ export default function EditWelcomeDashboard() {
       };
     });
     setShowNewsModal(false);
-    toast.success(editingNewsId ? 'แก้ไขข่าวสารเรียบร้อย' : 'เพิ่มข่าวใหม่เรียบร้อย (อย่าลืมกดบันทึกการเปลี่ยนแปลงด้านบน)');
+    toast.success(editingNewsId ? c.newsEdited : c.newsAdded);
   };
 
   const deleteNewsItem = (id: string) => {
-    if (!confirm('ยืนยันลบข่าวนี้?')) return;
+    if (!confirm(c.newsDeleteConfirm)) return;
     setData((prev) => ({
       ...prev,
       news: prev.news.filter((n) => n.id !== id)
     }));
-    toast.success('ลบข่าวเรียบร้อย');
+    toast.success(c.newsDeleted);
   };
 
   // Quick translate single news item from card list
@@ -429,9 +433,9 @@ export default function EditWelcomeDashboard() {
             : n
         )
       }));
-      toast.success(`แปลข่าว "${item.title.slice(0, 20)}..." เป็นภาษาอังกฤษสำเร็จ`);
+      toast.success(c.translateNewsDone.replace('{name}', item.title.slice(0, 20)));
     } catch {
-      toast.error('แปลไม่สำเร็จ');
+      toast.error(c.translateFailed);
     } finally {
       setTranslatingSection(null);
     }
@@ -447,9 +451,9 @@ export default function EditWelcomeDashboard() {
       nextServices[index] = { ...srv, title_en: tTitle, body_en: tBody };
       setData({ ...data, services: nextServices });
       setServicesLang('en');
-      toast.success(`แปลบริการ "${srv.title}" เป็นภาษาอังกฤษเรียบร้อย`);
+      toast.success(c.translateServiceDone.replace('{name}', srv.title));
     } catch {
-      toast.error('แปลไม่สำเร็จ');
+      toast.error(c.translateFailed);
     } finally {
       setTranslatingSection(null);
     }
@@ -465,9 +469,9 @@ export default function EditWelcomeDashboard() {
       nextGuide[index] = { ...step, title_en: tTitle, body_en: tBody };
       setData({ ...data, guide: nextGuide });
       setGuideLang('en');
-      toast.success(`แปลขั้นตอนที่ ${step.step} เป็นภาษาอังกฤษเรียบร้อย`);
+      toast.success(c.translateStepDone.replace('{n}', String(step.step)));
     } catch {
-      toast.error('แปลไม่สำเร็จ');
+      toast.error(c.translateFailed);
     } finally {
       setTranslatingSection(null);
     }
@@ -483,9 +487,9 @@ export default function EditWelcomeDashboard() {
       nextTips[index] = { ...tip, title_en: tTitle, body_en: tBody, category_en: tCat };
       setData({ ...data, tips: nextTips });
       setTipsLang('en');
-      toast.success(`แปลเคล็ดลับ "${tip.title.slice(0, 20)}..." เป็นภาษาอังกฤษเรียบร้อย`);
+      toast.success(c.translateTipDone.replace('{name}', tip.title.slice(0, 20)));
     } catch {
-      toast.error('แปลไม่สำเร็จ');
+      toast.error(c.translateFailed);
     } finally {
       setTranslatingSection(null);
     }
@@ -502,9 +506,9 @@ export default function EditWelcomeDashboard() {
       nextRules[index] = { ...rule, title_en: tTitle, items_en: tItems };
       setData({ ...data, rules: nextRules });
       setRulesLang('en');
-      toast.success(`แปลกฎ "${rule.title}" เป็นภาษาอังกฤษเรียบร้อย`);
+      toast.success(c.translateRuleDone.replace('{name}', rule.title));
     } catch {
-      toast.error('แปลไม่สำเร็จ');
+      toast.error(c.translateFailed);
     } finally {
       setTranslatingSection(null);
     }
@@ -532,17 +536,17 @@ export default function EditWelcomeDashboard() {
                 onClick={() => router.push('/dashboard')}
                 className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-[#F26522] dark:text-gray-400 mb-2 transition-colors"
               >
-                <ArrowLeft className="w-4 h-4" /> กลับสู่แดชบอร์ด
+                <ArrowLeft className="w-4 h-4" /> {c.backToDashboard}
               </button>
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-3">
                 <span className="p-2 rounded-xl bg-[#F26522]/10 text-[#F26522]">
                   <Sparkles className="w-6 h-6" />
                 </span>
-                จัดการเนื้อหาหน้าแรก (Welcome / Landing Page)
+                {c.pageTitle}
               </h1>
               <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
                 <Languages className="w-4 h-4 text-emerald-500" />
-                <span>รองรับระบบ 2 ภาษา (ไทย - อังกฤษ) พร้อมปุ่มแปลภาษาอัตโนมัติด้วย AI</span>
+                <span>{c.bilingualSubtitle}</span>
               </p>
             </div>
 
@@ -550,18 +554,18 @@ export default function EditWelcomeDashboard() {
               <button
                 onClick={handleAutoTranslateAll}
                 disabled={translatingAll || saving}
-                title="สแกนและแปลเนื้อหาทุกส่วนที่ยังว่างอยู่เป็นภาษาอังกฤษโดยไม่ทับของเดิม"
+                title={c.translateAllTitle}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 text-sm font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors shadow-sm"
               >
                 {translatingAll ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
-                    กำลังแปลทุกส่วน…
+                    {c.translatingAll}
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    แปลทุกส่วนเป็นอังกฤษ (AI)
+                    {c.translateAllButton}
                   </>
                 )}
               </button>
@@ -572,7 +576,7 @@ export default function EditWelcomeDashboard() {
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-white/20 bg-white dark:bg-zinc-900 text-sm font-bold hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors shadow-sm"
               >
-                <ExternalLink className="w-4 h-4" /> ดูหน้าแรกจริง
+                <ExternalLink className="w-4 h-4" /> {c.viewLive}
               </a>
 
               <button
@@ -580,7 +584,7 @@ export default function EditWelcomeDashboard() {
                 disabled={saving}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-300 dark:border-red-900/50 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 text-sm font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
               >
-                <RotateCcw className="w-4 h-4" /> คืนค่าเริ่มต้น
+                <RotateCcw className="w-4 h-4" /> {c.restoreDefaults}
               </button>
 
               <button
@@ -588,7 +592,7 @@ export default function EditWelcomeDashboard() {
                 disabled={saving}
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#F26522] hover:bg-[#d95314] text-white text-sm font-bold shadow-lg shadow-[#F26522]/20 active:scale-95 transition-all"
               >
-                <Save className="w-4 h-4" /> {saving ? 'กำลังบันทึก…' : 'บันทึกการเปลี่ยนแปลง'}
+                <Save className="w-4 h-4" /> {saving ? c.saving : c.saveChanges}
               </button>
             </div>
           </div>
@@ -597,7 +601,7 @@ export default function EditWelcomeDashboard() {
           <div className="mt-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3 text-amber-800 dark:text-amber-300 text-sm">
             <Info className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
             <div>
-              <span className="font-bold">ระบบแปลภาษา 2 ภาษาแบบเสถียร:</span> คุณสามารถกรอกเนื้อหาทั้ง <strong>🇹🇭 ภาษาไทย</strong> และ <strong>🇬🇧 English</strong> หรือกดปุ่ม <strong>[ ✨ แปลเป็นอังกฤษด้วย AI ]</strong> เพื่อให้ระบบแปลให้อัตโนมัติ จากนั้นกด <strong>“บันทึกการเปลี่ยนแปลง”</strong> เพื่อให้หน้าเว็บสลับภาษาได้ทันที (0ms) ไม่มีค้าง
+              <span className="font-bold">{c.noticeTitle}</span> {c.noticeBody1} <strong>🇹🇭 {c.thaiName}</strong> / <strong>🇬🇧 English</strong> {c.noticeBody2} <strong>{c.noticeBtn}</strong> {c.noticeBody3} <strong>“{c.saveChanges}”</strong> {c.noticeBody4}
             </div>
           </div>
         </div>
@@ -613,7 +617,7 @@ export default function EditWelcomeDashboard() {
                   : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
               }`}
             >
-              <Newspaper className="w-4 h-4" /> ข่าวสาร & ประชาสัมพันธ์ ({data.news.length})
+              <Newspaper className="w-4 h-4" /> {c.tabNews} ({data.news.length})
             </button>
             <button
               onClick={() => setActiveTab('hero')}
@@ -623,7 +627,7 @@ export default function EditWelcomeDashboard() {
                   : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
               }`}
             >
-              <ImageIcon className="w-4 h-4" /> แบนเนอร์ & สไลด์ภาพ ({data.hero.images.length})
+              <ImageIcon className="w-4 h-4" /> {c.tabHero} ({data.hero.images.length})
             </button>
             <button
               onClick={() => setActiveTab('services')}
@@ -633,7 +637,7 @@ export default function EditWelcomeDashboard() {
                   : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
               }`}
             >
-              <Layers className="w-4 h-4" /> บริการ (Services)
+              <Layers className="w-4 h-4" /> {c.tabServices}
             </button>
             <button
               onClick={() => setActiveTab('guide')}
@@ -643,7 +647,7 @@ export default function EditWelcomeDashboard() {
                   : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
               }`}
             >
-              <BookOpen className="w-4 h-4" /> คู่มือการใช้งาน (Guide)
+              <BookOpen className="w-4 h-4" /> {c.tabGuide}
             </button>
             <button
               onClick={() => setActiveTab('tips')}
@@ -653,7 +657,7 @@ export default function EditWelcomeDashboard() {
                   : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
               }`}
             >
-              <Lightbulb className="w-4 h-4" /> เคล็ดลับผู้เล่น (Tips)
+              <Lightbulb className="w-4 h-4" /> {c.tabTips}
             </button>
             <button
               onClick={() => setActiveTab('rules')}
@@ -663,7 +667,7 @@ export default function EditWelcomeDashboard() {
                   : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
               }`}
             >
-              <ShieldAlert className="w-4 h-4" /> กฎและข้อกำหนด (Rules)
+              <ShieldAlert className="w-4 h-4" /> {c.tabRules}
             </button>
             <button
               onClick={() => setActiveTab('courts')}
@@ -673,26 +677,26 @@ export default function EditWelcomeDashboard() {
                   : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
               }`}
             >
-              <LayoutGrid className="w-4 h-4" /> สนาม & รูปคอร์ท (Courts)
+              <LayoutGrid className="w-4 h-4" /> {c.tabCourts}
             </button>
           </div>
         </div>
 
-        {/* Tab 1: ข่าวสาร (News) */}
+        {/* Tab 1: News */}
         {activeTab === 'news' && (
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold">จัดการข่าวสารและประกาศ (News)</h2>
+                <h2 className="text-xl font-bold">{c.newsHeadingNews}</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  เพิ่มข่าวใหม่ แก้ไขเนื้อหา พร้อมคำแปลภาษาอังกฤษ เพื่อแสดงบนหน้าแรกและหน้า /news
+                  {c.newsHelpBilingual}
                 </p>
               </div>
               <button
                 onClick={openAddNews}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#F26522] text-white font-bold text-sm hover:bg-[#d95314] shadow-md transition-colors"
               >
-                <Plus className="w-4 h-4" /> เพิ่มข่าวใหม่
+                <Plus className="w-4 h-4" /> {c.addNews}
               </button>
             </div>
 
@@ -715,7 +719,7 @@ export default function EditWelcomeDashboard() {
                           className="w-full h-full object-cover"
                         />
                         <span className="absolute top-4 left-4 bg-[#F26522] text-white text-xs font-black px-2.5 py-1 rounded-md uppercase">
-                          {item.tag || 'ข่าวสาร'}
+                          {item.tag || c.newsFallbackTag}
                         </span>
                         <span className="absolute bottom-3 right-4 bg-black/70 backdrop-blur-md text-white text-xs px-2.5 py-1 rounded-md">
                           {item.date}
@@ -724,7 +728,7 @@ export default function EditWelcomeDashboard() {
                     ) : (
                       <div className="h-24 bg-gradient-to-r from-orange-500/20 to-amber-500/20 flex items-center justify-between p-6">
                         <span className="bg-[#F26522] text-white text-xs font-black px-2.5 py-1 rounded-md uppercase">
-                          {item.tag || 'ข่าวสาร'}
+                          {item.tag || c.newsFallbackTag}
                         </span>
                         <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                           {item.date}
@@ -740,11 +744,11 @@ export default function EditWelcomeDashboard() {
                           </span>
                           {hasEn ? (
                             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                              <CheckCircle2 className="w-3 h-3" /> มีภาษาอังกฤษ (EN)
+                              <CheckCircle2 className="w-3 h-3" /> {c.hasEnglish}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-0.5 rounded-full border border-amber-500/20">
-                              <AlertTriangle className="w-3 h-3" /> ยังไม่มีภาษาอังกฤษ
+                              <AlertTriangle className="w-3 h-3" /> {c.noEnglish}
                             </span>
                           )}
                         </div>
@@ -773,7 +777,7 @@ export default function EditWelcomeDashboard() {
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold hover:bg-emerald-100 transition-colors"
                           >
                             {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                            แปลอังกฤษด่วน
+                            {c.quickTranslate}
                           </button>
                         )}
 
@@ -782,13 +786,13 @@ export default function EditWelcomeDashboard() {
                             onClick={() => openEditNews(item)}
                             className="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-white/20 text-xs font-bold hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                           >
-                            แก้ไข
+                            {c.edit}
                           </button>
                           <button
                             onClick={() => deleteNewsItem(item.id)}
                             className="px-3.5 py-1.5 rounded-lg border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
                           >
-                            ลบ
+                            {c.delete}
                           </button>
                         </div>
                       </div>
@@ -806,7 +810,7 @@ export default function EditWelcomeDashboard() {
             <div className="bg-white dark:bg-[#140900] p-6 sm:p-8 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h2 className="text-xl font-bold flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-[#F26522]" /> ข้อความส่วนหัว (Hero Banner)
+                  <Sparkles className="w-5 h-5 text-[#F26522]" /> {c.heroHeading}
                 </h2>
 
                 <div className="flex items-center gap-2">
@@ -818,7 +822,7 @@ export default function EditWelcomeDashboard() {
                         heroLang === 'th' ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'
                       }`}
                     >
-                      🇹🇭 ภาษาไทย
+                      🇹🇭 {c.thaiName}
                     </button>
                     <button
                       type="button"
@@ -838,7 +842,7 @@ export default function EditWelcomeDashboard() {
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 transition-colors"
                   >
                     {translatingSection === 'hero' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                    แปลส่วน Hero ด้วย AI
+                    {c.translateHero}
                   </button>
                 </div>
               </div>
@@ -847,7 +851,7 @@ export default function EditWelcomeDashboard() {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                      หัวข้อหลัก {heroLang === 'th' ? '(Headline 🇹🇭)' : '(Headline 🇬🇧 English)'}
+                      {c.lblHeadline} {heroLang === 'th' ? '(Headline 🇹🇭)' : '(Headline 🇬🇧 English)'}
                     </label>
                   </div>
                   {heroLang === 'th' ? (
@@ -881,7 +885,7 @@ export default function EditWelcomeDashboard() {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                      คำบรรยายย่อย {heroLang === 'th' ? '(Subtitle 🇹🇭)' : '(Subtitle 🇬🇧 English)'}
+                      {c.lblSubtitle} {heroLang === 'th' ? '(Subtitle 🇹🇭)' : '(Subtitle 🇬🇧 English)'}
                     </label>
                   </div>
                   {heroLang === 'th' ? (
@@ -915,7 +919,7 @@ export default function EditWelcomeDashboard() {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                      ข้อความบนปุ่ม {heroLang === 'th' ? '(CTA Button 🇹🇭)' : '(CTA Button 🇬🇧 English)'}
+                      {c.lblCta} {heroLang === 'th' ? '(CTA Button 🇹🇭)' : '(CTA Button 🇬🇧 English)'}
                     </label>
                   </div>
                   {heroLang === 'th' ? (
@@ -952,22 +956,22 @@ export default function EditWelcomeDashboard() {
             <div className="bg-white dark:bg-[#140900] p-6 sm:p-8 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm space-y-6">
               <div>
                 <h2 className="text-xl font-bold flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5 text-[#F26522]" /> รูปภาพสไลด์แบนเนอร์ (Hero Slides)
+                  <ImageIcon className="w-5 h-5 text-[#F26522]" /> {c.heroSlides}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  รูปภาพสไลด์ขนาดใหญ่ด้านบนสุดของหน้าแรก เลื่อนเปลี่ยนอัตโนมัติ
+                  {c.heroSlidesHelp}
                 </p>
               </div>
 
               {/* Add Image Inputs */}
               <div className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-white/10 space-y-3">
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  เพิ่มรูปสไลด์ใหม่:
+                  {c.addSlide}
                 </span>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <input
                     type="text"
-                    placeholder="ใส่ URL รูปภาพ (เช่น https://images.unsplash.com/...)"
+                    placeholder={c.slideUrlPlaceholder}
                     value={newSlideUrl}
                     onChange={(e) => setNewSlideUrl(e.target.value)}
                     className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
@@ -976,7 +980,7 @@ export default function EditWelcomeDashboard() {
                     onClick={() => addHeroImage(newSlideUrl)}
                     className="px-5 py-2.5 rounded-xl bg-[#F26522] text-white text-sm font-bold hover:bg-[#d95314] transition-colors shrink-0"
                   >
-                    + เพิ่มจาก URL
+                    {c.addFromUrl}
                   </button>
                   <input
                     type="file"
@@ -989,7 +993,7 @@ export default function EditWelcomeDashboard() {
                     onClick={() => slideFileRef.current?.click()}
                     className="px-4 py-2.5 rounded-xl border border-gray-300 dark:border-white/20 bg-white dark:bg-zinc-800 text-sm font-bold hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors inline-flex items-center gap-2 shrink-0"
                   >
-                    <Upload className="w-4 h-4" /> อัปโหลดจากคอมพิวเตอร์
+                    <Upload className="w-4 h-4" /> {c.uploadFromComputer}
                   </button>
                 </div>
               </div>
@@ -1008,12 +1012,12 @@ export default function EditWelcomeDashboard() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end justify-between p-4">
                       <span className="text-white text-xs font-bold bg-black/60 px-2.5 py-1 rounded-md backdrop-blur-sm">
-                        สไลด์ที่ {idx + 1}
+                        {c.slideNumber.replace('{n}', String(idx + 1))}
                       </span>
                       <button
                         onClick={() => removeHeroImage(idx)}
                         className="p-2 rounded-xl bg-red-600/90 text-white hover:bg-red-700 transition-colors shadow-md"
-                        title="ลบรูปนี้"
+                        title={c.removeImage}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -1025,14 +1029,14 @@ export default function EditWelcomeDashboard() {
           </div>
         )}
 
-        {/* Tab 3: บริการ (Services) */}
+        {/* Tab 3: Services */}
         {activeTab === 'services' && (
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold">แก้ไขข้อมูลบริการ 3 ส่วนหลัก</h2>
+                <h2 className="text-xl font-bold">{c.servicesHeading}</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  รองรับ 2 ภาษา สามารถกดปุ่มแปลภาษาอังกฤษอัตโนมัติได้รายส่วน
+                  {c.servicesHelp}
                 </p>
               </div>
 
@@ -1044,7 +1048,7 @@ export default function EditWelcomeDashboard() {
                     servicesLang === 'th' ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'
                   }`}
                 >
-                  🇹🇭 ภาษาไทย
+                  🇹🇭 {c.thaiName}
                 </button>
                 <button
                   type="button"
@@ -1069,7 +1073,7 @@ export default function EditWelcomeDashboard() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold uppercase tracking-wider text-[#F26522]">
-                          บริการส่วนที่ {idx + 1}
+                          {c.serviceNumber.replace('{n}', String(idx + 1))}
                         </span>
                         <span className="material-symbols-outlined text-[32px] text-[#F26522]">
                           {srv.icon}
@@ -1078,7 +1082,7 @@ export default function EditWelcomeDashboard() {
 
                       <div>
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                          ชื่อบริการ {servicesLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                          {c.lblServiceName} {servicesLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
                         </label>
                         {servicesLang === 'th' ? (
                           <input
@@ -1108,7 +1112,7 @@ export default function EditWelcomeDashboard() {
 
                       <div>
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                          คำอธิบาย {servicesLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                          {c.lblDescription} {servicesLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
                         </label>
                         {servicesLang === 'th' ? (
                           <textarea
@@ -1139,7 +1143,7 @@ export default function EditWelcomeDashboard() {
 
                     <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
                       <span className="text-[11px] text-gray-400">
-                        {srv.title_en ? '✓ มีคำแปล EN แล้ว' : '— ยังไม่มี EN'}
+                        {srv.title_en ? c.enDone : c.enNone}
                       </span>
                       <button
                         type="button"
@@ -1148,7 +1152,7 @@ export default function EditWelcomeDashboard() {
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 transition-colors"
                       >
                         {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                        แปลส่วนนี้ (AI)
+                        {c.translateThisSection}
                       </button>
                     </div>
                   </div>
@@ -1158,14 +1162,14 @@ export default function EditWelcomeDashboard() {
           </div>
         )}
 
-        {/* Tab 4: คู่มือ (Guide) */}
+        {/* Tab 4: Guide */}
         {activeTab === 'guide' && (
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold">แก้ไขขั้นตอนคู่มือการใช้งาน (4 ขั้นตอน)</h2>
+                <h2 className="text-xl font-bold">{c.guideHeading}</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  คู่มือขั้นตอนการจองสนาม 1-4 พร้อมคำแปลภาษาอังกฤษ
+                  {c.guideHelp}
                 </p>
               </div>
 
@@ -1177,7 +1181,7 @@ export default function EditWelcomeDashboard() {
                     guideLang === 'th' ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'
                   }`}
                 >
-                  🇹🇭 ภาษาไทย
+                  🇹🇭 {c.thaiName}
                 </button>
                 <button
                   type="button"
@@ -1211,7 +1215,7 @@ export default function EditWelcomeDashboard() {
 
                       <div>
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                          หัวข้อ {guideLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                          {c.lblTitle} {guideLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
                         </label>
                         {guideLang === 'th' ? (
                           <input
@@ -1241,7 +1245,7 @@ export default function EditWelcomeDashboard() {
 
                       <div>
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                          คำอธิบายวิธีปฏิบัติ {guideLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                          {c.stepDescription} {guideLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
                         </label>
                         {guideLang === 'th' ? (
                           <textarea
@@ -1272,7 +1276,7 @@ export default function EditWelcomeDashboard() {
 
                     <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
                       <span className="text-[11px] text-gray-400">
-                        {step.title_en ? '✓ มีคำแปล EN' : '— ยังไม่มี EN'}
+                        {step.title_en ? c.enDone : c.enNone}
                       </span>
                       <button
                         type="button"
@@ -1281,7 +1285,7 @@ export default function EditWelcomeDashboard() {
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 transition-colors"
                       >
                         {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                        แปลขั้นตอนนี้
+                        {c.translateStep}
                       </button>
                     </div>
                   </div>
@@ -1291,14 +1295,14 @@ export default function EditWelcomeDashboard() {
           </div>
         )}
 
-        {/* Tab 5: เคล็ดลับ (Tips) */}
+        {/* Tab 5: Tips */}
         {activeTab === 'tips' && (
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold">แก้ไขบทความเคล็ดลับผู้เล่น (Tips)</h2>
+                <h2 className="text-xl font-bold">{c.tipsHeading}</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  เทคนิคและสุขภาพสำหรับนักกีฬาแบดมินตัน
+                  {c.tipsHelp}
                 </p>
               </div>
 
@@ -1310,7 +1314,7 @@ export default function EditWelcomeDashboard() {
                     tipsLang === 'th' ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'
                   }`}
                 >
-                  🇹🇭 ภาษาไทย
+                  🇹🇭 {c.thaiName}
                 </button>
                 <button
                   type="button"
@@ -1348,7 +1352,7 @@ export default function EditWelcomeDashboard() {
 
                       <div>
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                          หมวดหมู่ {tipsLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                          {c.lblCategory} {tipsLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
                         </label>
                         {tipsLang === 'th' ? (
                           <input
@@ -1378,7 +1382,7 @@ export default function EditWelcomeDashboard() {
 
                       <div>
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                          หัวข้อ {tipsLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                          {c.lblTitle} {tipsLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
                         </label>
                         {tipsLang === 'th' ? (
                           <input
@@ -1408,7 +1412,7 @@ export default function EditWelcomeDashboard() {
 
                       <div>
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                          เนื้อหา {tipsLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                          {c.lblContent} {tipsLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
                         </label>
                         {tipsLang === 'th' ? (
                           <textarea
@@ -1439,7 +1443,7 @@ export default function EditWelcomeDashboard() {
 
                     <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
                       <span className="text-[11px] text-gray-400">
-                        {tip.title_en ? '✓ มีคำแปล EN' : '— ยังไม่มี EN'}
+                        {tip.title_en ? c.enDone : c.enNone}
                       </span>
                       <button
                         type="button"
@@ -1448,7 +1452,7 @@ export default function EditWelcomeDashboard() {
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 transition-colors"
                       >
                         {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                        แปลเคล็ดลับนี้
+                        {c.translateTip}
                       </button>
                     </div>
                   </div>
@@ -1458,14 +1462,14 @@ export default function EditWelcomeDashboard() {
           </div>
         )}
 
-        {/* Tab 6: กฎและข้อกำหนด (Rules) */}
+        {/* Tab 6: Rules */}
         {activeTab === 'rules' && (
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold">แก้ไขกฎระเบียบและข้อกำหนดตามระบบจริง</h2>
+                <h2 className="text-xl font-bold">{c.rulesHeading}</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  เงื่อนไขการจอง การเช็กอิน และแต้มความผิด Strikes
+                  {c.rulesHelp}
                 </p>
               </div>
 
@@ -1477,7 +1481,7 @@ export default function EditWelcomeDashboard() {
                     rulesLang === 'th' ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'
                   }`}
                 >
-                  🇹🇭 ภาษาไทย
+                  🇹🇭 {c.thaiName}
                 </button>
                 <button
                   type="button"
@@ -1538,7 +1542,7 @@ export default function EditWelcomeDashboard() {
                         {rule.items.map((_, itemIdx) => (
                           <div key={itemIdx} className="space-y-1">
                             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400">
-                              ข้อที่ {itemIdx + 1} {rulesLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                              {c.ruleNumber.replace('{n}', String(itemIdx + 1))} {rulesLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
                             </label>
                             {rulesLang === 'th' ? (
                               <textarea
@@ -1574,7 +1578,7 @@ export default function EditWelcomeDashboard() {
 
                     <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
                       <span className="text-[11px] text-gray-400">
-                        {rule.title_en ? '✓ มีคำแปล EN' : '— ยังไม่มี EN'}
+                        {rule.title_en ? c.enDone : c.enNone}
                       </span>
                       <button
                         type="button"
@@ -1583,7 +1587,7 @@ export default function EditWelcomeDashboard() {
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 transition-colors"
                       >
                         {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                        แปลกฎข้อนี้
+                        {c.translateRule}
                       </button>
                     </div>
                   </div>
@@ -1593,14 +1597,14 @@ export default function EditWelcomeDashboard() {
           </div>
         )}
 
-        {/* Tab 7: สนามและรูปคอร์ท (Courts) */}
+        {/* Tab 7: Courts */}
         {activeTab === 'courts' && (
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold">จัดการรูปภาพและข้อมูลสนาม (Courts 1-4)</h2>
+                <h2 className="text-xl font-bold">{c.courtsHeading}</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  เปลี่ยนรูปภาพคอร์ท หรือระบุสถานที่/โซน เพื่อแสดงในหน้าเลือกคอร์ท (/booking/select-court)
+                  {c.courtsHelp}
                 </p>
               </div>
             </div>
@@ -1613,10 +1617,10 @@ export default function EditWelcomeDashboard() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold bg-[#F26522]/10 text-[#F26522] px-3 py-1 rounded-full">
-                      สนามที่ {court.id} ({court.name})
+                      {c.courtNumber.replace('{id}', String(court.id)).replace('{name}', String(court.name))}
                     </span>
                     <span className="text-xs text-gray-400">
-                      {court.status === 'AVAILABLE' ? '🟢 พร้อมใช้งาน' : '🟡 ไม่พร้อมใช้งาน'}
+                      {court.status === 'AVAILABLE' ? c.courtAvailable : c.courtUnavailable}
                     </span>
                   </div>
 
@@ -1631,7 +1635,7 @@ export default function EditWelcomeDashboard() {
                   <div className="space-y-3">
                     <div>
                       <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                        ชื่อสนาม (Court Name)
+                        {c.courtNameLabel}
                       </label>
                       <input
                         type="text"
@@ -1647,7 +1651,7 @@ export default function EditWelcomeDashboard() {
 
                     <div>
                       <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                        สถานที่ / ตำแหน่งที่ตั้ง (Location)
+                        {c.courtLocationLabel}
                       </label>
                       <input
                         type="text"
@@ -1663,7 +1667,7 @@ export default function EditWelcomeDashboard() {
 
                     <div>
                       <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                        อัปโหลดรูปภาพใหม่สำหรับคอร์ทนี้
+                        {c.uploadCourtImage}
                       </label>
                       <input
                         type="file"
@@ -1682,7 +1686,7 @@ export default function EditWelcomeDashboard() {
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold text-xs hover:opacity-90 transition-opacity"
                     >
                       <Save className="w-3.5 h-3.5" />
-                      {savingCourtId === court.id ? 'กำลังบันทึก…' : 'บันทึกข้อมูลคอร์ทนี้'}
+                      {savingCourtId === court.id ? c.saving : c.saveThisCourt}
                     </button>
                   </div>
                 </div>
@@ -1700,7 +1704,7 @@ export default function EditWelcomeDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-100 dark:border-white/10">
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <Newspaper className="w-5 h-5 text-[#F26522]" />
-                {editingNewsId ? 'แก้ไขข้อมูลข่าว' : 'เพิ่มข่าวประชาสัมพันธ์ใหม่'}
+                {editingNewsId ? c.modalEditTitle : c.modalAddTitle}
               </h2>
 
               <div className="flex items-center gap-2">
@@ -1731,17 +1735,17 @@ export default function EditWelcomeDashboard() {
                   onClick={handleAutoTranslateNewsModal}
                   disabled={translatingNews}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 transition-colors shadow-sm"
-                  title="แปลจากภาษาไทยไปเป็นภาษาอังกฤษและนำไปใส่ในแท็บ English ให้อัตโนมัติ"
+                  title={c.translateNewsTitle}
                 >
                   {translatingNews ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      กำลังแปล…
+                      {c.translating}
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      แปลอังกฤษ (AI)
+                      {c.translateNewsButton}
                     </>
                   )}
                 </button>
@@ -1752,13 +1756,13 @@ export default function EditWelcomeDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
-                    หมวดหมู่ {newsModalLang === 'th' ? '(Category 🇹🇭)' : '(Category 🇬🇧 English)'}
+                    {c.lblCategory} {newsModalLang === 'th' ? '(Category 🇹🇭)' : '(Category 🇬🇧 English)'}
                   </label>
                   {newsModalLang === 'th' ? (
                     <input
                       type="text"
                       required
-                      placeholder="เช่น การจองสนาม, ระเบียบการ"
+                      placeholder={c.catPlaceholder}
                       value={newsForm.category}
                       onChange={(e) => setNewsForm({ ...newsForm, category: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
@@ -1775,12 +1779,12 @@ export default function EditWelcomeDashboard() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
-                    ป้ายสถานะ {newsModalLang === 'th' ? '(Tag 🇹🇭)' : '(Tag 🇬🇧 English)'}
+                    {c.lblTag} {newsModalLang === 'th' ? '(Tag 🇹🇭)' : '(Tag 🇬🇧 English)'}
                   </label>
                   {newsModalLang === 'th' ? (
                     <input
                       type="text"
-                      placeholder="เช่น ประกาศสำคัญ, ใหม่"
+                      placeholder={c.tagPlaceholder2}
                       value={newsForm.tag}
                       onChange={(e) => setNewsForm({ ...newsForm, tag: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
@@ -1799,13 +1803,13 @@ export default function EditWelcomeDashboard() {
 
               <div>
                 <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
-                  หัวข้อข่าว {newsModalLang === 'th' ? '(Title 🇹🇭)' : '(Title 🇬🇧 English)'}
+                  {c.lblNewsTitle} {newsModalLang === 'th' ? '(Title 🇹🇭)' : '(Title 🇬🇧 English)'}
                 </label>
                 {newsModalLang === 'th' ? (
                   <input
                     type="text"
                     required
-                    placeholder="พิมพ์หัวข้อข่าวภาษาไทยที่นี่..."
+                    placeholder={c.newsTitlePh}
                     value={newsForm.title}
                     onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#F26522]"
@@ -1824,12 +1828,12 @@ export default function EditWelcomeDashboard() {
               {/* News Image Upload & Preview */}
               <div className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-white/10 space-y-3">
                 <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">
-                  รูปภาพประกอบข่าว (News Cover Image)
+                  {c.newsCoverLabel}
                 </label>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
-                    placeholder="ใส่ URL รูปภาพข่าว (https://...)"
+                    placeholder={c.newsCoverPlaceholder}
                     value={newsForm.image || ''}
                     onChange={(e) => setNewsForm({ ...newsForm, image: e.target.value })}
                     className="flex-1 px-3.5 py-2 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-zinc-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#F26522]"
@@ -1848,7 +1852,7 @@ export default function EditWelcomeDashboard() {
                     onClick={() => newsFileRef.current?.click()}
                     className="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-white/20 bg-white dark:bg-zinc-800 text-xs font-bold hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors inline-flex items-center gap-1.5 shrink-0"
                   >
-                    <Upload className="w-3.5 h-3.5" /> อัปโหลดจากเครื่อง
+                    <Upload className="w-3.5 h-3.5" /> {c.uploadFromDevice}
                   </button>
                 </div>
 
@@ -1863,7 +1867,7 @@ export default function EditWelcomeDashboard() {
                       type="button"
                       onClick={() => setNewsForm({ ...newsForm, image: '' })}
                       className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-600 text-white text-xs hover:bg-red-700"
-                      title="ลบรูปภาพนี้"
+                      title={c.removeThisImage}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1873,13 +1877,13 @@ export default function EditWelcomeDashboard() {
 
               <div>
                 <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
-                  เนื้อหาข่าว {newsModalLang === 'th' ? '(Body 🇹🇭)' : '(Body 🇬🇧 English)'}
+                  {c.lblNewsBody} {newsModalLang === 'th' ? '(Body 🇹🇭)' : '(Body 🇬🇧 English)'}
                 </label>
                 {newsModalLang === 'th' ? (
                   <textarea
                     rows={4}
                     required
-                    placeholder="เขียนรายละเอียดข่าวสารภาษาไทย..."
+                    placeholder={c.newsBodyPh}
                     value={newsForm.body}
                     onChange={(e) => setNewsForm({ ...newsForm, body: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
@@ -1901,13 +1905,13 @@ export default function EditWelcomeDashboard() {
                   onClick={() => setShowNewsModal(false)}
                   className="px-5 py-2 rounded-xl border border-gray-300 dark:border-white/20 text-sm font-bold hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                 >
-                  ยกเลิก
+                  {c.cancel}
                 </button>
                 <button
                   type="submit"
                   className="px-6 py-2 rounded-xl bg-[#F26522] text-white text-sm font-bold hover:bg-[#d95314] shadow-md transition-colors"
                 >
-                  {editingNewsId ? 'บันทึกการแก้ไข' : 'เพิ่มข่าว'}
+                  {editingNewsId ? c.saveEdit : c.addNewsSubmit}
                 </button>
               </div>
             </form>

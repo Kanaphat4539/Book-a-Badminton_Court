@@ -7,6 +7,10 @@ export type SelectCourtCopyKey =
   | 'missingParams' | 'bookingFailed' | 'slotExpired' | 'bookingSuccess' | 'refreshFailed'
   | 'availableCourts' | 'totalCourts' | 'hallName' | 'studentQuota' | 'reminderBody'
   | 'reminderMinutes' | 'reminderTail' | 'dateLabel' | 'monthLabel' | 'courtLabel' | 'timeLabel'
-  | 'ruleCheckIn' | 'ruleNoShow' | 'ruleShoes' | 'indoorLocation' | 'northLocation';
+  | 'ruleCheckIn' | 'ruleNoShow' | 'ruleShoes' | 'indoorLocation' | 'northLocation'
+  | 'imageTooLarge' | 'imageLoaded' | 'courtImageSaved' | 'courtSaveFailed' | 'changeImageTooltip'
+  | 'changeCourtImage' | 'editImageTitle' | 'editImageHelp' | 'imagePreview' | 'noImage'
+  | 'chooseImageFile' | 'orImageUrl' | 'locationLabel' | 'locationPlaceholder' | 'cancel'
+  | 'savingEllipsis' | 'saveCourtImage';
 export function selectCourtText(locale: SelectCourtLocale, key: SelectCourtCopyKey, ...args: (string | number)[]): string;
 export const selectCourtCopy: Record<SelectCourtLocale, Record<string, string | ((...args: (string | number)[]) => string)>>;

@@ -90,7 +90,7 @@ export class CronService {
     }
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Bangkok' })
   async handleDailyQuotaReset() {
     try {
       await this.studentRepository.createQueryBuilder()

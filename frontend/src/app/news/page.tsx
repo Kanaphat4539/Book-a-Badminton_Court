@@ -84,7 +84,7 @@ export default function NewsPage() {
                       </p>
                       <div className="flex items-center justify-between pt-4 border-t border-white/5">
                         <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">{getLocalizedText(item.category, item.category_en, locale)}</span>
-                        <span className="text-xs text-[#F26522] font-bold">{locale === 'th' ? 'อ่านต่อ →' : 'Read more →'}</span>
+                        <span className="text-xs text-[#F26522] font-bold">{text('readMore')}</span>
                       </div>
                     </div>
                   </div>
@@ -129,7 +129,7 @@ export default function NewsPage() {
               <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm sm:text-base whitespace-pre-line">{getLocalizedText(selectedNews.body, selectedNews.body_en, locale)}</p>
             </div>
             <div className="p-4 sm:p-6 border-t border-gray-100 dark:border-white/10 flex justify-end bg-gray-50 dark:bg-zinc-900/50">
-              <button onClick={() => setSelectedNews(null)} className="px-6 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold text-sm hover:opacity-90">{locale === 'th' ? 'ปิด' : 'Close'}</button>
+              <button onClick={() => setSelectedNews(null)} className="px-6 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold text-sm hover:opacity-90">{text('closeWindow')}</button>
             </div>
           </div>
         </div>

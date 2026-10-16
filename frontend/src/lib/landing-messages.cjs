@@ -1,6 +1,7 @@
 const landingMessages = {
   th: {
     menuNews: 'ข่าวสาร',
+    editWelcome: 'แก้ไขหน้าแรก (Edit Welcome)', manageWelcome: 'จัดการหน้าแรก', manageNewsImages: 'จัดการข่าว/รูป', readMoreAction: 'อ่านเพิ่มเติม', closeWindow: 'ปิดหน้าต่าง',
     loginToConsole: 'เข้าสู่ระบบคอนโซล',
     openMenu: 'เปิดเมนู',
     heroConnect: 'จองคอร์ทสำหรับประสบการณ์ที่สุดยอด',
@@ -59,6 +60,7 @@ const landingMessages = {
   },
   en: {
     menuNews: 'News',
+    editWelcome: 'Edit welcome page', manageWelcome: 'Manage welcome page', manageNewsImages: 'Manage news / images', readMoreAction: 'Read more', closeWindow: 'Close window',
     loginToConsole: 'Log in to Console',
     openMenu: 'Open menu',
     heroConnect: 'Book a court for an ultimate experience.',

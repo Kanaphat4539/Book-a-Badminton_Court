@@ -53,6 +53,9 @@ import {
   Sparkles
 } from 'lucide-react';
 
+// "HH:mm" from an API time such as "10:00:00"; a booking without a time shows a placeholder.
+const clockLabel = (value?: string | null) => (value ? value.slice(0, 5) : '--:--');
+
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<{ id: number, name: string, username: string, role: string } | null>(null);
@@ -274,10 +277,12 @@ export default function Dashboard() {
 
 
 
-  const handleCancelBooking = async () => {
-    if (!bookingToCancel) return;
+  // Takes the id explicitly: setBookingToCancel() is asynchronous, so a handler that sets the state
+  // and then reads it (the admin "cancel this booking" button) would cancel nothing.
+  const cancelBookingById = async (bookingId: number | null) => {
+    if (!bookingId) return;
     try {
-      await api.post(`/bookings/${bookingToCancel}/cancel`);
+      await api.post(`/bookings/${bookingId}/cancel`);
       toast.success(actions.cancelSuccess);
       setBookingToCancel(null);
       fetchBookings();
@@ -288,6 +293,7 @@ export default function Dashboard() {
       toast.error(err.response?.data?.message || actions.cancelFailed);
     }
   };
+  const handleCancelBooking = () => cancelBookingById(bookingToCancel);
 
   const handleResetDatabase = async () => {
     if (!confirm(actions.resetWarning)) return;
@@ -1058,7 +1064,7 @@ export default function Dashboard() {
                             <span className="text-[11px] sm:text-xs">{c.reservedSlot}</span>
                           </div>
                           <div className="font-mono font-bold text-xs sm:text-sm text-slate-900 dark:text-white tracking-wider bg-white dark:bg-slate-900 px-2 sm:px-2.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-sm">
-                            {(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)}
+                            {clockLabel(booking.time_in)} - {clockLabel(booking.time_out)}
                           </div>
                         </div>
 
@@ -1176,7 +1182,7 @@ export default function Dashboard() {
                     {selectedBooking.student?.first_name} {selectedBooking.student?.last_name} (@{selectedBooking.student?.username})
                   </p>
                   <p className="font-mono text-sm text-orange-600 dark:text-orange-400 font-bold mt-2 bg-orange-50 dark:bg-orange-500/10 inline-block px-4 py-1.5 rounded-full border border-orange-200 dark:border-orange-500/30">
-                    {c.courtLine} {selectedBooking.court} • {(selectedBooking.time_in || '').slice(0, 5)} - {(selectedBooking.time_out || '').slice(0, 5)}
+                    {c.courtLine} {selectedBooking.court} • {clockLabel(selectedBooking.time_in)} - {clockLabel(selectedBooking.time_out)}
                   </p>
                 </div>
 
@@ -1212,8 +1218,7 @@ export default function Dashboard() {
 
                       <button
                         onClick={() => {
-                          setBookingToCancel(selectedBooking.booking_id);
-                          handleCancelBooking();
+                          cancelBookingById(selectedBooking.booking_id);
                           setSelectedBookingId(null);
                         }}
                         className="w-full bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 text-xs font-mono font-bold py-2.5 rounded-xl transition"
@@ -1334,7 +1339,7 @@ export default function Dashboard() {
                       <span className="material-symbols-outlined text-[18px] text-primary">schedule</span>
                       <div className="flex flex-col min-w-0">
                         <span className="font-label-sm text-label-sm text-on-surface-variant">{p.timeLabel}</span>
-                        <span className="font-label-lg text-label-lg text-on-surface font-bold truncate">{pendingBooking.time_in?.slice(0, 5)} - {pendingBooking.time_out?.slice(0, 5)}</span>
+                        <span className="font-label-lg text-label-lg text-on-surface font-bold truncate">{clockLabel(pendingBooking.time_in)} - {clockLabel(pendingBooking.time_out)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 bg-surface-container-lowest py-2 px-2.5 rounded-lg shadow-sm">
@@ -1400,7 +1405,7 @@ export default function Dashboard() {
                   
                   <div className="text-center py-4 bg-surface-container-lowest rounded-lg shadow-sm border border-secondary/20">
                     <p className="font-label-sm text-[13px] font-bold text-on-surface-variant mb-1 tracking-widest">
-                      {fillCopy(p.timeRemaining, { time: activeBooking.time_out?.slice(0, 5) || '—' })}
+                      {fillCopy(p.timeRemaining, { time: clockLabel(activeBooking.time_out) || '—' })}
                     </p>
                     <div className="font-headline-xl text-[48px] font-black text-secondary">
                       {timeLeft}
@@ -1514,7 +1519,7 @@ export default function Dashboard() {
                         </div>
                         <div className="flex items-center gap-2 mt-0.5 text-on-surface-variant font-body-sm text-body-sm">
                           <span className="flex items-center gap-1 font-medium">
-                            <span className="material-symbols-outlined text-[13px]">schedule</span> {(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)}
+                            <span className="material-symbols-outlined text-[13px]">schedule</span> {clockLabel(booking.time_in)} - {clockLabel(booking.time_out)}
                           </span>
                           <span>•</span>
                           <span className="font-medium">{formatDate(booking.booking_date)}</span>
@@ -1674,7 +1679,7 @@ export default function Dashboard() {
                       <div className="flex flex-col">
                         <span className="text-on-surface-variant text-[11px]">{p.historyTimeLabel}</span>
                         <span className="font-bold text-on-surface">
-                          {(booking.time_in || '').slice(0, 5)} - {(booking.time_out || '').slice(0, 5)}
+                          {clockLabel(booking.time_in)} - {clockLabel(booking.time_out)}
                         </span>
                       </div>
                       <div className="flex flex-col">

@@ -201,7 +201,7 @@ export class UsersService implements OnModuleInit {
     }
     student.quota = 1;
     // Also cancel today's pending/checked-in bookings so user can actually book again
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
     const bookingRepo = this.studentRepository.manager.getRepository(Booking);
     await bookingRepo.createQueryBuilder()
       .update(Booking)

@@ -56,6 +56,10 @@ import {
 // "HH:mm" from an API time such as "10:00:00"; a booking without a time shows a placeholder.
 const clockLabel = (value?: string | null) => (value ? value.slice(0, 5) : '--:--');
 
+// Offset between server and client clocks. Kept outside the component: it is only called from
+// async handlers, never during render.
+const serverOffsetFrom = (serverTimestamp: number) => serverTimestamp - Date.now();
+
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<{ id: number, name: string, username: string, role: string } | null>(null);
@@ -110,7 +114,7 @@ export default function Dashboard() {
     try {
       const res = await api.get('/time');
       if (res.data?.timestamp) {
-        setServerOffset(res.data.timestamp - Date.now());
+        setServerOffset(serverOffsetFrom(res.data.timestamp));
       }
     } catch {
       // ignore

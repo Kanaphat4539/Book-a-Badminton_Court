@@ -118,6 +118,8 @@ export default function EditWelcomeDashboard() {
     api.get('/courts').then((res) => {
       if (res.data) setCourtsList(res.data);
     }).catch(() => {});
+    // Runs once on mount for the auth guard and initial load; a locale switch must not refetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   const handleCourtFileInDashboard = (courtId: number, e: React.ChangeEvent<HTMLInputElement>) => {

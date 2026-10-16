@@ -9,6 +9,8 @@ import {
   fetchWelcomeContent,
   saveWelcomeContent,
   resetWelcomeContent,
+  translateText,
+  translateBatch,
   type WelcomeContentData,
   type WelcomeNewsItem,
   type WelcomeTipItem,
@@ -33,7 +35,10 @@ import {
   Lightbulb,
   ShieldAlert,
   Info,
-  LayoutGrid
+  LayoutGrid,
+  Languages,
+  Loader2,
+  Globe
 } from 'lucide-react';
 
 export default function EditWelcomeDashboard() {
@@ -43,19 +48,36 @@ export default function EditWelcomeDashboard() {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'hero' | 'news' | 'services' | 'guide' | 'tips' | 'rules' | 'courts'>('news');
 
+  // Active editing language per section
+  const [heroLang, setHeroLang] = useState<'th' | 'en'>('th');
+  const [servicesLang, setServicesLang] = useState<'th' | 'en'>('th');
+  const [guideLang, setGuideLang] = useState<'th' | 'en'>('th');
+  const [tipsLang, setTipsLang] = useState<'th' | 'en'>('th');
+  const [rulesLang, setRulesLang] = useState<'th' | 'en'>('th');
+
+  // Translation busy states
+  const [translatingAll, setTranslatingAll] = useState(false);
+  const [translatingSection, setTranslatingSection] = useState<string | null>(null);
+
   // Courts state
   const [courtsList, setCourtsList] = useState<any[]>([]);
   const [savingCourtId, setSavingCourtId] = useState<number | null>(null);
 
   // News form state
   const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
+  const [newsModalLang, setNewsModalLang] = useState<'th' | 'en'>('th');
+  const [translatingNews, setTranslatingNews] = useState(false);
   const [newsForm, setNewsForm] = useState<WelcomeNewsItem>({
     id: '',
     tag: 'ประกาศสำคัญ',
+    tag_en: 'Important',
     date: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date()).replace(/-/g, '/'),
     title: '',
+    title_en: '',
     body: '',
+    body_en: '',
     category: 'การจองสนาม',
+    category_en: 'Court Booking',
     image: ''
   });
   const [showNewsModal, setShowNewsModal] = useState(false);
@@ -160,6 +182,70 @@ export default function EditWelcomeDashboard() {
     }
   };
 
+  // Master Auto-Translate All
+  const handleAutoTranslateAll = async () => {
+    if (!confirm('ต้องการให้ระบบแปลเนื้อหาทุกส่วนที่ยังไม่มีภาษาอังกฤษอัตโนมัติหรือไม่? (จะไม่เขียนทับส่วนที่มีการแก้ไขภาษาอังกฤษไว้แล้ว)')) return;
+    setTranslatingAll(true);
+    toast.info('กำลังดำเนินการแปลเนื้อหาด้วย AI / Google Translate...');
+    try {
+      const next = JSON.parse(JSON.stringify(data)) as WelcomeContentData;
+
+      // Hero
+      if (!next.hero.headline_en?.trim() && next.hero.headline) {
+        next.hero.headline_en = await translateText(next.hero.headline);
+      }
+      if (!next.hero.subtitle_en?.trim() && next.hero.subtitle) {
+        next.hero.subtitle_en = await translateText(next.hero.subtitle);
+      }
+      if (!next.hero.ctaText_en?.trim() && next.hero.ctaText) {
+        next.hero.ctaText_en = await translateText(next.hero.ctaText);
+      }
+
+      // Services
+      for (const s of next.services) {
+        if (!s.title_en?.trim() && s.title) s.title_en = await translateText(s.title);
+        if (!s.body_en?.trim() && s.body) s.body_en = await translateText(s.body);
+      }
+
+      // News
+      for (const n of next.news) {
+        if (!n.title_en?.trim() && n.title) n.title_en = await translateText(n.title);
+        if (!n.body_en?.trim() && n.body) n.body_en = await translateText(n.body);
+        if (!n.category_en?.trim() && n.category) n.category_en = await translateText(n.category);
+        if (!n.tag_en?.trim() && n.tag) n.tag_en = await translateText(n.tag);
+      }
+
+      // Guide
+      for (const g of next.guide) {
+        if (!g.title_en?.trim() && g.title) g.title_en = await translateText(g.title);
+        if (!g.body_en?.trim() && g.body) g.body_en = await translateText(g.body);
+      }
+
+      // Tips
+      for (const t of next.tips) {
+        if (!t.title_en?.trim() && t.title) t.title_en = await translateText(t.title);
+        if (!t.body_en?.trim() && t.body) t.body_en = await translateText(t.body);
+        if (!t.category_en?.trim() && t.category) t.category_en = await translateText(t.category);
+      }
+
+      // Rules
+      for (const r of next.rules) {
+        if (!r.title_en?.trim() && r.title) r.title_en = await translateText(r.title);
+        if (!r.items_en || r.items_en.length !== r.items.length) {
+          r.items_en = await translateBatch(r.items);
+        }
+      }
+
+      setData(next);
+      toast.success('แปลเนื้อหาทุกส่วนเป็นภาษาอังกฤษเรียบร้อยแล้ว! อย่าลืมกด "บันทึกการเปลี่ยนแปลง"');
+    } catch (e) {
+      console.error('Auto translate all error:', e);
+      toast.error('การแปลบางส่วนขัดข้อง กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setTranslatingAll(false);
+    }
+  };
+
   // Image Upload to Base64
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void) => {
     const file = e.target.files?.[0];
@@ -204,16 +290,48 @@ export default function EditWelcomeDashboard() {
     }));
   };
 
+  // Hero Auto-translate
+  const handleTranslateHero = async () => {
+    setTranslatingSection('hero');
+    try {
+      const [hlEn, subEn, ctaEn] = await translateBatch([
+        data.hero.headline,
+        data.hero.subtitle,
+        data.hero.ctaText
+      ]);
+      setData((prev) => ({
+        ...prev,
+        hero: {
+          ...prev.hero,
+          headline_en: hlEn || prev.hero.headline_en,
+          subtitle_en: subEn || prev.hero.subtitle_en,
+          ctaText_en: ctaEn || prev.hero.ctaText_en,
+        }
+      }));
+      setHeroLang('en');
+      toast.success('แปลส่วน Hero Banner เป็นภาษาอังกฤษเรียบร้อยแล้ว');
+    } catch {
+      toast.error('แปลไม่สำเร็จ');
+    } finally {
+      setTranslatingSection(null);
+    }
+  };
+
   // News Handlers
   const openAddNews = () => {
     setEditingNewsId(null);
+    setNewsModalLang('th');
     setNewsForm({
       id: `news-${Date.now()}`,
       tag: 'ข่าวใหม่',
+      tag_en: 'New',
       date: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date()).replace(/-/g, '/'),
       title: '',
+      title_en: '',
       body: '',
+      body_en: '',
       category: 'การจองสนาม',
+      category_en: 'Court Booking',
       image: ''
     });
     setShowNewsModal(true);
@@ -221,8 +339,44 @@ export default function EditWelcomeDashboard() {
 
   const openEditNews = (item: WelcomeNewsItem) => {
     setEditingNewsId(item.id);
-    setNewsForm({ ...item });
+    setNewsModalLang('th');
+    setNewsForm({
+      ...item,
+      tag_en: item.tag_en || '',
+      title_en: item.title_en || '',
+      body_en: item.body_en || '',
+      category_en: item.category_en || ''
+    });
     setShowNewsModal(true);
+  };
+
+  const handleAutoTranslateNewsModal = async () => {
+    if (!newsForm.title.trim() && !newsForm.body.trim()) {
+      toast.error('กรุณากรอกหัวข้อหรือเนื้อหาข่าวภาษาไทยก่อนแปล');
+      return;
+    }
+    setTranslatingNews(true);
+    try {
+      const [transTitle, transBody, transCat, transTag] = await translateBatch([
+        newsForm.title,
+        newsForm.body,
+        newsForm.category,
+        newsForm.tag
+      ]);
+      setNewsForm((prev) => ({
+        ...prev,
+        title_en: transTitle || prev.title_en,
+        body_en: transBody || prev.body_en,
+        category_en: transCat || prev.category_en,
+        tag_en: transTag || prev.tag_en
+      }));
+      setNewsModalLang('en');
+      toast.success('แปลเป็นภาษาอังกฤษสำเร็จ! สลับไปยังแท็บ English ให้ตรวจทานแล้ว');
+    } catch {
+      toast.error('เกิดข้อผิดพลาดในการแปลภาษา');
+    } finally {
+      setTranslatingNews(false);
+    }
   };
 
   const saveNewsItem = (e: React.FormEvent) => {
@@ -245,7 +399,7 @@ export default function EditWelcomeDashboard() {
       };
     });
     setShowNewsModal(false);
-    toast.success(editingNewsId ? 'แก้ไขข่าวสารเรียบร้อย' : 'เพิ่มข่าวใหม่เรียบร้อย (อย่าลืมกดบันทึกทั้งหมด)');
+    toast.success(editingNewsId ? 'แก้ไขข่าวสารเรียบร้อย' : 'เพิ่มข่าวใหม่เรียบร้อย (อย่าลืมกดบันทึกการเปลี่ยนแปลงด้านบน)');
   };
 
   const deleteNewsItem = (id: string) => {
@@ -255,6 +409,105 @@ export default function EditWelcomeDashboard() {
       news: prev.news.filter((n) => n.id !== id)
     }));
     toast.success('ลบข่าวเรียบร้อย');
+  };
+
+  // Quick translate single news item from card list
+  const handleQuickTranslateNews = async (item: WelcomeNewsItem) => {
+    setTranslatingSection(`news-${item.id}`);
+    try {
+      const [tTitle, tBody, tCat, tTag] = await translateBatch([
+        item.title,
+        item.body,
+        item.category,
+        item.tag
+      ]);
+      setData((prev) => ({
+        ...prev,
+        news: prev.news.map((n) =>
+          n.id === item.id
+            ? { ...n, title_en: tTitle, body_en: tBody, category_en: tCat, tag_en: tTag }
+            : n
+        )
+      }));
+      toast.success(`แปลข่าว "${item.title.slice(0, 20)}..." เป็นภาษาอังกฤษสำเร็จ`);
+    } catch {
+      toast.error('แปลไม่สำเร็จ');
+    } finally {
+      setTranslatingSection(null);
+    }
+  };
+
+  // Translate Service
+  const handleTranslateService = async (index: number) => {
+    setTranslatingSection(`srv-${index}`);
+    try {
+      const srv = data.services[index];
+      const [tTitle, tBody] = await translateBatch([srv.title, srv.body]);
+      const nextServices = [...data.services];
+      nextServices[index] = { ...srv, title_en: tTitle, body_en: tBody };
+      setData({ ...data, services: nextServices });
+      setServicesLang('en');
+      toast.success(`แปลบริการ "${srv.title}" เป็นภาษาอังกฤษเรียบร้อย`);
+    } catch {
+      toast.error('แปลไม่สำเร็จ');
+    } finally {
+      setTranslatingSection(null);
+    }
+  };
+
+  // Translate Guide
+  const handleTranslateGuide = async (index: number) => {
+    setTranslatingSection(`guide-${index}`);
+    try {
+      const step = data.guide[index];
+      const [tTitle, tBody] = await translateBatch([step.title, step.body]);
+      const nextGuide = [...data.guide];
+      nextGuide[index] = { ...step, title_en: tTitle, body_en: tBody };
+      setData({ ...data, guide: nextGuide });
+      setGuideLang('en');
+      toast.success(`แปลขั้นตอนที่ ${step.step} เป็นภาษาอังกฤษเรียบร้อย`);
+    } catch {
+      toast.error('แปลไม่สำเร็จ');
+    } finally {
+      setTranslatingSection(null);
+    }
+  };
+
+  // Translate Tip
+  const handleTranslateTip = async (index: number) => {
+    setTranslatingSection(`tip-${index}`);
+    try {
+      const tip = data.tips[index];
+      const [tTitle, tBody, tCat] = await translateBatch([tip.title, tip.body, tip.category]);
+      const nextTips = [...data.tips];
+      nextTips[index] = { ...tip, title_en: tTitle, body_en: tBody, category_en: tCat };
+      setData({ ...data, tips: nextTips });
+      setTipsLang('en');
+      toast.success(`แปลเคล็ดลับ "${tip.title.slice(0, 20)}..." เป็นภาษาอังกฤษเรียบร้อย`);
+    } catch {
+      toast.error('แปลไม่สำเร็จ');
+    } finally {
+      setTranslatingSection(null);
+    }
+  };
+
+  // Translate Rule
+  const handleTranslateRule = async (index: number) => {
+    setTranslatingSection(`rule-${index}`);
+    try {
+      const rule = data.rules[index];
+      const tTitle = await translateText(rule.title);
+      const tItems = await translateBatch(rule.items);
+      const nextRules = [...data.rules];
+      nextRules[index] = { ...rule, title_en: tTitle, items_en: tItems };
+      setData({ ...data, rules: nextRules });
+      setRulesLang('en');
+      toast.success(`แปลกฎ "${rule.title}" เป็นภาษาอังกฤษเรียบร้อย`);
+    } catch {
+      toast.error('แปลไม่สำเร็จ');
+    } finally {
+      setTranslatingSection(null);
+    }
   };
 
   if (loading) {
@@ -287,12 +540,32 @@ export default function EditWelcomeDashboard() {
                 </span>
                 จัดการเนื้อหาหน้าแรก (Welcome / Landing Page)
               </h1>
-              <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
-                แก้ไขข้อมูลบริการ ข่าวสารพร้อมรูปภาพ กฎระเบียบตามความเป็นจริง และภาพสไลด์หน้าแรก
+              <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+                <Languages className="w-4 h-4 text-emerald-500" />
+                <span>รองรับระบบ 2 ภาษา (ไทย - อังกฤษ) พร้อมปุ่มแปลภาษาอัตโนมัติด้วย AI</span>
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={handleAutoTranslateAll}
+                disabled={translatingAll || saving}
+                title="สแกนและแปลเนื้อหาทุกส่วนที่ยังว่างอยู่เป็นภาษาอังกฤษโดยไม่ทับของเดิม"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 text-sm font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors shadow-sm"
+              >
+                {translatingAll ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                    กำลังแปลทุกส่วน…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    แปลทุกส่วนเป็นอังกฤษ (AI)
+                  </>
+                )}
+              </button>
+
               <a
                 href="/"
                 target="_blank"
@@ -301,6 +574,7 @@ export default function EditWelcomeDashboard() {
               >
                 <ExternalLink className="w-4 h-4" /> ดูหน้าแรกจริง
               </a>
+
               <button
                 onClick={handleReset}
                 disabled={saving}
@@ -308,6 +582,7 @@ export default function EditWelcomeDashboard() {
               >
                 <RotateCcw className="w-4 h-4" /> คืนค่าเริ่มต้น
               </button>
+
               <button
                 onClick={handleSave}
                 disabled={saving}
@@ -322,7 +597,7 @@ export default function EditWelcomeDashboard() {
           <div className="mt-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3 text-amber-800 dark:text-amber-300 text-sm">
             <Info className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
             <div>
-              <span className="font-bold">คำแนะนำ:</span> เมื่อแก้ไขเนื้อหาหรือเพิ่มรูปภาพแล้ว ให้กดปุ่ม <strong>“บันทึกการเปลี่ยนแปลง”</strong> สีส้มด้านบน ข้อมูลจะแสดงผลบนหน้าแรกทันที และผู้ใช้ทุกคนจะมองเห็นข้อมูลที่อัปเดตตรงกัน
+              <span className="font-bold">ระบบแปลภาษา 2 ภาษาแบบเสถียร:</span> คุณสามารถกรอกเนื้อหาทั้ง <strong>🇹🇭 ภาษาไทย</strong> และ <strong>🇬🇧 English</strong> หรือกดปุ่ม <strong>[ ✨ แปลเป็นอังกฤษด้วย AI ]</strong> เพื่อให้ระบบแปลให้อัตโนมัติ จากนั้นกด <strong>“บันทึกการเปลี่ยนแปลง”</strong> เพื่อให้หน้าเว็บสลับภาษาได้ทันที (0ms) ไม่มีค้าง
             </div>
           </div>
         </div>
@@ -408,9 +683,9 @@ export default function EditWelcomeDashboard() {
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold">จัดการข่าวสารและประกาศ</h2>
+                <h2 className="text-xl font-bold">จัดการข่าวสารและประกาศ (News)</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  เพิ่มข่าวใหม่ แก้ไขเนื้อหา และอัปโหลดรูปภาพประกอบข่าว เพื่อแสดงบนหน้าแรกและหน้า /news
+                  เพิ่มข่าวใหม่ แก้ไขเนื้อหา พร้อมคำแปลภาษาอังกฤษ เพื่อแสดงบนหน้าแรกและหน้า /news
                 </p>
               </div>
               <button
@@ -422,69 +697,105 @@ export default function EditWelcomeDashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {data.news.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white dark:bg-[#140900] rounded-3xl border border-gray-200 dark:border-white/10 overflow-hidden shadow-sm hover:border-[#F26522]/40 transition-all flex flex-col"
-                >
-                  {/* News Image Preview */}
-                  {item.image ? (
-                    <div className="relative h-48 w-full bg-black/20 overflow-hidden">
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <span className="absolute top-4 left-4 bg-[#F26522] text-white text-xs font-black px-2.5 py-1 rounded-md uppercase">
-                        {item.tag || 'ข่าวสาร'}
-                      </span>
-                      <span className="absolute bottom-3 right-4 bg-black/70 backdrop-blur-md text-white text-xs px-2.5 py-1 rounded-md">
-                        {item.date}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="h-28 bg-gradient-to-r from-orange-500/20 to-amber-500/20 flex items-center justify-between p-6">
-                      <span className="bg-[#F26522] text-white text-xs font-black px-2.5 py-1 rounded-md uppercase">
-                        {item.tag || 'ข่าวสาร'}
-                      </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                        {item.date}
-                      </span>
-                    </div>
-                  )}
+              {data.news.map((item) => {
+                const hasEn = Boolean(item.title_en?.trim());
+                const isTranslating = translatingSection === `news-${item.id}`;
 
-                  <div className="p-6 flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300">
-                          {item.category}
+                return (
+                  <div
+                    key={item.id}
+                    className="bg-white dark:bg-[#140900] rounded-3xl border border-gray-200 dark:border-white/10 overflow-hidden shadow-sm hover:border-[#F26522]/40 transition-all flex flex-col"
+                  >
+                    {/* News Image Preview */}
+                    {item.image ? (
+                      <div className="relative h-48 w-full bg-black/20 overflow-hidden">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <span className="absolute top-4 left-4 bg-[#F26522] text-white text-xs font-black px-2.5 py-1 rounded-md uppercase">
+                          {item.tag || 'ข่าวสาร'}
+                        </span>
+                        <span className="absolute bottom-3 right-4 bg-black/70 backdrop-blur-md text-white text-xs px-2.5 py-1 rounded-md">
+                          {item.date}
                         </span>
                       </div>
-                      <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2 leading-snug">
-                        {item.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 leading-relaxed mb-4">
-                        {item.body}
-                      </p>
-                    </div>
+                    ) : (
+                      <div className="h-24 bg-gradient-to-r from-orange-500/20 to-amber-500/20 flex items-center justify-between p-6">
+                        <span className="bg-[#F26522] text-white text-xs font-black px-2.5 py-1 rounded-md uppercase">
+                          {item.tag || 'ข่าวสาร'}
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                          {item.date}
+                        </span>
+                      </div>
+                    )}
 
-                    <div className="pt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => openEditNews(item)}
-                        className="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-white/20 text-xs font-bold hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-                      >
-                        แก้ไข
-                      </button>
-                      <button
-                        onClick={() => deleteNewsItem(item.id)}
-                        className="px-3.5 py-1.5 rounded-lg border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
-                      >
-                        ลบ
-                      </button>
+                    <div className="p-6 flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300">
+                            {item.category}
+                          </span>
+                          {hasEn ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                              <CheckCircle2 className="w-3 h-3" /> มีภาษาอังกฤษ (EN)
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                              <AlertTriangle className="w-3 h-3" /> ยังไม่มีภาษาอังกฤษ
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-1 leading-snug">
+                          {item.title}
+                        </h3>
+
+                        {item.title_en && (
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mb-2 italic">
+                            EN: {item.title_en}
+                          </p>
+                        )}
+
+                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 leading-relaxed mb-4">
+                          {item.body}
+                        </p>
+                      </div>
+
+                      <div className="pt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between gap-2">
+                        {!hasEn && (
+                          <button
+                            type="button"
+                            onClick={() => handleQuickTranslateNews(item)}
+                            disabled={isTranslating}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold hover:bg-emerald-100 transition-colors"
+                          >
+                            {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                            แปลอังกฤษด่วน
+                          </button>
+                        )}
+
+                        <div className="flex items-center gap-2 ml-auto">
+                          <button
+                            onClick={() => openEditNews(item)}
+                            className="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-white/20 text-xs font-bold hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                          >
+                            แก้ไข
+                          </button>
+                          <button
+                            onClick={() => deleteNewsItem(item.id)}
+                            className="px-3.5 py-1.5 rounded-lg border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                          >
+                            ลบ
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -493,75 +804,159 @@ export default function EditWelcomeDashboard() {
         {activeTab === 'hero' && (
           <div className="max-w-7xl mx-auto space-y-8">
             <div className="bg-white dark:bg-[#140900] p-6 sm:p-8 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm space-y-6">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[#F26522]" /> ข้อความส่วนหัว (Hero Banner)
-              </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[#F26522]" /> ข้อความส่วนหัว (Hero Banner)
+                </h2>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex rounded-xl bg-gray-100 dark:bg-zinc-800 p-1 border border-gray-200 dark:border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setHeroLang('th')}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                        heroLang === 'th' ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'
+                      }`}
+                    >
+                      🇹🇭 ภาษาไทย
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHeroLang('en')}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                        heroLang === 'en' ? 'bg-[#F26522] text-white shadow-sm' : 'text-gray-500'
+                      }`}
+                    >
+                      🇬🇧 English
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleTranslateHero}
+                    disabled={translatingSection === 'hero'}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 transition-colors"
+                  >
+                    {translatingSection === 'hero' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    แปลส่วน Hero ด้วย AI
+                  </button>
+                </div>
+              </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                    หัวข้อหลัก (Headline)
-                  </label>
-                  <input
-                    type="text"
-                    value={data.hero.headline}
-                    onChange={(e) =>
-                      setData((prev) => ({
-                        ...prev,
-                        hero: { ...prev.hero, headline: e.target.value }
-                      }))
-                    }
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                  />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                      หัวข้อหลัก {heroLang === 'th' ? '(Headline 🇹🇭)' : '(Headline 🇬🇧 English)'}
+                    </label>
+                  </div>
+                  {heroLang === 'th' ? (
+                    <input
+                      type="text"
+                      value={data.hero.headline}
+                      onChange={(e) =>
+                        setData((prev) => ({
+                          ...prev,
+                          hero: { ...prev.hero, headline: e.target.value }
+                        }))
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="e.g. Book a court for an ultimate experience KMITL PCC BADMINTON"
+                      value={data.hero.headline_en || ''}
+                      onChange={(e) =>
+                        setData((prev) => ({
+                          ...prev,
+                          hero: { ...prev.hero, headline_en: e.target.value }
+                        }))
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                    />
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                    คำบรรยายย่อย (Subtitle)
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={data.hero.subtitle}
-                    onChange={(e) =>
-                      setData((prev) => ({
-                        ...prev,
-                        hero: { ...prev.hero, subtitle: e.target.value }
-                      }))
-                    }
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                  />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                      คำบรรยายย่อย {heroLang === 'th' ? '(Subtitle 🇹🇭)' : '(Subtitle 🇬🇧 English)'}
+                    </label>
+                  </div>
+                  {heroLang === 'th' ? (
+                    <textarea
+                      rows={2}
+                      value={data.hero.subtitle}
+                      onChange={(e) =>
+                        setData((prev) => ({
+                          ...prev,
+                          hero: { ...prev.hero, subtitle: e.target.value }
+                        }))
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                    />
+                  ) : (
+                    <textarea
+                      rows={2}
+                      placeholder="e.g. Day-by-day badminton court booking system for KMITL students and staff."
+                      value={data.hero.subtitle_en || ''}
+                      onChange={(e) =>
+                        setData((prev) => ({
+                          ...prev,
+                          hero: { ...prev.hero, subtitle_en: e.target.value }
+                        }))
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                    />
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                    ข้อความบนปุ่ม (CTA Button)
-                  </label>
-                  <input
-                    type="text"
-                    value={data.hero.ctaText}
-                    onChange={(e) =>
-                      setData((prev) => ({
-                        ...prev,
-                        hero: { ...prev.hero, ctaText: e.target.value }
-                      }))
-                    }
-                    className="w-full sm:w-1/2 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                  />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                      ข้อความบนปุ่ม {heroLang === 'th' ? '(CTA Button 🇹🇭)' : '(CTA Button 🇬🇧 English)'}
+                    </label>
+                  </div>
+                  {heroLang === 'th' ? (
+                    <input
+                      type="text"
+                      value={data.hero.ctaText}
+                      onChange={(e) =>
+                        setData((prev) => ({
+                          ...prev,
+                          hero: { ...prev.hero, ctaText: e.target.value }
+                        }))
+                      }
+                      className="w-full sm:w-1/2 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="e.g. Get Started"
+                      value={data.hero.ctaText_en || ''}
+                      onChange={(e) =>
+                        setData((prev) => ({
+                          ...prev,
+                          hero: { ...prev.hero, ctaText_en: e.target.value }
+                        }))
+                      }
+                      className="w-full sm:w-1/2 px-4 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                    />
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Hero Images Management */}
             <div className="bg-white dark:bg-[#140900] p-6 sm:p-8 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-xl font-bold flex items-center gap-2">
-                    <ImageIcon className="w-5 h-5 text-[#F26522]" /> รูปภาพสไลด์แบนเนอร์ (Hero Slides)
-                  </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    รูปภาพสไลด์ขนาดใหญ่ด้านบนสุดของหน้าแรก เลื่อนเปลี่ยนอัตโนมัติ
-                  </p>
-                </div>
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5 text-[#F26522]" /> รูปภาพสไลด์แบนเนอร์ (Hero Slides)
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  รูปภาพสไลด์ขนาดใหญ่ด้านบนสุดของหน้าแรก เลื่อนเปลี่ยนอัตโนมัติ
+                </p>
               </div>
 
               {/* Add Image Inputs */}
@@ -633,55 +1028,132 @@ export default function EditWelcomeDashboard() {
         {/* Tab 3: บริการ (Services) */}
         {activeTab === 'services' && (
           <div className="max-w-7xl mx-auto space-y-6">
-            <h2 className="text-xl font-bold">แก้ไขข้อมูลบริการ 3 ส่วนหลัก</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {data.services.map((srv, idx) => (
-                <div
-                  key={srv.id}
-                  className="bg-white dark:bg-[#140900] p-6 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm space-y-4"
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold">แก้ไขข้อมูลบริการ 3 ส่วนหลัก</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  รองรับ 2 ภาษา สามารถกดปุ่มแปลภาษาอังกฤษอัตโนมัติได้รายส่วน
+                </p>
+              </div>
+
+              <div className="flex rounded-xl bg-gray-100 dark:bg-zinc-800 p-1 border border-gray-200 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setServicesLang('th')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    servicesLang === 'th' ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'
+                  }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#F26522]">
-                      บริการส่วนที่ {idx + 1}
-                    </span>
-                    <span className="material-symbols-outlined text-[32px] text-[#F26522]">
-                      {srv.icon}
-                    </span>
-                  </div>
+                  🇹🇭 ภาษาไทย
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setServicesLang('en')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    servicesLang === 'en' ? 'bg-[#F26522] text-white shadow-sm' : 'text-gray-500'
+                  }`}
+                >
+                  🇬🇧 English
+                </button>
+              </div>
+            </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                      ชื่อบริการ
-                    </label>
-                    <input
-                      type="text"
-                      value={srv.title}
-                      onChange={(e) => {
-                        const newServices = [...data.services];
-                        newServices[idx].title = e.target.value;
-                        setData({ ...data, services: newServices });
-                      }}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                    />
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {data.services.map((srv, idx) => {
+                const isTranslating = translatingSection === `srv-${idx}`;
+                return (
+                  <div
+                    key={srv.id}
+                    className="bg-white dark:bg-[#140900] p-6 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm space-y-4 flex flex-col justify-between"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#F26522]">
+                          บริการส่วนที่ {idx + 1}
+                        </span>
+                        <span className="material-symbols-outlined text-[32px] text-[#F26522]">
+                          {srv.icon}
+                        </span>
+                      </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                      คำอธิบายบริการ
-                    </label>
-                    <textarea
-                      rows={4}
-                      value={srv.body}
-                      onChange={(e) => {
-                        const newServices = [...data.services];
-                        newServices[idx].body = e.target.value;
-                        setData({ ...data, services: newServices });
-                      }}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                    />
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                          ชื่อบริการ {servicesLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                        </label>
+                        {servicesLang === 'th' ? (
+                          <input
+                            type="text"
+                            value={srv.title}
+                            onChange={(e) => {
+                              const newServices = [...data.services];
+                              newServices[idx].title = e.target.value;
+                              setData({ ...data, services: newServices });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            placeholder="Service title in English..."
+                            value={srv.title_en || ''}
+                            onChange={(e) => {
+                              const newServices = [...data.services];
+                              newServices[idx].title_en = e.target.value;
+                              setData({ ...data, services: newServices });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                          คำอธิบาย {servicesLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                        </label>
+                        {servicesLang === 'th' ? (
+                          <textarea
+                            rows={4}
+                            value={srv.body}
+                            onChange={(e) => {
+                              const newServices = [...data.services];
+                              newServices[idx].body = e.target.value;
+                              setData({ ...data, services: newServices });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                          />
+                        ) : (
+                          <textarea
+                            rows={4}
+                            placeholder="Service description in English..."
+                            value={srv.body_en || ''}
+                            onChange={(e) => {
+                              const newServices = [...data.services];
+                              newServices[idx].body_en = e.target.value;
+                              setData({ ...data, services: newServices });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
+                      <span className="text-[11px] text-gray-400">
+                        {srv.title_en ? '✓ มีคำแปล EN แล้ว' : '— ยังไม่มี EN'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleTranslateService(idx)}
+                        disabled={isTranslating}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 transition-colors"
+                      >
+                        {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                        แปลส่วนนี้ (AI)
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -689,55 +1161,132 @@ export default function EditWelcomeDashboard() {
         {/* Tab 4: คู่มือ (Guide) */}
         {activeTab === 'guide' && (
           <div className="max-w-7xl mx-auto space-y-6">
-            <h2 className="text-xl font-bold">แก้ไขขั้นตอนคู่มือการใช้งาน (4 ขั้นตอน)</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {data.guide.map((step, idx) => (
-                <div
-                  key={step.step}
-                  className="bg-white dark:bg-[#140900] p-6 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm space-y-4"
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold">แก้ไขขั้นตอนคู่มือการใช้งาน (4 ขั้นตอน)</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  คู่มือขั้นตอนการจองสนาม 1-4 พร้อมคำแปลภาษาอังกฤษ
+                </p>
+              </div>
+
+              <div className="flex rounded-xl bg-gray-100 dark:bg-zinc-800 p-1 border border-gray-200 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setGuideLang('th')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    guideLang === 'th' ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'
+                  }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="w-8 h-8 rounded-full bg-[#F26522] text-white flex items-center justify-center font-bold text-sm shadow">
-                      {step.step}
-                    </span>
-                    <span className="material-symbols-outlined text-[28px] text-gray-400">
-                      {step.icon}
-                    </span>
-                  </div>
+                  🇹🇭 ภาษาไทย
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGuideLang('en')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    guideLang === 'en' ? 'bg-[#F26522] text-white shadow-sm' : 'text-gray-500'
+                  }`}
+                >
+                  🇬🇧 English
+                </button>
+              </div>
+            </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                      หัวข้อขั้นตอน
-                    </label>
-                    <input
-                      type="text"
-                      value={step.title}
-                      onChange={(e) => {
-                        const newGuide = [...data.guide];
-                        newGuide[idx].title = e.target.value;
-                        setData({ ...data, guide: newGuide });
-                      }}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                    />
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {data.guide.map((step, idx) => {
+                const isTranslating = translatingSection === `guide-${idx}`;
+                return (
+                  <div
+                    key={step.step}
+                    className="bg-white dark:bg-[#140900] p-6 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm space-y-4 flex flex-col justify-between"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="w-8 h-8 rounded-full bg-[#F26522] text-white flex items-center justify-center font-bold text-sm shadow">
+                          {step.step}
+                        </span>
+                        <span className="material-symbols-outlined text-[28px] text-gray-400">
+                          {step.icon}
+                        </span>
+                      </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                      คำอธิบายวิธีปฏิบัติ
-                    </label>
-                    <textarea
-                      rows={5}
-                      value={step.body}
-                      onChange={(e) => {
-                        const newGuide = [...data.guide];
-                        newGuide[idx].body = e.target.value;
-                        setData({ ...data, guide: newGuide });
-                      }}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                    />
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                          หัวข้อ {guideLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                        </label>
+                        {guideLang === 'th' ? (
+                          <input
+                            type="text"
+                            value={step.title}
+                            onChange={(e) => {
+                              const newGuide = [...data.guide];
+                              newGuide[idx].title = e.target.value;
+                              setData({ ...data, guide: newGuide });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            placeholder="Step title in English..."
+                            value={step.title_en || ''}
+                            onChange={(e) => {
+                              const newGuide = [...data.guide];
+                              newGuide[idx].title_en = e.target.value;
+                              setData({ ...data, guide: newGuide });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                          คำอธิบายวิธีปฏิบัติ {guideLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                        </label>
+                        {guideLang === 'th' ? (
+                          <textarea
+                            rows={5}
+                            value={step.body}
+                            onChange={(e) => {
+                              const newGuide = [...data.guide];
+                              newGuide[idx].body = e.target.value;
+                              setData({ ...data, guide: newGuide });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                          />
+                        ) : (
+                          <textarea
+                            rows={5}
+                            placeholder="Step instructions in English..."
+                            value={step.body_en || ''}
+                            onChange={(e) => {
+                              const newGuide = [...data.guide];
+                              newGuide[idx].body_en = e.target.value;
+                              setData({ ...data, guide: newGuide });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
+                      <span className="text-[11px] text-gray-400">
+                        {step.title_en ? '✓ มีคำแปล EN' : '— ยังไม่มี EN'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleTranslateGuide(idx)}
+                        disabled={isTranslating}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 transition-colors"
+                      >
+                        {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                        แปลขั้นตอนนี้
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -745,59 +1294,166 @@ export default function EditWelcomeDashboard() {
         {/* Tab 5: เคล็ดลับ (Tips) */}
         {activeTab === 'tips' && (
           <div className="max-w-7xl mx-auto space-y-6">
-            <h2 className="text-xl font-bold">แก้ไขบทความเคล็ดลับผู้เล่น</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {data.tips.map((tip, idx) => (
-                <div
-                  key={tip.id}
-                  className="bg-white dark:bg-[#140900] p-6 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm space-y-4"
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold">แก้ไขบทความเคล็ดลับผู้เล่น (Tips)</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  เทคนิคและสุขภาพสำหรับนักกีฬาแบดมินตัน
+                </p>
+              </div>
+
+              <div className="flex rounded-xl bg-gray-100 dark:bg-zinc-800 p-1 border border-gray-200 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setTipsLang('th')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    tipsLang === 'th' ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'
+                  }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-[#F26522]/10 text-[#F26522]">
-                      {tip.category}
-                    </span>
-                    <span className="text-xs text-gray-400">{tip.date}</span>
-                  </div>
+                  🇹🇭 ภาษาไทย
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTipsLang('en')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    tipsLang === 'en' ? 'bg-[#F26522] text-white shadow-sm' : 'text-gray-500'
+                  }`}
+                >
+                  🇬🇧 English
+                </button>
+              </div>
+            </div>
 
-                  {tip.image && (
-                    <div className="h-36 rounded-xl overflow-hidden bg-black/10">
-                      <img src={tip.image} alt={tip.title} className="w-full h-full object-cover" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {data.tips.map((tip, idx) => {
+                const isTranslating = translatingSection === `tip-${idx}`;
+                return (
+                  <div
+                    key={tip.id}
+                    className="bg-white dark:bg-[#140900] p-6 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm space-y-4 flex flex-col justify-between"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-[#F26522]/10 text-[#F26522]">
+                          {tipsLang === 'th' ? tip.category : (tip.category_en || tip.category)}
+                        </span>
+                        <span className="text-xs text-gray-400">{tip.date}</span>
+                      </div>
+
+                      {tip.image && (
+                        <div className="h-36 rounded-xl overflow-hidden bg-black/10">
+                          <img src={tip.image} alt={tip.title} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                          หมวดหมู่ {tipsLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                        </label>
+                        {tipsLang === 'th' ? (
+                          <input
+                            type="text"
+                            value={tip.category}
+                            onChange={(e) => {
+                              const newTips = [...data.tips];
+                              newTips[idx].category = e.target.value;
+                              setData({ ...data, tips: newTips });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            placeholder="Category in English..."
+                            value={tip.category_en || ''}
+                            onChange={(e) => {
+                              const newTips = [...data.tips];
+                              newTips[idx].category_en = e.target.value;
+                              setData({ ...data, tips: newTips });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                          หัวข้อ {tipsLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                        </label>
+                        {tipsLang === 'th' ? (
+                          <input
+                            type="text"
+                            value={tip.title}
+                            onChange={(e) => {
+                              const newTips = [...data.tips];
+                              newTips[idx].title = e.target.value;
+                              setData({ ...data, tips: newTips });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            placeholder="Tip title in English..."
+                            value={tip.title_en || ''}
+                            onChange={(e) => {
+                              const newTips = [...data.tips];
+                              newTips[idx].title_en = e.target.value;
+                              setData({ ...data, tips: newTips });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                          เนื้อหา {tipsLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                        </label>
+                        {tipsLang === 'th' ? (
+                          <textarea
+                            rows={4}
+                            value={tip.body}
+                            onChange={(e) => {
+                              const newTips = [...data.tips];
+                              newTips[idx].body = e.target.value;
+                              setData({ ...data, tips: newTips });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                          />
+                        ) : (
+                          <textarea
+                            rows={4}
+                            placeholder="Tip details in English..."
+                            value={tip.body_en || ''}
+                            onChange={(e) => {
+                              const newTips = [...data.tips];
+                              newTips[idx].body_en = e.target.value;
+                              setData({ ...data, tips: newTips });
+                            }}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        )}
+                      </div>
                     </div>
-                  )}
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                      หัวข้อบทความ
-                    </label>
-                    <input
-                      type="text"
-                      value={tip.title}
-                      onChange={(e) => {
-                        const newTips = [...data.tips];
-                        newTips[idx].title = e.target.value;
-                        setData({ ...data, tips: newTips });
-                      }}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                    />
+                    <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
+                      <span className="text-[11px] text-gray-400">
+                        {tip.title_en ? '✓ มีคำแปล EN' : '— ยังไม่มี EN'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleTranslateTip(idx)}
+                        disabled={isTranslating}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 transition-colors"
+                      >
+                        {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                        แปลเคล็ดลับนี้
+                      </button>
+                    </div>
                   </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                      เนื้อหาเคล็ดลับ
-                    </label>
-                    <textarea
-                      rows={4}
-                      value={tip.body}
-                      onChange={(e) => {
-                        const newTips = [...data.tips];
-                        newTips[idx].body = e.target.value;
-                        setData({ ...data, tips: newTips });
-                      }}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -805,50 +1461,134 @@ export default function EditWelcomeDashboard() {
         {/* Tab 6: กฎและข้อกำหนด (Rules) */}
         {activeTab === 'rules' && (
           <div className="max-w-7xl mx-auto space-y-6">
-            <h2 className="text-xl font-bold">แก้ไขกฎระเบียบและข้อกำหนดตามระบบจริง</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {data.rules.map((rule, ruleIdx) => (
-                <div
-                  key={rule.id}
-                  className="bg-white dark:bg-[#140900] p-6 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm space-y-4"
-                >
-                  <div className="flex items-center gap-3 pb-2 border-b border-gray-100 dark:border-white/5">
-                    <span className="material-symbols-outlined text-[28px] text-[#F26522]">
-                      {rule.icon}
-                    </span>
-                    <input
-                      type="text"
-                      value={rule.title}
-                      onChange={(e) => {
-                        const newRules = [...data.rules];
-                        newRules[ruleIdx].title = e.target.value;
-                        setData({ ...data, rules: newRules });
-                      }}
-                      className="text-lg font-bold bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-[#F26522] rounded px-2 w-full"
-                    />
-                  </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold">แก้ไขกฎระเบียบและข้อกำหนดตามระบบจริง</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  เงื่อนไขการจอง การเช็กอิน และแต้มความผิด Strikes
+                </p>
+              </div>
 
-                  <div className="space-y-3">
-                    {rule.items.map((item, itemIdx) => (
-                      <div key={itemIdx} className="space-y-1">
-                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400">
-                          ข้อที่ {itemIdx + 1}
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={item}
-                          onChange={(e) => {
-                            const newRules = [...data.rules];
-                            newRules[ruleIdx].items[itemIdx] = e.target.value;
-                            setData({ ...data, rules: newRules });
-                          }}
-                          className="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                        />
+              <div className="flex rounded-xl bg-gray-100 dark:bg-zinc-800 p-1 border border-gray-200 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setRulesLang('th')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    rulesLang === 'th' ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'
+                  }`}
+                >
+                  🇹🇭 ภาษาไทย
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRulesLang('en')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    rulesLang === 'en' ? 'bg-[#F26522] text-white shadow-sm' : 'text-gray-500'
+                  }`}
+                >
+                  🇬🇧 English
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {data.rules.map((rule, ruleIdx) => {
+                const isTranslating = translatingSection === `rule-${ruleIdx}`;
+                const itemsList = rulesLang === 'th'
+                  ? rule.items
+                  : (rule.items_en && rule.items_en.length === rule.items.length ? rule.items_en : rule.items);
+
+                return (
+                  <div
+                    key={rule.id}
+                    className="bg-white dark:bg-[#140900] p-6 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm space-y-4 flex flex-col justify-between"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 pb-2 border-b border-gray-100 dark:border-white/5">
+                        <span className="material-symbols-outlined text-[28px] text-[#F26522]">
+                          {rule.icon}
+                        </span>
+                        {rulesLang === 'th' ? (
+                          <input
+                            type="text"
+                            value={rule.title}
+                            onChange={(e) => {
+                              const newRules = [...data.rules];
+                              newRules[ruleIdx].title = e.target.value;
+                              setData({ ...data, rules: newRules });
+                            }}
+                            className="text-lg font-bold bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-[#F26522] rounded px-2 w-full"
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            placeholder="Rule category title in English..."
+                            value={rule.title_en || ''}
+                            onChange={(e) => {
+                              const newRules = [...data.rules];
+                              newRules[ruleIdx].title_en = e.target.value;
+                              setData({ ...data, rules: newRules });
+                            }}
+                            className="text-lg font-bold bg-transparent text-emerald-600 dark:text-emerald-400 border-none focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded px-2 w-full"
+                          />
+                        )}
                       </div>
-                    ))}
+
+                      <div className="space-y-3">
+                        {rule.items.map((_, itemIdx) => (
+                          <div key={itemIdx} className="space-y-1">
+                            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400">
+                              ข้อที่ {itemIdx + 1} {rulesLang === 'th' ? '(🇹🇭 ไทย)' : '(🇬🇧 English)'}
+                            </label>
+                            {rulesLang === 'th' ? (
+                              <textarea
+                                rows={2}
+                                value={rule.items[itemIdx]}
+                                onChange={(e) => {
+                                  const newRules = [...data.rules];
+                                  newRules[ruleIdx].items[itemIdx] = e.target.value;
+                                  setData({ ...data, rules: newRules });
+                                }}
+                                className="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                              />
+                            ) : (
+                              <textarea
+                                rows={2}
+                                placeholder="Rule text in English..."
+                                value={rule.items_en?.[itemIdx] || ''}
+                                onChange={(e) => {
+                                  const newRules = [...data.rules];
+                                  if (!newRules[ruleIdx].items_en) {
+                                    newRules[ruleIdx].items_en = [...newRules[ruleIdx].items];
+                                  }
+                                  newRules[ruleIdx].items_en![itemIdx] = e.target.value;
+                                  setData({ ...data, rules: newRules });
+                                }}
+                                className="w-full px-3.5 py-2 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
+                      <span className="text-[11px] text-gray-400">
+                        {rule.title_en ? '✓ มีคำแปล EN' : '— ยังไม่มี EN'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleTranslateRule(ruleIdx)}
+                        disabled={isTranslating}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 transition-colors"
+                      >
+                        {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                        แปลกฎข้อนี้
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -869,112 +1609,82 @@ export default function EditWelcomeDashboard() {
               {courtsList.map((court) => (
                 <div
                   key={court.id}
-                  className="bg-white dark:bg-[#140900] rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-sm flex flex-col justify-between gap-4"
+                  className="bg-white dark:bg-[#140900] rounded-3xl border border-gray-200 dark:border-white/10 p-6 shadow-sm space-y-4"
                 >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="w-8 h-8 rounded-lg bg-orange-500/10 text-[#F26522] font-black text-sm flex items-center justify-center">
-                          {court.id}
-                        </span>
-                        <h3 className="font-bold text-lg text-gray-900 dark:text-white">
-                          {court.name}
-                        </h3>
-                      </div>
-                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-600 dark:text-green-400">
-                        {court.status || 'ACTIVE'}
-                      </span>
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold bg-[#F26522]/10 text-[#F26522] px-3 py-1 rounded-full">
+                      สนามที่ {court.id} ({court.name})
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {court.status === 'AVAILABLE' ? '🟢 พร้อมใช้งาน' : '🟡 ไม่พร้อมใช้งาน'}
+                    </span>
+                  </div>
 
-                    {/* Court Image Preview */}
-                    <div className="relative h-48 w-full rounded-2xl overflow-hidden bg-black/10 border border-gray-200 dark:border-white/10">
-                      {court.image ? (
-                        <img
-                          src={court.image}
-                          alt={court.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs gap-1">
-                          <ImageIcon className="w-8 h-8 opacity-40" />
-                          <span>ยังไม่มีรูปภาพ</span>
-                        </div>
-                      )}
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-bold">
-                        {court.location || `คอร์ท ${court.id}`}
-                      </div>
-                    </div>
+                  <div className="relative h-44 rounded-2xl overflow-hidden bg-black/10 border border-gray-200 dark:border-white/10">
+                    <img
+                      src={court.image || '/images/pixel_badminton.png'}
+                      alt={court.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
-                    {/* Upload File Button */}
+                  <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
-                        อัปโหลดรูปภาพใหม่จากเครื่อง
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        id={`court-file-${court.id}`}
-                        className="hidden"
-                        onChange={(e) => handleCourtFileInDashboard(court.id, e)}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => document.getElementById(`court-file-${court.id}`)?.click()}
-                        className="w-full py-2.5 px-3 rounded-xl border border-dashed border-[#F26522] text-[#F26522] hover:bg-[#F26522]/5 text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
-                      >
-                        <Upload className="w-4 h-4" />
-                        เลือกไฟล์รูปภาพ (Max 5MB)
-                      </button>
-                    </div>
-
-                    {/* Image URL Input */}
-                    <div>
-                      <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
-                        หรือกรอก Image URL
+                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                        ชื่อสนาม (Court Name)
                       </label>
                       <input
                         type="text"
-                        value={court.image || ''}
-                        onChange={(e) => {
-                          const val = e.target.value;
+                        value={court.name}
+                        onChange={(e) =>
                           setCourtsList((prev) =>
-                            prev.map((c) => (c.id === court.id ? { ...c, image: val } : c))
-                          );
-                        }}
-                        placeholder="https://images.unsplash.com/..."
-                        className="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                            prev.map((c) => (c.id === court.id ? { ...c, name: e.target.value } : c))
+                          )
+                        }
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#F26522]"
                       />
                     </div>
 
-                    {/* Location / Zone Label */}
                     <div>
-                      <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
-                        สถานที่ / โซน (Location Text)
+                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                        สถานที่ / ตำแหน่งที่ตั้ง (Location)
                       </label>
                       <input
                         type="text"
                         value={court.location || ''}
-                        onChange={(e) => {
-                          const val = e.target.value;
+                        onChange={(e) =>
                           setCourtsList((prev) =>
-                            prev.map((c) => (c.id === court.id ? { ...c, location: val } : c))
-                          );
-                        }}
-                        placeholder="เช่น KMITL Sports Hall • Main"
-                        className="w-full px-3.5 py-2 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                            prev.map((c) => (c.id === court.id ? { ...c, location: e.target.value } : c))
+                          )
+                        }
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                        อัปโหลดรูปภาพใหม่สำหรับคอร์ทนี้
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleCourtFileInDashboard(court.id, e)}
+                        className="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20 cursor-pointer"
                       />
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    disabled={savingCourtId === court.id}
-                    onClick={() => handleSaveCourtInDashboard(court)}
-                    className="w-full mt-2 py-2.5 rounded-xl bg-[#F26522] hover:bg-[#d95314] text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 cursor-pointer"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    {savingCourtId === court.id ? 'กำลังบันทึก...' : `บันทึกรูป ${court.name}`}
-                  </button>
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="button"
+                      disabled={savingCourtId === court.id}
+                      onClick={() => handleSaveCourtInDashboard(court)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold text-xs hover:opacity-90 transition-opacity"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      {savingCourtId === court.id ? 'กำลังบันทึก…' : 'บันทึกข้อมูลคอร์ทนี้'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -983,56 +1693,132 @@ export default function EditWelcomeDashboard() {
 
       </div>
 
-      {/* Modal: เพิ่ม/แก้ไข ข่าวสาร พร้อมใส่รูปภาพ */}
+      {/* Modal: เพิ่ม/แก้ไข ข่าวสาร พร้อมปุ่มแปลภาษาอัตโนมัติ */}
       {showNewsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
           <div className="relative w-full max-w-2xl bg-white dark:bg-[#140900] rounded-3xl p-6 sm:p-8 shadow-2xl border border-gray-200 dark:border-white/10 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <Newspaper className="w-5 h-5 text-[#F26522]" />
-              {editingNewsId ? 'แก้ไขข้อมูลข่าว' : 'เพิ่มข่าวประชาสัมพันธ์ใหม่'}
-            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-100 dark:border-white/10">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Newspaper className="w-5 h-5 text-[#F26522]" />
+                {editingNewsId ? 'แก้ไขข้อมูลข่าว' : 'เพิ่มข่าวประชาสัมพันธ์ใหม่'}
+              </h2>
+
+              <div className="flex items-center gap-2">
+                {/* Language tab for Modal */}
+                <div className="flex rounded-xl bg-gray-100 dark:bg-zinc-800 p-1 border border-gray-200 dark:border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setNewsModalLang('th')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      newsModalLang === 'th' ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'
+                    }`}
+                  >
+                    🇹🇭 ไทย
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewsModalLang('en')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      newsModalLang === 'en' ? 'bg-[#F26522] text-white shadow-sm' : 'text-gray-500'
+                    }`}
+                  >
+                    🇬🇧 English
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAutoTranslateNewsModal}
+                  disabled={translatingNews}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100 transition-colors shadow-sm"
+                  title="แปลจากภาษาไทยไปเป็นภาษาอังกฤษและนำไปใส่ในแท็บ English ให้อัตโนมัติ"
+                >
+                  {translatingNews ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      กำลังแปล…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      แปลอังกฤษ (AI)
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
 
             <form onSubmit={saveNewsItem} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
-                    หมวดหมู่ (Category)
+                    หมวดหมู่ {newsModalLang === 'th' ? '(Category 🇹🇭)' : '(Category 🇬🇧 English)'}
                   </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="เช่น การจองสนาม, ระเบียบการ"
-                    value={newsForm.category}
-                    onChange={(e) => setNewsForm({ ...newsForm, category: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                  />
+                  {newsModalLang === 'th' ? (
+                    <input
+                      type="text"
+                      required
+                      placeholder="เช่น การจองสนาม, ระเบียบการ"
+                      value={newsForm.category}
+                      onChange={(e) => setNewsForm({ ...newsForm, category: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="e.g. Court Booking, Policy"
+                      value={newsForm.category_en || ''}
+                      onChange={(e) => setNewsForm({ ...newsForm, category_en: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
-                    ป้ายสถานะ (Tag)
+                    ป้ายสถานะ {newsModalLang === 'th' ? '(Tag 🇹🇭)' : '(Tag 🇬🇧 English)'}
                   </label>
-                  <input
-                    type="text"
-                    placeholder="เช่น ประกาศสำคัญ, ใหม่"
-                    value={newsForm.tag}
-                    onChange={(e) => setNewsForm({ ...newsForm, tag: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                  />
+                  {newsModalLang === 'th' ? (
+                    <input
+                      type="text"
+                      placeholder="เช่น ประกาศสำคัญ, ใหม่"
+                      value={newsForm.tag}
+                      onChange={(e) => setNewsForm({ ...newsForm, tag: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="e.g. Important, New"
+                      value={newsForm.tag_en || ''}
+                      onChange={(e) => setNewsForm({ ...newsForm, tag_en: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                    />
+                  )}
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
-                  หัวข้อข่าว (Title)
+                  หัวข้อข่าว {newsModalLang === 'th' ? '(Title 🇹🇭)' : '(Title 🇬🇧 English)'}
                 </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="พิมพ์หัวข้อข่าวที่นี่..."
-                  value={newsForm.title}
-                  onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                />
+                {newsModalLang === 'th' ? (
+                  <input
+                    type="text"
+                    required
+                    placeholder="พิมพ์หัวข้อข่าวภาษาไทยที่นี่..."
+                    value={newsForm.title}
+                    onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    placeholder="Headline in English..."
+                    value={newsForm.title_en || ''}
+                    onChange={(e) => setNewsForm({ ...newsForm, title_en: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                )}
               </div>
 
               {/* News Image Upload & Preview */}
@@ -1087,16 +1873,26 @@ export default function EditWelcomeDashboard() {
 
               <div>
                 <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
-                  เนื้อหาข่าว (Body)
+                  เนื้อหาข่าว {newsModalLang === 'th' ? '(Body 🇹🇭)' : '(Body 🇬🇧 English)'}
                 </label>
-                <textarea
-                  rows={4}
-                  required
-                  placeholder="เขียนรายละเอียดข่าวสาร..."
-                  value={newsForm.body}
-                  onChange={(e) => setNewsForm({ ...newsForm, body: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
-                />
+                {newsModalLang === 'th' ? (
+                  <textarea
+                    rows={4}
+                    required
+                    placeholder="เขียนรายละเอียดข่าวสารภาษาไทย..."
+                    value={newsForm.body}
+                    onChange={(e) => setNewsForm({ ...newsForm, body: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                  />
+                ) : (
+                  <textarea
+                    rows={4}
+                    placeholder="Write news content in English..."
+                    value={newsForm.body_en || ''}
+                    onChange={(e) => setNewsForm({ ...newsForm, body_en: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                  />
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-white/10">

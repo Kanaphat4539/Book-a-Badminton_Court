@@ -80,14 +80,14 @@ function SelectCourtContent() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('ขนาดไฟล์รูปภาพไม่ควรเกิน 5MB');
+      toast.error(locale === 'th' ? 'ขนาดไฟล์รูปภาพไม่ควรเกิน 5MB' : 'Image file size must not exceed 5MB');
       return;
     }
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
         setEditCourtImage(reader.result);
-        toast.success('โหลดรูปภาพเรียบร้อยแล้ว');
+        toast.success(locale === 'th' ? 'โหลดรูปภาพเรียบร้อยแล้ว' : 'Image loaded successfully');
       }
     };
     reader.readAsDataURL(file);
@@ -108,11 +108,11 @@ function SelectCourtContent() {
             : c
         )
       );
-      toast.success(`บันทึกการเปลี่ยนรูปภาพของ ${editingCourt.name} สำเร็จแล้ว!`);
+      toast.success(locale === 'th' ? `บันทึกการเปลี่ยนรูปภาพของ ${editingCourt.name} สำเร็จแล้ว!` : `Court image updated successfully for ${editingCourt.name}!`);
       setEditingCourt(null);
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.response?.data?.message || 'ไม่สามารถบันทึกข้อมูลคอร์ทได้');
+      toast.error(err?.response?.data?.message || (locale === 'th' ? 'ไม่สามารถบันทึกข้อมูลคอร์ทได้' : 'Failed to save court details'));
     } finally {
       setUpdatingCourt(false);
     }
@@ -335,10 +335,10 @@ function SelectCourtContent() {
                           handleOpenEditCourt(court, imageSrc, locationText);
                         }}
                         className="absolute top-2 right-2 md:top-3 md:right-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/75 hover:bg-[#F26522] text-white text-xs font-bold backdrop-blur-md border border-white/20 shadow-lg transition-all active:scale-95 cursor-pointer"
-                        title="เปลี่ยนรูปภาพหรือสถานที่คอร์ท (Admin Only)"
+                        title={locale === 'th' ? "เปลี่ยนรูปภาพหรือสถานที่คอร์ท (Admin Only)" : "Edit court photo or location (Admin Only)"}
                       >
                         <span className="material-symbols-outlined text-[15px]">photo_camera</span>
-                        <span>เปลี่ยนรูปคอร์ท</span>
+                        <span>{locale === 'th' ? 'เปลี่ยนรูปคอร์ท' : 'Edit Photo'}</span>
                       </button>
                     )}
                     <div className="absolute bottom-2 left-2 right-2 md:bottom-3 md:left-3 md:right-3 flex items-end justify-between text-white">
@@ -474,24 +474,26 @@ function SelectCourtContent() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[#F26522]">photo_camera</span>
-              แก้ไขรูปภาพ {editingCourt?.name}
+              {locale === 'th' ? `แก้ไขรูปภาพ ${editingCourt?.name}` : `Edit Photo: ${editingCourt?.name}`}
             </DialogTitle>
             <DialogDescription>
-              สามารถใส่ URL รูปภาพ หรือ อัปโหลดรูปภาพใหม่จากเครื่องของคุณ (Admin Only)
+              {locale === 'th' ? 'สามารถใส่ URL รูปภาพ หรือ อัปโหลดรูปภาพใหม่จากเครื่องของคุณ (Admin Only)' : 'Enter an image URL or upload a new photo from your device (Admin Only)'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-4 py-2">
             {/* Live Image Preview */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-on-surface-variant">ตัวอย่างรูปภาพ</label>
+              <label className="text-xs font-bold text-on-surface-variant">
+                {locale === 'th' ? 'ตัวอย่างรูปภาพ' : 'Image Preview'}
+              </label>
               <div className="relative h-44 w-full rounded-2xl overflow-hidden bg-black/10 border border-outline-variant/40">
                 {editCourtImage ? (
                   <img src={editCourtImage} alt="Court Preview" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-on-surface-variant text-xs gap-1">
                     <span className="material-symbols-outlined text-3xl opacity-40">image_not_supported</span>
-                    <span>ไม่มีรูปภาพ</span>
+                    <span>{locale === 'th' ? 'ไม่มีรูปภาพ' : 'No image available'}</span>
                   </div>
                 )}
               </div>
@@ -512,13 +514,15 @@ function SelectCourtContent() {
                 className="flex-1 py-2 px-3 rounded-xl border border-dashed border-[#F26522] text-[#F26522] hover:bg-[#F26522]/5 text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95"
               >
                 <span className="material-symbols-outlined text-[18px]">upload_file</span>
-                เลือกไฟล์รูปจากเครื่อง (Max 5MB)
+                {locale === 'th' ? 'เลือกไฟล์รูปจากเครื่อง (Max 5MB)' : 'Select image file (Max 5MB)'}
               </button>
             </div>
 
             {/* Direct Image URL Input */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-on-surface-variant">หรือกรอก Image URL</label>
+              <label className="text-xs font-bold text-on-surface-variant">
+                {locale === 'th' ? 'หรือกรอก Image URL' : 'Or enter Image URL'}
+              </label>
               <input
                 type="text"
                 value={editCourtImage}
@@ -530,12 +534,14 @@ function SelectCourtContent() {
 
             {/* Location / Zone Input */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-on-surface-variant">สถานที่ / โซน (Location)</label>
+              <label className="text-xs font-bold text-on-surface-variant">
+                {locale === 'th' ? 'สถานที่ / โซน (Location)' : 'Location / Zone'}
+              </label>
               <input
                 type="text"
                 value={editCourtLocation}
                 onChange={(e) => setEditCourtLocation(e.target.value)}
-                placeholder="เช่น KMITL Sports Hall • Main"
+                placeholder={locale === 'th' ? 'เช่น KMITL Sports Hall • Main' : 'e.g. KMITL Sports Hall • Main'}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-outline-variant bg-surface-container-low text-on-surface focus:outline-none focus:ring-2 focus:ring-[#F26522]"
               />
             </div>
@@ -549,7 +555,7 @@ function SelectCourtContent() {
               onClick={() => setEditingCourt(null)}
               className="rounded-xl px-4 py-2 font-medium hover:bg-surface-container"
             >
-              ยกเลิก
+              {locale === 'th' ? 'ยกเลิก' : 'Cancel'}
             </Button>
             <Button
               type="button"
@@ -560,12 +566,12 @@ function SelectCourtContent() {
               {updatingCourt ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  <span>กำลังบันทึก...</span>
+                  <span>{locale === 'th' ? 'กำลังบันทึก...' : 'Saving...'}</span>
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined text-[18px]">save</span>
-                  <span>บันทึกรูปภาพคอร์ท</span>
+                  <span>{locale === 'th' ? 'บันทึกรูปภาพคอร์ท' : 'Save Court Details'}</span>
                 </>
               )}
             </Button>

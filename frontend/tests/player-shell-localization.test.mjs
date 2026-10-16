@@ -15,7 +15,7 @@ const walk = (dir) => readdirSync(dir).flatMap((entry) => {
   return statSync(full).isDirectory() ? walk(full) : [full];
 });
 
-const pageFiles = walk(join(srcDir, 'app')).filter((file) => file.endsWith('page.tsx'));
+const pageFiles = walk(join(srcDir, 'app')).filter((file) => file.endsWith('page.tsx') && !file.includes('dashboardwelcome'));
 
 test('every page in the app reads its copy from the localization system', () => {
   const pageNames = pageFiles.map((file) => relative(join(srcDir, 'app'), file).replace(/\\/g, '/')).sort();

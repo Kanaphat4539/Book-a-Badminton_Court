@@ -27,4 +27,21 @@ export class WelcomeController {
   async resetWelcome() {
     return this.welcomeService.resetContent();
   }
+
+  @Post('translate')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async translateText(
+    @Body() body: { text?: string; texts?: string[]; source?: string; target?: string }
+  ) {
+    const source = body.source || 'th';
+    const target = body.target || 'en';
+    if (body.texts && Array.isArray(body.texts)) {
+      const results = await this.welcomeService.translateBatch(body.texts, source, target);
+      return { translations: results };
+    }
+    const text = body.text || '';
+    const result = await this.welcomeService.translateText(text, source, target);
+    return { translation: result };
+  }
 }

@@ -6,7 +6,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { useLocale } from '@/components/locale-provider';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { landingMessages, type LandingLocale, type LandingCopy } from '@/lib/landing-messages.cjs';
-import { fetchWelcomeContent, type WelcomeContentData, type WelcomeNewsItem } from '@/lib/welcome-content';
+import { fetchWelcomeContent, getLocalizedText, type WelcomeContentData, type WelcomeNewsItem } from '@/lib/welcome-content';
 
 const heroImages = [
   'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1920&q=80',
@@ -112,7 +112,7 @@ export default function LandingPage() {
             className="flex items-center gap-2 px-5 py-3 rounded-full bg-[#F26522] text-white font-bold shadow-2xl hover:bg-[#d95314] hover:scale-105 active:scale-95 transition-all border border-white/30 backdrop-blur-md"
           >
             <span className="material-symbols-outlined text-[20px]">edit_note</span>
-            <span className="text-sm">แก้ไขหน้าแรก (Edit Welcome)</span>
+            <span className="text-sm">{locale === 'th' ? 'แก้ไขหน้าแรก' : 'Edit Welcome'}</span>
           </Link>
         </aside>
       )}
@@ -144,7 +144,7 @@ export default function LandingPage() {
             <Link href="#rules" className="text-white/80 hover:text-white transition-colors">{t('menuRules')}</Link>
             {isAdmin && (
               <Link href="/admin/dashboardwelcome" className="text-[#F26522] hover:text-[#ff7e22] font-bold transition-colors flex items-center gap-1">
-                <span className="material-symbols-outlined text-[18px]">edit</span> จัดการหน้าแรก
+                <span className="material-symbols-outlined text-[18px]">edit</span> {locale === 'th' ? 'จัดการหน้าแรก' : 'Manage Welcome'}
               </Link>
             )}
           </div>
@@ -188,7 +188,7 @@ export default function LandingPage() {
                   <Link href="#rules" onClick={() => setIsSidebarOpen(false)} className="font-bold text-[18px] text-gray-900 dark:text-orange-50 hover:text-[#F26522] transition-colors border-b border-gray-100 dark:border-gray-800 pb-2">{t('menuRules')}</Link>
                   {isAdmin && (
                     <Link href="/admin/dashboardwelcome" onClick={() => setIsSidebarOpen(false)} className="font-bold text-[18px] text-[#F26522] hover:underline border-b border-gray-100 dark:border-gray-800 pb-2 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[20px]">edit</span> จัดการหน้าแรก
+                      <span className="material-symbols-outlined text-[20px]">edit</span> {locale === 'th' ? 'จัดการหน้าแรก' : 'Manage Welcome'}
                     </Link>
                   )}
                 </div>
@@ -251,10 +251,10 @@ export default function LandingPage() {
               <br className="md:hidden" /> BADMINTON
             </h1>
             <p className="text-[20px] sm:text-[26px] md:text-[32px] font-medium text-white/95 drop-shadow-lg mt-3 md:mt-4 mb-8 max-w-3xl leading-snug">
-              {welcomeData?.hero?.subtitle || copy.heroConnect}
+              {getLocalizedText(welcomeData?.hero?.subtitle, welcomeData?.hero?.subtitle_en, locale) || copy.heroConnect}
             </p>
             <Link href="/login" className="font-bold text-[18px] md:text-[22px] text-[#F26522] hover:text-[#ff7e22] transition-all inline-flex items-center gap-2 w-fit bg-white/10 hover:bg-white/20 hover:scale-[1.05] active:scale-[0.98] px-8 py-4 rounded-full backdrop-blur-md border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.3)] pointer-events-auto">
-              {welcomeData?.hero?.ctaText || copy.heroCta} <span className="material-symbols-outlined font-bold text-[20px] md:text-[24px]">arrow_forward_ios</span>
+              {getLocalizedText(welcomeData?.hero?.ctaText, welcomeData?.hero?.ctaText_en, locale) || copy.heroCta} <span className="material-symbols-outlined font-bold text-[20px] md:text-[24px]">arrow_forward_ios</span>
             </Link>
 
             {/* Slider Dots */}
@@ -297,10 +297,10 @@ export default function LandingPage() {
                 {welcomeData?.services?.[0]?.icon || 'event_available'}
               </span>
               <h3 className="font-bold text-[24px] text-gray-900 dark:text-white mb-4">
-                {welcomeData?.services?.[0]?.title || t('courtBookingApi')}
+                {getLocalizedText(welcomeData?.services?.[0]?.title, welcomeData?.services?.[0]?.title_en, locale) || t('courtBookingApi')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                {welcomeData?.services?.[0]?.body || copy.serviceBookingBody}
+                {getLocalizedText(welcomeData?.services?.[0]?.body, welcomeData?.services?.[0]?.body_en, locale) || copy.serviceBookingBody}
               </p>
             </div>
             {/* Card 2 */}
@@ -309,10 +309,10 @@ export default function LandingPage() {
                 {welcomeData?.services?.[1]?.icon || 'card_membership'}
               </span>
               <h3 className="font-bold text-[24px] text-gray-900 dark:text-white mb-4">
-                {welcomeData?.services?.[1]?.title || t('membershipLogin')}
+                {getLocalizedText(welcomeData?.services?.[1]?.title, welcomeData?.services?.[1]?.title_en, locale) || t('membershipLogin')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                {welcomeData?.services?.[1]?.body || copy.serviceMembershipBody}
+                {getLocalizedText(welcomeData?.services?.[1]?.body, welcomeData?.services?.[1]?.body_en, locale) || copy.serviceMembershipBody}
               </p>
             </div>
             {/* Card 3 */}
@@ -321,10 +321,10 @@ export default function LandingPage() {
                 {welcomeData?.services?.[2]?.icon || 'qr_code_scanner'}
               </span>
               <h3 className="font-bold text-[24px] text-gray-900 dark:text-white mb-4">
-                {welcomeData?.services?.[2]?.title || t('smartCheckin')}
+                {getLocalizedText(welcomeData?.services?.[2]?.title, welcomeData?.services?.[2]?.title_en, locale) || t('smartCheckin')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                {welcomeData?.services?.[2]?.body || copy.serviceCheckinBody}
+                {getLocalizedText(welcomeData?.services?.[2]?.body, welcomeData?.services?.[2]?.body_en, locale) || copy.serviceCheckinBody}
               </p>
             </div>
           </div>
@@ -343,7 +343,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-4">
               {isAdmin && (
                 <Link href="/admin/dashboardwelcome" className="text-xs font-bold px-3 py-1.5 rounded-full bg-[#F26522]/80 text-white hover:bg-[#F26522] transition-colors inline-flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">add_photo_alternate</span> จัดการข่าว/รูป
+                  <span className="material-symbols-outlined text-[16px]">add_photo_alternate</span> {locale === 'th' ? 'จัดการข่าว/รูป' : 'Manage News'}
                 </Link>
               )}
               <Link href="/news" className="font-bold text-white hover:text-[#F26522] transition-colors flex items-center gap-1">
@@ -365,12 +365,12 @@ export default function LandingPage() {
                   <div className="h-52 w-full overflow-hidden bg-black/40 relative">
                     <img
                       src={item.image}
-                      alt={item.title}
+                      alt={getLocalizedText(item.title, item.title_en, locale)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                     <span className="absolute top-4 left-4 bg-[#F26522] text-white text-[10px] font-black px-2.5 py-1 rounded uppercase tracking-wider shadow">
-                      {item.tag || t('newsNew')}
+                      {getLocalizedText(item.tag, item.tag_en, locale) || t('newsNew')}
                     </span>
                     <time className="absolute bottom-3 right-4 text-gray-300 text-[13px] font-medium bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-md">
                       {item.date}
@@ -382,25 +382,25 @@ export default function LandingPage() {
                   {!item.image && (
                     <div className="flex justify-between items-start mb-4">
                       <span className="bg-green-500 text-white text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider">
-                        {item.tag || t('newsNew')}
+                        {getLocalizedText(item.tag, item.tag_en, locale) || t('newsNew')}
                       </span>
                       <span className="text-gray-400 text-[14px]">{item.date}</span>
                     </div>
                   )}
                   <div>
                     <h3 className="font-bold text-[22px] text-white mb-4 leading-snug group-hover:text-[#F26522] transition-colors">
-                      {item.title}
+                      {getLocalizedText(item.title, item.title_en, locale)}
                     </h3>
                     <p className="text-gray-300 text-[15px] leading-relaxed line-clamp-3 mb-6">
-                      {item.body}
+                      {getLocalizedText(item.body, item.body_en, locale)}
                     </p>
                   </div>
                   <div className="flex items-center justify-between pt-4 border-t border-white/5">
                     <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">
-                      {item.category}
+                      {getLocalizedText(item.category, item.category_en, locale)}
                     </span>
                     <span className="text-xs text-[#F26522] font-bold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                      อ่านเพิ่มเติม <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                      {locale === 'th' ? 'อ่านเพิ่มเติม' : 'Read more'} <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                     </span>
                   </div>
                 </div>
@@ -426,10 +426,10 @@ export default function LandingPage() {
                 {welcomeData?.guide?.[0]?.icon || 'login'}
               </span>
               <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">
-                {welcomeData?.guide?.[0]?.title || copy.guideStep1Title}
+                {getLocalizedText(welcomeData?.guide?.[0]?.title, welcomeData?.guide?.[0]?.title_en, locale) || copy.guideStep1Title}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-[15px]">
-                {welcomeData?.guide?.[0]?.body || copy.guideStep1Body}
+                {getLocalizedText(welcomeData?.guide?.[0]?.body, welcomeData?.guide?.[0]?.body_en, locale) || copy.guideStep1Body}
               </p>
             </div>
 
@@ -440,10 +440,10 @@ export default function LandingPage() {
                 {welcomeData?.guide?.[1]?.icon || 'event_seat'}
               </span>
               <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">
-                {welcomeData?.guide?.[1]?.title || copy.guideStep2Title}
+                {getLocalizedText(welcomeData?.guide?.[1]?.title, welcomeData?.guide?.[1]?.title_en, locale) || copy.guideStep2Title}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-[15px]">
-                {welcomeData?.guide?.[1]?.body || copy.guideStep2Body}
+                {getLocalizedText(welcomeData?.guide?.[1]?.body, welcomeData?.guide?.[1]?.body_en, locale) || copy.guideStep2Body}
               </p>
             </div>
 
@@ -454,10 +454,10 @@ export default function LandingPage() {
                 {welcomeData?.guide?.[2]?.icon || 'check_circle'}
               </span>
               <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">
-                {welcomeData?.guide?.[2]?.title || copy.guideStep3Title}
+                {getLocalizedText(welcomeData?.guide?.[2]?.title, welcomeData?.guide?.[2]?.title_en, locale) || copy.guideStep3Title}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-[15px]">
-                {welcomeData?.guide?.[2]?.body || copy.guideStep3Body}
+                {getLocalizedText(welcomeData?.guide?.[2]?.body, welcomeData?.guide?.[2]?.body_en, locale) || copy.guideStep3Body}
               </p>
             </div>
 
@@ -468,10 +468,10 @@ export default function LandingPage() {
                 {welcomeData?.guide?.[3]?.icon || 'qr_code_scanner'}
               </span>
               <h3 className="font-bold text-[20px] text-gray-900 dark:text-white mb-4">
-                {welcomeData?.guide?.[3]?.title || copy.guideStep4Title}
+                {getLocalizedText(welcomeData?.guide?.[3]?.title, welcomeData?.guide?.[3]?.title_en, locale) || copy.guideStep4Title}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-[15px]">
-                {welcomeData?.guide?.[3]?.body || copy.guideStep4Body}
+                {getLocalizedText(welcomeData?.guide?.[3]?.body, welcomeData?.guide?.[3]?.body_en, locale) || copy.guideStep4Body}
               </p>
             </div>
           </div>
@@ -497,13 +497,13 @@ export default function LandingPage() {
                 {welcomeData?.tips?.[0]?.date || '2026/10/05'}
               </span>
               <h3 className="font-bold text-[24px] text-white mb-4 leading-snug">
-                {welcomeData?.tips?.[0]?.title || copy.tipsWarmTitle}
+                {getLocalizedText(welcomeData?.tips?.[0]?.title, welcomeData?.tips?.[0]?.title_en, locale) || copy.tipsWarmTitle}
               </h3>
               <p className="text-gray-300 text-[15px] leading-relaxed mb-8">
-                {welcomeData?.tips?.[0]?.body || copy.tipsWarmBody}
+                {getLocalizedText(welcomeData?.tips?.[0]?.body, welcomeData?.tips?.[0]?.body_en, locale) || copy.tipsWarmBody}
               </p>
               <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">
-                {welcomeData?.tips?.[0]?.category || copy.tipsWarmCategory}
+                {getLocalizedText(welcomeData?.tips?.[0]?.category, welcomeData?.tips?.[0]?.category_en, locale) || copy.tipsWarmCategory}
               </span>
             </div>
 
@@ -512,13 +512,13 @@ export default function LandingPage() {
                 {welcomeData?.tips?.[1]?.date || '2026/10/01'}
               </span>
               <h3 className="font-bold text-[24px] text-white mb-4 leading-snug">
-                {welcomeData?.tips?.[1]?.title || copy.tipsStringTitle}
+                {getLocalizedText(welcomeData?.tips?.[1]?.title, welcomeData?.tips?.[1]?.title_en, locale) || copy.tipsStringTitle}
               </h3>
               <p className="text-gray-300 text-[15px] leading-relaxed mb-8">
-                {welcomeData?.tips?.[1]?.body || copy.tipsStringBody}
+                {getLocalizedText(welcomeData?.tips?.[1]?.body, welcomeData?.tips?.[1]?.body_en, locale) || copy.tipsStringBody}
               </p>
               <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">
-                {welcomeData?.tips?.[1]?.category || copy.tipsStringCategory}
+                {getLocalizedText(welcomeData?.tips?.[1]?.category, welcomeData?.tips?.[1]?.category_en, locale) || copy.tipsStringCategory}
               </span>
             </div>
           </div>
@@ -539,20 +539,20 @@ export default function LandingPage() {
               <div className="flex items-center gap-4 mb-6">
                 <span className="material-symbols-outlined text-[32px] text-[#F26522]">schedule</span>
                 <h3 className="font-bold text-[22px] text-gray-900 dark:text-white">
-                  {welcomeData?.rules?.[0]?.title || copy.rulesBookingTitle}
+                  {getLocalizedText(welcomeData?.rules?.[0]?.title, welcomeData?.rules?.[0]?.title_en, locale) || copy.rulesBookingTitle}
                 </h3>
               </div>
               <ul className="space-y-4 text-gray-600 dark:text-gray-400">
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-green-500 shrink-0">check_circle</span>
                   <span className="leading-relaxed">
-                    {welcomeData?.rules?.[0]?.items?.[0] || copy.rulesBookingLimit}
+                    {(locale === 'en' && welcomeData?.rules?.[0]?.items_en?.[0]) || welcomeData?.rules?.[0]?.items?.[0] || copy.rulesBookingLimit}
                   </span>
                 </li>
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-green-500 shrink-0">check_circle</span>
                   <span className="leading-relaxed">
-                    {welcomeData?.rules?.[0]?.items?.[1] || copy.rulesAdvance}
+                    {(locale === 'en' && welcomeData?.rules?.[0]?.items_en?.[1]) || welcomeData?.rules?.[0]?.items?.[1] || copy.rulesAdvance}
                   </span>
                 </li>
               </ul>
@@ -563,20 +563,20 @@ export default function LandingPage() {
               <div className="flex items-center gap-4 mb-6">
                 <span className="material-symbols-outlined text-[32px] text-[#F26522]">how_to_reg</span>
                 <h3 className="font-bold text-[22px] text-gray-900 dark:text-white">
-                  {welcomeData?.rules?.[1]?.title || copy.rulesAccessTitle}
+                  {getLocalizedText(welcomeData?.rules?.[1]?.title, welcomeData?.rules?.[1]?.title_en, locale) || copy.rulesAccessTitle}
                 </h3>
               </div>
               <ul className="space-y-4 text-gray-600 dark:text-gray-400">
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-blue-500 shrink-0">qr_code_scanner</span>
                   <span className="leading-relaxed">
-                    {welcomeData?.rules?.[1]?.items?.[0] || copy.rulesIdentity}
+                    {(locale === 'en' && welcomeData?.rules?.[1]?.items_en?.[0]) || welcomeData?.rules?.[1]?.items?.[0] || copy.rulesIdentity}
                   </span>
                 </li>
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-red-500 shrink-0">timer</span>
                   <span className="leading-relaxed">
-                    {welcomeData?.rules?.[1]?.items?.[1] || copy.rulesLate}
+                    {(locale === 'en' && welcomeData?.rules?.[1]?.items_en?.[1]) || welcomeData?.rules?.[1]?.items?.[1] || copy.rulesLate}
                   </span>
                 </li>
               </ul>
@@ -587,20 +587,20 @@ export default function LandingPage() {
               <div className="flex items-center gap-4 mb-6">
                 <span className="material-symbols-outlined text-[32px] text-[#F26522]">cancel</span>
                 <h3 className="font-bold text-[22px] text-gray-900 dark:text-white">
-                  {welcomeData?.rules?.[2]?.title || copy.rulesCancelTitle}
+                  {getLocalizedText(welcomeData?.rules?.[2]?.title, welcomeData?.rules?.[2]?.title_en, locale) || copy.rulesCancelTitle}
                 </h3>
               </div>
               <ul className="space-y-4 text-gray-600 dark:text-gray-400">
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-orange-500 shrink-0">event_busy</span>
                   <span className="leading-relaxed">
-                    {welcomeData?.rules?.[2]?.items?.[0] || copy.rulesCancellation}
+                    {(locale === 'en' && welcomeData?.rules?.[2]?.items_en?.[0]) || welcomeData?.rules?.[2]?.items?.[0] || copy.rulesCancellation}
                   </span>
                 </li>
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-red-500 shrink-0">warning</span>
                   <span className="leading-relaxed">
-                    {welcomeData?.rules?.[2]?.items?.[1] || copy.rulesPenalty}
+                    {(locale === 'en' && welcomeData?.rules?.[2]?.items_en?.[1]) || welcomeData?.rules?.[2]?.items?.[1] || copy.rulesPenalty}
                   </span>
                 </li>
               </ul>
@@ -611,14 +611,14 @@ export default function LandingPage() {
               <div className="flex items-center gap-4 mb-6">
                 <span className="material-symbols-outlined text-[32px] text-[#F26522]">sports_score</span>
                 <h3 className="font-bold text-[22px] text-gray-900 dark:text-white">
-                  {welcomeData?.rules?.[3]?.title || copy.rulesCourtTitle}
+                  {getLocalizedText(welcomeData?.rules?.[3]?.title, welcomeData?.rules?.[3]?.title_en, locale) || copy.rulesCourtTitle}
                 </h3>
               </div>
               <ul className="space-y-4 text-gray-600 dark:text-gray-400">
                 <li className="flex gap-3">
                   <span className="material-symbols-outlined text-[24px] text-[#F26522] shrink-0">steps</span>
                   <span className="leading-relaxed">
-                    {welcomeData?.rules?.[3]?.items?.[0] || copy.rulesFootwear}
+                    {(locale === 'en' && welcomeData?.rules?.[3]?.items_en?.[0]) || welcomeData?.rules?.[3]?.items?.[0] || copy.rulesFootwear}
                   </span>
                 </li>
               </ul>
@@ -635,7 +635,7 @@ export default function LandingPage() {
               <div className="relative h-60 w-full bg-black">
                 <img
                   src={selectedNews.image}
-                  alt={selectedNews.title}
+                  alt={getLocalizedText(selectedNews.title, selectedNews.title_en, locale)}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
@@ -644,17 +644,17 @@ export default function LandingPage() {
             <div className="p-6 sm:p-8 overflow-y-auto flex-1">
               <div className="flex items-center justify-between gap-2 mb-3">
                 <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#F26522]/15 text-[#F26522]">
-                  {selectedNews.category}
+                  {getLocalizedText(selectedNews.category, selectedNews.category_en, locale)}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                   {selectedNews.date}
                 </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white mb-4 leading-snug">
-                {selectedNews.title}
+                {getLocalizedText(selectedNews.title, selectedNews.title_en, locale)}
               </h2>
               <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm sm:text-base whitespace-pre-line">
-                {selectedNews.body}
+                {getLocalizedText(selectedNews.body, selectedNews.body_en, locale)}
               </p>
             </div>
             <div className="p-4 sm:p-6 border-t border-gray-100 dark:border-white/10 flex justify-end bg-gray-50 dark:bg-zinc-900/50">
@@ -662,7 +662,7 @@ export default function LandingPage() {
                 onClick={() => setSelectedNews(null)}
                 className="px-6 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold text-sm hover:opacity-90 transition-opacity"
               >
-                ปิดหน้าต่าง
+                {locale === 'th' ? 'ปิดหน้าต่าง' : 'Close'}
               </button>
             </div>
           </div>

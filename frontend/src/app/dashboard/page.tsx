@@ -94,6 +94,9 @@ export default function Dashboard() {
   const lastSyncLabel = lastSyncAt
     ? `${formatDate(lastSyncAt)} ${lastSyncAt.toLocaleTimeString(locale === 'th' ? 'th-TH' : 'en-US', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', second: '2-digit' })} UTC+7`
     : '';
+  const lastSyncTimeStr = lastSyncAt
+    ? `${lastSyncAt.toLocaleTimeString(locale === 'th' ? 'th-TH' : 'en-US', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', second: '2-digit' })} UTC+7`
+    : '';
   const p = playerDashboardCopy[locale];
   const actions = dashboardActionCopy(locale);
 
@@ -510,7 +513,7 @@ export default function Dashboard() {
                       }
                     >
                       {statPeriod === period && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
-                      {period}
+                      {periodLabels[period]}
                     </button>
                   ))}
                 </nav>
@@ -750,7 +753,7 @@ export default function Dashboard() {
                   <span className="font-medium text-emerald-600 dark:text-emerald-400">{`${formatNumber(analytics.checkins)} ${c.verifiedCheckin}`}</span>
                 </div>
                 <div className="font-mono text-slate-500 dark:text-slate-400 text-[11px] sm:text-xs">
-                  {c.lastCalculationSynced}<span className="text-slate-800 dark:text-slate-200 font-semibold">{lastSyncAt ? `${c.todayAt}${lastSyncLabel}` : c.justNow}</span>
+                  {c.lastCalculationSynced}<span className="text-slate-800 dark:text-slate-200 font-semibold">{lastSyncAt ? `${c.todayAt}${lastSyncTimeStr}` : c.justNow}</span>
                 </div>
               </div>
             </section>
@@ -1060,7 +1063,7 @@ export default function Dashboard() {
                             <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
                             <div className="min-w-0">
                               <span className="block text-[9px] sm:text-[10px] text-slate-400 uppercase font-mono font-semibold">{c.cardDate}</span>
-                              <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate block text-xs">{booking.booking_date}</span>
+                              <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate block text-xs">{formatDate(booking.booking_date)}</span>
                             </div>
                           </div>
                         </div>

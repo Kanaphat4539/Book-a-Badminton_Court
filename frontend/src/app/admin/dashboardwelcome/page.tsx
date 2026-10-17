@@ -1006,24 +1006,42 @@ export default function EditWelcomeDashboard() {
                 {data.hero.images.map((imgUrl, idx) => (
                   <div
                     key={idx}
-                    className="group relative rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-black aspect-video shadow-md"
+                    className="rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-md flex flex-col"
                   >
-                    <img
-                      src={imgUrl}
-                      alt={`Slide ${idx + 1}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end justify-between p-4">
-                      <span className="text-white text-xs font-bold bg-black/60 px-2.5 py-1 rounded-md backdrop-blur-sm">
-                        {c.slideNumber.replace('{n}', String(idx + 1))}
-                      </span>
-                      <button
-                        onClick={() => removeHeroImage(idx)}
-                        className="p-2 rounded-xl bg-red-600/90 text-white hover:bg-red-700 transition-colors shadow-md"
-                        title={c.removeImage}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <div className="group relative bg-black aspect-video overflow-hidden">
+                      <img
+                        src={imgUrl}
+                        alt={`Slide ${idx + 1}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end justify-between p-3">
+                        <span className="text-white text-xs font-bold bg-black/60 px-2.5 py-1 rounded-md backdrop-blur-sm">
+                          {c.slideNumber.replace('{n}', String(idx + 1))}
+                        </span>
+                        <button
+                          onClick={() => removeHeroImage(idx)}
+                          className="p-1.5 rounded-xl bg-red-600/90 text-white hover:bg-red-700 transition-colors shadow-md"
+                          title={c.removeImage}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <input
+                        type="text"
+                        value={imgUrl}
+                        onChange={(e) => {
+                          const newImages = [...data.hero.images];
+                          newImages[idx] = e.target.value;
+                          setData({
+                            ...data,
+                            hero: { ...data.hero, images: newImages },
+                          });
+                        }}
+                        placeholder={c.slideUrlPlaceholder}
+                        className="w-full px-3 py-1.5 text-xs rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-[#F26522]"
+                      />
                     </div>
                   </div>
                 ))}
@@ -1347,11 +1365,61 @@ export default function EditWelcomeDashboard() {
                         <span className="text-xs text-gray-400">{tip.date}</span>
                       </div>
 
-                      {tip.image && (
-                        <div className="h-36 rounded-xl overflow-hidden bg-black/10">
-                          <img src={tip.image} alt={tip.title} className="w-full h-full object-cover" />
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400">
+                          {c.newsCoverLabel}
+                        </label>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <input
+                            type="text"
+                            placeholder={c.slideUrlPlaceholder}
+                            value={tip.image || ''}
+                            onChange={(e) => {
+                              const newTips = [...data.tips];
+                              newTips[idx] = { ...newTips[idx], image: e.target.value };
+                              setData({ ...data, tips: newTips });
+                            }}
+                            className="flex-1 px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                          />
+                          <input
+                            type="file"
+                            id={`tip-file-${idx}`}
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) =>
+                              handleFileUpload(e, (base64) => {
+                                const newTips = [...data.tips];
+                                newTips[idx] = { ...newTips[idx], image: base64 };
+                                setData({ ...data, tips: newTips });
+                              })
+                            }
+                          />
+                          <button
+                            type="button"
+                            onClick={() => document.getElementById(`tip-file-${idx}`)?.click()}
+                            className="px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/20 bg-white dark:bg-zinc-800 text-xs font-bold hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors inline-flex items-center gap-1.5 shrink-0"
+                          >
+                            <Upload className="w-3.5 h-3.5" /> {c.uploadFromComputer}
+                          </button>
                         </div>
-                      )}
+                        {tip.image && (
+                          <div className="relative h-36 rounded-xl overflow-hidden bg-black/10 border border-gray-200 dark:border-white/10 mt-2">
+                            <img src={tip.image} alt={tip.title} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newTips = [...data.tips];
+                                newTips[idx] = { ...newTips[idx], image: '' };
+                                setData({ ...data, tips: newTips });
+                              }}
+                              className="absolute top-2 right-2 p-1.5 rounded-xl bg-red-600/90 text-white hover:bg-red-700 transition-colors shadow-md"
+                              title={c.removeImage}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
 
                       <div>
                         <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
@@ -1633,6 +1701,20 @@ export default function EditWelcomeDashboard() {
                       alt={court.name}
                       className="w-full h-full object-cover"
                     />
+                    {court.image && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCourtsList((prev) =>
+                            prev.map((cItem) => (cItem.id === court.id ? { ...cItem, image: '' } : cItem))
+                          )
+                        }
+                        className="absolute top-2 right-2 p-1.5 rounded-xl bg-red-600/90 text-white hover:bg-red-700 transition-colors shadow-md"
+                        title={c.removeImage}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
 
                   <div className="space-y-3">
@@ -1668,16 +1750,37 @@ export default function EditWelcomeDashboard() {
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400">
                         {c.uploadCourtImage}
                       </label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleCourtFileInDashboard(court.id, e)}
-                        className="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#F26522]/10 file:text-[#F26522] hover:file:bg-[#F26522]/20 cursor-pointer"
-                      />
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          placeholder={c.slideUrlPlaceholder}
+                          value={court.image || ''}
+                          onChange={(e) =>
+                            setCourtsList((prev) =>
+                              prev.map((cItem) => (cItem.id === court.id ? { ...cItem, image: e.target.value } : cItem))
+                            )
+                          }
+                          className="flex-1 px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-zinc-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#F26522]"
+                        />
+                        <input
+                          type="file"
+                          id={`court-file-${court.id}`}
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleCourtFileInDashboard(court.id, e)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById(`court-file-${court.id}`)?.click()}
+                          className="px-3.5 py-2.5 rounded-xl border border-gray-300 dark:border-white/20 bg-white dark:bg-zinc-800 text-xs font-bold hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors inline-flex items-center gap-1.5 shrink-0"
+                        >
+                          <Upload className="w-3.5 h-3.5" /> {c.uploadFromComputer}
+                        </button>
+                      </div>
                     </div>
                   </div>
 

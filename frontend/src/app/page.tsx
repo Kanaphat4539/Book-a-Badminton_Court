@@ -6,7 +6,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { useLocale } from '@/components/locale-provider';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { landingMessages, type LandingLocale, type LandingCopy } from '@/lib/landing-messages.cjs';
-import { fetchWelcomeContent, getLocalizedText, type WelcomeContentData, type WelcomeNewsItem } from '@/lib/welcome-content';
+import { fetchWelcomeContent, getLocalizedText, type WelcomeContentData, type WelcomeNewsItem, type WelcomeTipItem } from '@/lib/welcome-content';
 
 const heroImages = [
   'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1920&q=80',
@@ -98,6 +98,33 @@ export default function LandingPage() {
           body: copy.newsStatsBody,
           category: copy.newsDashboardCategory,
           image: 'https://images.unsplash.com/photo-1521537634581-0dced2fee2ef?w=1200&q=80'
+        }
+      ];
+
+  const displayTips: WelcomeTipItem[] = welcomeData?.tips?.length
+    ? welcomeData.tips
+    : [
+        {
+          id: 'tip-default-1',
+          date: '2026/10/05',
+          title: copy.tipsWarmTitle,
+          title_en: '10-Minute Joint Warm-up and Stretching Before Playing',
+          body: copy.tipsWarmBody,
+          body_en: 'Focus on ankles, knees, and shoulders to boost agility and prevent sudden directional change injuries during rapid rallies.',
+          category: copy.tipsWarmCategory,
+          category_en: 'Health & Safety',
+          image: 'https://images.unsplash.com/photo-1518659728514-6d9b0efdc3e0?w=1200&q=80'
+        },
+        {
+          id: 'tip-default-2',
+          date: '2026/10/01',
+          title: copy.tipsStringTitle,
+          title_en: 'Preserving Your Daily Quota and Avoiding Penalty Strikes',
+          body: copy.tipsStringBody,
+          body_en: 'If you have urgent errands, cancel within the first 15 minutes to instantly restore your daily quota without strikes.',
+          category: copy.tipsStringCategory,
+          category_en: 'Rules & Ethics',
+          image: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1200&q=80'
         }
       ];
 
@@ -492,35 +519,49 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-[#1a1a1a]/90 backdrop-blur-md p-8 rounded-3xl border border-white/5 hover:border-white/20 transition-colors">
-              <span className="text-gray-400 text-[14px] block mb-3">
-                {welcomeData?.tips?.[0]?.date || '2026/10/05'}
-              </span>
-              <h3 className="font-bold text-[24px] text-white mb-4 leading-snug">
-                {getLocalizedText(welcomeData?.tips?.[0]?.title, welcomeData?.tips?.[0]?.title_en, locale) || copy.tipsWarmTitle}
-              </h3>
-              <p className="text-gray-300 text-[15px] leading-relaxed mb-8">
-                {getLocalizedText(welcomeData?.tips?.[0]?.body, welcomeData?.tips?.[0]?.body_en, locale) || copy.tipsWarmBody}
-              </p>
-              <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">
-                {getLocalizedText(welcomeData?.tips?.[0]?.category, welcomeData?.tips?.[0]?.category_en, locale) || copy.tipsWarmCategory}
-              </span>
-            </div>
+            {displayTips.map((tip, idx) => (
+              <div
+                key={tip.id || idx}
+                className="group bg-[#1a1a1a]/90 backdrop-blur-md rounded-3xl border border-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden flex flex-col justify-between shadow-lg"
+              >
+                {tip.image && (
+                  <div className="h-56 w-full overflow-hidden bg-black/40 relative">
+                    <img
+                      src={tip.image}
+                      alt={getLocalizedText(tip.title, tip.title_en, locale) || ''}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                    {tip.date && (
+                      <span className="absolute bottom-3 right-4 text-gray-300 text-[13px] font-medium bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-md">
+                        {tip.date}
+                      </span>
+                    )}
+                  </div>
+                )}
 
-            <div className="bg-[#1a1a1a]/90 backdrop-blur-md p-8 rounded-3xl border border-white/5 hover:border-white/20 transition-colors">
-              <span className="text-gray-400 text-[14px] block mb-3">
-                {welcomeData?.tips?.[1]?.date || '2026/10/01'}
-              </span>
-              <h3 className="font-bold text-[24px] text-white mb-4 leading-snug">
-                {getLocalizedText(welcomeData?.tips?.[1]?.title, welcomeData?.tips?.[1]?.title_en, locale) || copy.tipsStringTitle}
-              </h3>
-              <p className="text-gray-300 text-[15px] leading-relaxed mb-8">
-                {getLocalizedText(welcomeData?.tips?.[1]?.body, welcomeData?.tips?.[1]?.body_en, locale) || copy.tipsStringBody}
-              </p>
-              <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">
-                {getLocalizedText(welcomeData?.tips?.[1]?.category, welcomeData?.tips?.[1]?.category_en, locale) || copy.tipsStringCategory}
-              </span>
-            </div>
+                <div className="p-8 flex-1 flex flex-col justify-between">
+                  {!tip.image && tip.date && (
+                    <span className="text-gray-400 text-[14px] block mb-3">
+                      {tip.date}
+                    </span>
+                  )}
+                  <div>
+                    <h3 className="font-bold text-[24px] text-white mb-4 leading-snug group-hover:text-[#F26522] transition-colors">
+                      {getLocalizedText(tip.title, tip.title_en, locale) || (idx === 0 ? copy.tipsWarmTitle : copy.tipsStringTitle)}
+                    </h3>
+                    <p className="text-gray-300 text-[15px] leading-relaxed mb-8">
+                      {getLocalizedText(tip.body, tip.body_en, locale) || (idx === 0 ? copy.tipsWarmBody : copy.tipsStringBody)}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-[12px] text-gray-400 bg-white/10 px-3 py-1.5 rounded-lg">
+                      {getLocalizedText(tip.category, tip.category_en, locale) || (idx === 0 ? copy.tipsWarmCategory : copy.tipsStringCategory)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

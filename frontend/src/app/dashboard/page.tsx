@@ -1216,7 +1216,11 @@ export default function Dashboard() {
                         <>
                           <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
                             <QRCode
-                              value={selectedBooking.court?.toString() || 'court'}
+                              value={JSON.stringify({
+                                court: selectedBooking.court,
+                                date: selectedBooking.booking_date ? String(selectedBooking.booking_date).slice(0, 10) : '',
+                                time: selectedBooking.time_in ? String(selectedBooking.time_in).slice(0, 5) : '',
+                              })}
                               size={200}
                               level="H"
                             />

@@ -45,18 +45,30 @@ export default function ScanPage() {
 
   const isProcessingRef = useRef(false);
 
-  const handleCheckIn = async (courtId: number) => {
+  const handleCheckIn = async (courtId: number, qrDate?: string, qrTime?: string) => {
     setLoading(true);
     try {
-      // Find the pending booking for this court using the ref
-      const pendingBooking = myBookingsRef.current.find(b => b.status === 'PENDING' && b.court === courtId);
+      // Find the pending booking for this court, date, and time using the ref
+      const pendingBooking = myBookingsRef.current.find(b => {
+        if (b.status !== 'PENDING') return false;
+        if (Number(b.court) !== courtId) return false;
+        if (qrDate) {
+          const bDate = String(b.booking_date).slice(0, 10);
+          if (bDate !== qrDate) return false;
+        }
+        if (qrTime) {
+          const bTime = String(b.time_in).slice(0, 5);
+          if (bTime !== qrTime) return false;
+        }
+        return true;
+      });
       
       if (!pendingBooking) {
         throw new Error(t('pendingCourtError'));
       }
 
       const bookingId = pendingBooking.booking_id || pendingBooking.id;
-      await api.post(`/bookings/${bookingId}/check-in`, { courtId });
+      await api.post(`/bookings/${bookingId}/check-in`, { courtId, date: qrDate, time: qrTime });
       toast.success(t('checkinSuccessToast'));
       setCheckedInInfo({ courtId, date: pendingBooking.booking_date, end: pendingBooking.time_out });
       setLoading(false);
@@ -82,16 +94,29 @@ export default function ScanPage() {
       scannerRef.current = null;
     }
 
-    const courtId = parseInt(decodedText, 10);
+    let courtId: number = NaN;
+    let qrDate: string | undefined;
+    let qrTime: string | undefined;
+
+    try {
+      const parsed = JSON.parse(decodedText);
+      if (parsed && typeof parsed === 'object') {
+        courtId = Number(parsed.court ?? parsed.courtId);
+        if (parsed.date) qrDate = String(parsed.date).slice(0, 10);
+        if (parsed.time) qrTime = String(parsed.time).slice(0, 5);
+      }
+    } catch {
+      courtId = parseInt(decodedText, 10);
+    }
     
-    if (isNaN(courtId)) {
+    if (isNaN(courtId) || !qrDate || !qrTime) {
       toast.error(t('invalidQr'));
       setScannedResult(null);
       isProcessingRef.current = false;
       return;
     }
 
-    handleCheckIn(courtId);
+    handleCheckIn(courtId, qrDate, qrTime);
   };
 
   const onScanFailure = () => {

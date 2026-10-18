@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Booking, BookingStatus } from './entities/booking.entity';
 import { Student } from '../users/entities/student.entity';
 import { Admin } from '../users/entities/admin.entity';
+import { UserRole } from '../users/users.service';
 import { dbMutex } from '../utils/mutex';
 import { getBookingTimes } from './booking-time';
 
@@ -198,7 +199,7 @@ export class BookingsService {
     return notifications;
   }
 
-  async checkIn(bookingId: number, stu_id: string, courtId: number) {
+  async checkIn(bookingId: number, stu_id: string, courtId: number, date?: string, time?: string) {
     const release = await dbMutex.acquire();
     try {
       return await this.bookingsRepository.manager.transaction(async (manager) => {
@@ -212,6 +213,20 @@ export class BookingsService {
 
         if (booking.status !== BookingStatus.PENDING) {
           throw new BadRequestException(`Cannot check in. Status is currently ${booking.status}`);
+        }
+
+        if (date) {
+          const bookingDateStr = String(booking.booking_date).slice(0, 10);
+          if (bookingDateStr !== date.slice(0, 10)) {
+            throw new BadRequestException('QR code date mismatch.');
+          }
+        }
+
+        if (time) {
+          const bookingTimeStr = String(booking.time_in).slice(0, 5);
+          if (bookingTimeStr !== time.slice(0, 5)) {
+            throw new BadRequestException('QR code time mismatch.');
+          }
         }
 
         const now = new Date();
@@ -234,12 +249,13 @@ export class BookingsService {
     }
   }
 
-  async cancelBooking(bookingId: number, stu_id: string) {
+  async cancelBooking(bookingId: number, stu_id: string, role?: string) {
     const release = await dbMutex.acquire();
     try {
       return await this.bookingsRepository.manager.transaction(async (manager) => {
+        const isAdmin = role === UserRole.ADMIN;
         const booking = await manager.findOne(Booking, {
-          where: { booking_id: bookingId, stu_id }
+          where: isAdmin ? { booking_id: bookingId } : { booking_id: bookingId, stu_id }
         });
 
         if (!booking) {
@@ -252,30 +268,39 @@ export class BookingsService {
 
         const now = new Date();
         const { deadline, end } = getBookingTimes(booking);
-        const student = await manager.findOneBy(Student, { stu_id });
+        const student = await manager.findOneBy(Student, { stu_id: booking.stu_id });
 
-        // Do not penalize a shortened round that ends before its grace period.
-        if (deadline <= end && now.getTime() >= deadline) {
-          // Late cancellation - add a strike
-          if (student) {
-            student.strikes += 1;
-            if (student.strikes >= 2) {
-              student.banned_until = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Ban for 24 hours
-            }
-            await manager.save(Student, student);
-            Logger.log(`[Strike Added] Late cancel for Booking ID: ${bookingId}. Strikes: ${student.strikes}`, 'BookingsService');
-          }
-        } else {
-          // Timely cancellation (before 15 mins): do not consume quota, restore quota to 1
+        if (isAdmin) {
+          // Admin cancellation restores student's daily quota without penalizing them
           if (student) {
             student.quota = 1;
             await manager.save(Student, student);
-            Logger.log(`[Quota Restored] Timely cancel for Booking ID: ${bookingId}, Student ID: ${stu_id}. Quota restored to 1.`, 'BookingsService');
+            Logger.log(`[Quota Restored] Admin cancel for Booking ID: ${bookingId}, Student ID: ${booking.stu_id}. Quota restored to 1.`, 'BookingsService');
+          }
+        } else {
+          // Do not penalize a shortened round that ends before its grace period.
+          if (deadline <= end && now.getTime() >= deadline) {
+            // Late cancellation - add a strike
+            if (student) {
+              student.strikes += 1;
+              if (student.strikes >= 2) {
+                student.banned_until = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Ban for 24 hours
+              }
+              await manager.save(Student, student);
+              Logger.log(`[Strike Added] Late cancel for Booking ID: ${bookingId}. Strikes: ${student.strikes}`, 'BookingsService');
+            }
+          } else {
+            // Timely cancellation (before 15 mins): do not consume quota, restore quota to 1
+            if (student) {
+              student.quota = 1;
+              await manager.save(Student, student);
+              Logger.log(`[Quota Restored] Timely cancel for Booking ID: ${bookingId}, Student ID: ${booking.stu_id}. Quota restored to 1.`, 'BookingsService');
+            }
           }
         }
 
         booking.status = BookingStatus.CANCELLED;
-        Logger.log(`[Booking Cancelled] Booking ID: ${bookingId}, Student ID: ${stu_id}`, 'BookingsService');
+        Logger.log(`[Booking Cancelled] Booking ID: ${bookingId}, Student ID: ${booking.stu_id}`, 'BookingsService');
         return await manager.save(Booking, booking);
       });
     } finally {

@@ -6,6 +6,7 @@ import { Booking, BookingStatus } from './entities/booking.entity';
 import { Student } from '../users/entities/student.entity';
 import { Court } from '../courts/entities/court.entity';
 import { Admin } from '../users/entities/admin.entity';
+import { UserRole } from '../users/users.service';
 
 describe('booking lifecycle (Bangkok time)', () => {
   let rows: Booking[];
@@ -171,5 +172,43 @@ describe('booking lifecycle (Bangkok time)', () => {
     await cron.handleCron();
     expect(booking.status).toBe(BookingStatus.CANCELLED);
     expect(students[0].strikes).toBe(1);
+  });
+
+  it('allows admin to cancel any booking regardless of stu_id, restoring quota without strike', async () => {
+    at('15:00:00');
+    const booking = await bookings.createBooking('00000001', 1, date, '15:00:00');
+    expect(students[0].quota).toBe(0);
+
+    // Late time (after grace period)
+    at('15:35:00');
+    const cancelled = await bookings.cancelBooking(booking.booking_id, 'admin-uuid', UserRole.ADMIN);
+    expect(cancelled.status).toBe(BookingStatus.CANCELLED);
+    expect(students[0].quota).toBe(1);
+    expect(students[0].strikes).toBe(0);
+  });
+
+  it('prevents regular student from cancelling another student booking', async () => {
+    at('15:00:00');
+    const booking = await bookings.createBooking('00000001', 1, date, '15:00:00');
+    await expect(bookings.cancelBooking(booking.booking_id, '99999999', UserRole.STUDENT)).rejects.toThrow('Booking not found');
+  });
+
+  it('validates QR code date and time on check-in', async () => {
+    at('15:00:00');
+    const booking = await bookings.createBooking('00000001', 1, date, '15:00:00');
+
+    // Mismatched date fails
+    await expect(
+      bookings.checkIn(booking.booking_id, '00000001', 1, '2026-09-19', '15:00')
+    ).rejects.toThrow('QR code date mismatch.');
+
+    // Mismatched time fails
+    await expect(
+      bookings.checkIn(booking.booking_id, '00000001', 1, date, '16:00')
+    ).rejects.toThrow('QR code time mismatch.');
+
+    // Matching date & time succeeds
+    const checkedIn = await bookings.checkIn(booking.booking_id, '00000001', 1, date, '15:00');
+    expect(checkedIn.status).toBe(BookingStatus.CHECKED_IN);
   });
 });

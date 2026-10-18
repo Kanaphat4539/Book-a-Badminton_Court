@@ -153,13 +153,17 @@ export class BookingsController {
   }
 
   @Post(':id/check-in')
-  async checkIn(@Request() req: any, @Param('id') id: string, @Body() body: { courtId: number }) {
-    return this.bookingsService.checkIn(+id, req.user.userId, body.courtId);
+  async checkIn(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() body: { courtId: number; date?: string; time?: string },
+  ) {
+    return this.bookingsService.checkIn(+id, req.user.userId, body.courtId, body.date, body.time);
   }
 
   @Post(':id/cancel')
   async cancelBooking(@Request() req: any, @Param('id') id: string) {
-    return this.bookingsService.cancelBooking(+id, req.user.userId);
+    return this.bookingsService.cancelBooking(+id, req.user.userId, req.user.role);
   }
 
   @Post(':id/finish')

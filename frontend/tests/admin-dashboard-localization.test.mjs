@@ -58,11 +58,13 @@ test('admin actions (toasts, confirmations) are localized too', () => {
   assert.ok(!source.includes("toast.error('Failed to sync telemetry')"));
 });
 
-test('the admin QR keeps encoding a bare court number that the scan page can parse', () => {
+test('the admin QR encodes court, date, and time that the scan page can parse', () => {
   const scan = readFileSync(new URL('../src/app/scan/page.tsx', import.meta.url), 'utf8');
-  assert.match(scan, /parseInt\(decodedText, 10\)/);
-  assert.match(admin, /<QRCode[\s\S]{0,200}value=\{selectedBooking\.court\?\.toString\(\) \|\| 'court'\}/);
-  assert.doesNotMatch(admin, /<QRCode[\s\S]{0,200}JSON\.stringify/);
+  assert.match(scan, /JSON\.parse\(decodedText\)/);
+  assert.match(admin, /<QRCode[\s\S]{0,400}JSON\.stringify/);
+  assert.match(admin, /selectedBooking\.court/);
+  assert.match(admin, /selectedBooking\.booking_date/);
+  assert.match(admin, /selectedBooking\.time_in/);
 });
 
 test('the student branch renders from the player dictionary, not from literals', () => {
